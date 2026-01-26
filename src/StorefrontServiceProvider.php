@@ -7,6 +7,7 @@ use Lunar\Models\Contracts\Product;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
 use Lunar\Storefront\Actions\Catalog\GetProductOptions;
 use Lunar\Storefront\Console\StorefrontKeyGenerateCommand;
+use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\ProductManager;
 use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
@@ -21,6 +22,7 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->singleton(StorefrontManager::class , fn () => new \Lunar\Storefront\Managers\StorefrontManager());
         $this->app->bind(ProductManager::class, fn () => new \Lunar\Storefront\Managers\ProductManager());
         $this->app->bind(VariantManager::class, fn () => new \Lunar\Storefront\Managers\VariantManager());
+        $this->app->bind(CollectionManager::class, fn () => new \Lunar\Storefront\Managers\CollectionManager());
     }
 
     public function boot()

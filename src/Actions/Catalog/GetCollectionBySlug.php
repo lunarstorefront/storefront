@@ -4,10 +4,11 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Lunar\Models\Contracts\Collection;
 
 class GetCollectionBySlug
 {
-    public function get(string $slug, ?string $child = null, array $eager = []): ?Model
+    public function get(string $slug, ?string $child = null, array $eager = []): ?Collection
     {
         return \Lunar\Models\Collection::whereHas(
             'urls',

@@ -16,4 +16,9 @@ class StorefrontManager implements \Lunar\Storefront\Contracts\StorefrontManager
     {
         return app(ProductManagerContract::class);
     }
+
+    public function collections(): CollectionManager
+    {
+        return app(CollectionManager::class);
+    }
 }

@@ -6,4 +6,5 @@ interface StorefrontManager
 {
     public function variants(): VariantManager;
     public function products(): ProductManager;
+    public function collections(): CollectionManager;
 }

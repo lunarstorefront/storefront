@@ -8,6 +8,7 @@ use Lunar\Storefront\Contracts\StorefrontManager;
 /**
  * @method static variants(): VariantManager;
  * @method static products(): ProductManager;
+ * @method static collections(): CollectionManager;
  * @see StorefrontManager
  */
 class Storefront extends Facade
