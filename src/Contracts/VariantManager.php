@@ -7,4 +7,6 @@ use Lunar\Models\Contracts\ProductVariant;
 interface VariantManager
 {
     public function getBySku(string $sku): ?ProductVariant;
+
+    public function decryptOptions(string $hash): array;
 }

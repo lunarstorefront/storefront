@@ -4,21 +4,22 @@ namespace Lunar\Storefront;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Scout\Scout;
 use Lunar\Facades\CartSession;
 use Lunar\Models\CartLine;
 use Lunar\Models\ProductVariant;
 use Lunar\Rules\ValidCoupon;
+use Lunar\Storefront\Data\SearchQueryHit;
 use Lunar\Storefront\Facades\Storefront;
+use Lunar\Storefront\Http\Controllers\GetQuerySuggestionsController;
+use Lunar\Storefront\Http\Controllers\SetCurrencyController;
 use Lunar\Storefront\Rules\InStock;
+use Meilisearch\Contracts\SearchQuery;
 
 class RouteRegistrar
 {
     public static function register()
     {
-        Route::get('products/product-options/hash', function (Request $request) {
-            return sha1('hello');
-        })->name('lunar.storefront.products.product-options-hash');
-
         Route::put('cart/lines/{id}', function (Request $request, int $id) {
             $cart = CartSession::current();
 
@@ -94,5 +95,9 @@ class RouteRegistrar
 
             return back();
         })->middleware(['web'])->name('lunar.storefront.cart.discount.delete');
+
+        Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
+
+        Route::post('/api/currency', SetCurrencyController::class)->middleware(['web'])->name('storefront.currency');
     }
 }

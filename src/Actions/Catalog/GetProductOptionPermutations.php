@@ -8,6 +8,7 @@ use Lunar\Models\Contracts\Product;
 use Lunar\Models\Contracts\ProductOption;
 use Lunar\Models\ProductOptionValue;
 use Lunar\Storefront\Data\ProductOptionPermutation;
+use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Managers\VariantManager;
 
 class GetProductOptionPermutations
@@ -43,7 +44,7 @@ class GetProductOptionPermutations
                 );
 
             return new ProductOptionPermutation(
-                hash: (new VariantManager)->encryptOptions($values->mapWithKeys(
+                hash: Storefront::variants()->encryptOptions($values->mapWithKeys(
                     fn ($value) => [$value->product_option_id => $value->id]
                 )->toArray()),
                 hasVariant: $variantQuery->exists(),

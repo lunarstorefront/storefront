@@ -3,15 +3,19 @@
 namespace Lunar\Storefront;
 
 use Illuminate\Support\ServiceProvider;
+use Lunar\Facades\StorefrontSession;
 use Lunar\Models\Contracts\Product;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
 use Lunar\Storefront\Actions\Catalog\GetProductOptions;
-use Lunar\Storefront\Console\StorefrontKeyGenerateCommand;
+use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
 use Lunar\Storefront\Contracts\CollectionManager;
+use Lunar\Storefront\Contracts\PricingManager;
 use Lunar\Storefront\Contracts\ProductManager;
 use Lunar\Storefront\Contracts\PropManager;
+use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Data\Currency;
 use Lunar\Storefront\Facades\Props;
 
 class StorefrontServiceProvider extends ServiceProvider
@@ -23,6 +27,8 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->bind(ProductManager::class, fn () => new \Lunar\Storefront\Managers\ProductManager());
         $this->app->bind(VariantManager::class, fn () => new \Lunar\Storefront\Managers\VariantManager());
         $this->app->bind(CollectionManager::class, fn () => new \Lunar\Storefront\Managers\CollectionManager());
+        $this->app->bind(SearchManager::class, fn () => new \Lunar\Storefront\Managers\SearchManager());
+        $this->app->bind(PricingManager::class, fn () => new \Lunar\Storefront\Managers\PricingManager());
     }
 
     public function boot()
@@ -31,11 +37,25 @@ class StorefrontServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                StorefrontKeyGenerateCommand::class,
+                ConfigureMeilisearchQuerySuggestions::class,
             ]);
         }
 
-        Props::add(
+        Props::add([
+            new PropData(
+                page: 'global',
+                key: 'currencies',
+                callback: fn () => Currency::collect(
+                    \Lunar\Models\Currency::get()
+                ),
+            ),
+            new PropData(
+                page: 'global',
+                key: 'currentCurrency',
+                callback: fn () => Currency::from(
+                    StorefrontSession::getCurrency()
+                ),
+            ),
             new PropData(
                 page: 'products.show',
                 key: 'permutations',
@@ -44,7 +64,7 @@ class StorefrontServiceProvider extends ServiceProvider
                     return (new GetProductOptionPermutations)->get($productOptions, $product);
                 },
             )
-        );
+        ]);
     }
 }
 

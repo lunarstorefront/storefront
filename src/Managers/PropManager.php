@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Lunar\Storefront\PropData;
 
 class PropManager implements \Lunar\Storefront\Contracts\PropManager
@@ -29,8 +30,15 @@ class PropManager implements \Lunar\Storefront\Contracts\PropManager
         return $data;
     }
 
-    public function add(PropData $propData)
+    public function add(array|Collection|PropData $propData): void
     {
-        $this->props[] = $propData;
+        if (!is_iterable($propData)) {
+            $propData = [$propData];
+        }
+
+        $this->props = [
+            ...$this->props,
+            ...$propData
+        ];
     }
 }
