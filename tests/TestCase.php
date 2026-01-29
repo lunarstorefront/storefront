@@ -10,6 +10,7 @@ use Lunar\Storefront\StorefrontServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
+use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -29,6 +30,7 @@ abstract class TestCase extends Orchestra
             MediaLibraryServiceProvider::class,
             ConverterServiceProvider::class,
             LaravelDataServiceProvider::class,
+            BlinkServiceProvider::class,
             LunarServiceProvider::class,
             StorefrontServiceProvider::class,
         ];
@@ -44,6 +46,7 @@ abstract class TestCase extends Orchestra
         ]);
 
         $app['config']->set('lunar.database.connection', 'testing');
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
     protected function defineDatabaseMigrations(): void
