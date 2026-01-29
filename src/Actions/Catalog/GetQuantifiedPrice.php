@@ -15,8 +15,8 @@ class GetQuantifiedPrice
         $unitPriceIncTax = $price->priceIncTax();
         $unitPriceExTax = $price->priceExTax();
 
-        $quantifiedPriceIncTax = intval(bcmul($unitPriceIncTax->unitDecimal(rounding: false) * $quantity, 100));
-        $quantifiedPriceExTax = intval(bcmul($unitPriceExTax->unitDecimal(rounding: false) * $quantity, 100));
+        $quantifiedPriceIncTax = (int) round($unitPriceIncTax->unitDecimal(rounding: false) * $quantity * 100);
+        $quantifiedPriceExTax = (int) round($unitPriceExTax->unitDecimal(rounding: false) * $quantity * 100);
 
         $quantifiedIncTax = new Price(
             $quantifiedPriceIncTax,

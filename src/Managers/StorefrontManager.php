@@ -4,10 +4,11 @@ namespace Lunar\Storefront\Managers;
 
 use Lunar\Storefront\Actions\SetCurrency;
 use Lunar\Storefront\Actions\SetLocale;
-use Lunar\Storefront\Contracts\VariantManager;
-use Lunar\Storefront\Contracts\ProductManager;
 use Lunar\Storefront\Contracts\CollectionManager;
+use Lunar\Storefront\Contracts\PricingManager;
+use Lunar\Storefront\Contracts\ProductManager;
 use Lunar\Storefront\Contracts\SearchManager;
+use Lunar\Storefront\Contracts\VariantManager;
 
 class StorefrontManager implements \Lunar\Storefront\Contracts\StorefrontManager
 {

@@ -1,0 +1,56 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - src
+
+    level: 5
+
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Lunar contracts don't declare Eloquent model properties
+        - '#Access to an undefined property Lunar\\Models\\Contracts\\[a-zA-Z]+::\$[a-zA-Z_]+#'
+
+        # Eloquent model properties accessed via base Model type
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$[a-zA-Z_]+#'
+
+        # Return type covariance with Eloquent models implementing contracts
+        - '#should return Lunar\\Models\\Contracts\\[a-zA-Z]+\|null but returns Illuminate\\Database\\Eloquent\\Model\|null#'
+        - '#should return Lunar\\Models\\[a-zA-Z]+\|null but returns Illuminate\\Database\\Eloquent\\Model\|null#'
+
+        # Lunar Search facade methods
+        - '#Call to an undefined static method Lunar\\Search\\Facades\\Search::#'
+
+        # Lunar Cart facade methods
+        - '#Call to an undefined static method Lunar\\Facades\\CartSession::#'
+
+        # Eloquent collection methods from packages (e.g., kalnoy/nestedset)
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Collection<[^>]+>::toTree\(\)#'
+
+        # Eloquent builder scopes and relation methods
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder<[^>]+>::type\(\)#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\[a-zA-Z]+::withoutTrashed\(\)#'
+
+        # Spatie LaravelData Lazy::whenLoaded expects Model but contracts implement Model
+        - '#Spatie\\LaravelData\\Lazy::whenLoaded\(\) expects Illuminate\\Database\\Eloquent\\Model, Lunar\\Models\\Contracts\\[a-zA-Z]+ given#'
+
+        # PHPDoc array vs Collection type hints in Data classes (intentional for TypeScript generation)
+        - '#PHPDoc type for property Lunar\\Storefront\\Data\\[a-zA-Z]+::\$[a-zA-Z]+ with type array<[^>]+> is incompatible with native type#'
+
+        # Lunar model methods not on base Model class
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::mappedAttributes\(\)#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::canBeFulfilledAtQuantity\(\)#'
+
+        # Contract vs concrete model parameter types
+        - '#expects Lunar\\Models\\[a-zA-Z]+(\|null)?, Lunar\\Models\\Contracts\\[a-zA-Z]+ given#'
+        - '#expects Illuminate\\Database\\Eloquent\\Model, Lunar\\Models\\Contracts\\[a-zA-Z]+ given#'
+
+        # Lunar contract methods (attr, translate, etc.) not declared in interfaces
+        - '#Call to an undefined method Lunar\\Models\\Contracts\\[a-zA-Z]+::(attr|translate|comparePriceIncTax)\(\)#'
+
+        # Spatie LaravelData collection type coercion
+        - '#constructor expects Illuminate\\Support\\Collection, array<[^>]+>\|Illuminate\\#'
+
+    excludePaths:

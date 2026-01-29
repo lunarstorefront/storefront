@@ -10,9 +10,6 @@ use Lunar\Storefront\Managers\VariantManager;
 
 class GetProductVariantByProvidedOptions
 {
-    /**
-     * @param string|int[]  $selectedValues
-     */
     public function get(Model|Product $product, ?string $hash): ?ProductVariant
     {
         if (! $hash) {
