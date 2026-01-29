@@ -15,7 +15,7 @@ class MapProductPriceBreaks
             return collect();
         }
 
-        $priceBreaks = $pricing->priceBreaks->sortBy('min_quantity');
+        $priceBreaks = $pricing->priceBreaks->sortBy('min_quantity')->values();
         $basePrice = $pricing->base;
 
         $baseTiers = collect([
