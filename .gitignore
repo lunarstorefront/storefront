@@ -1,1 +1,36 @@
 /vendor/
+/node_modules/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+/.phpunit.cache/
+.phpunit.result.cache
+coverage/
+.coverage
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+/build/
+/dist/
+
+# Composer
+composer.phar
+composer.lock
+
+# Laravel/PHP
+storage/*.key
+*.log
