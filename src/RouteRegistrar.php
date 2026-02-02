@@ -11,6 +11,7 @@ use Lunar\Models\ProductVariant;
 use Lunar\Rules\ValidCoupon;
 use Lunar\Storefront\Data\SearchQueryHit;
 use Lunar\Storefront\Facades\Storefront;
+use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
 use Lunar\Storefront\Http\Controllers\GetQuerySuggestionsController;
 use Lunar\Storefront\Http\Controllers\SetCurrencyController;
 use Lunar\Storefront\Rules\InStock;
@@ -99,5 +100,7 @@ class RouteRegistrar
         Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
 
         Route::post('/api/currency', SetCurrencyController::class)->middleware(['web'])->name('storefront.currency');
+
+        Route::get('/api/auth/codes', GetTwoFactorCodesController::class)->middleware(['web', 'auth'])->name('auth.codes');
     }
 }
