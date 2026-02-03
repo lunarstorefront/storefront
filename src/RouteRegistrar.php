@@ -11,6 +11,7 @@ use Lunar\Models\ProductVariant;
 use Lunar\Rules\ValidCoupon;
 use Lunar\Storefront\Data\SearchQueryHit;
 use Lunar\Storefront\Facades\Storefront;
+use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
 use Lunar\Storefront\Http\Controllers\GetQuerySuggestionsController;
 use Lunar\Storefront\Http\Controllers\SetCurrencyController;
@@ -96,6 +97,9 @@ class RouteRegistrar
 
             return back();
         })->middleware(['web'])->name('lunar.storefront.cart.discount.delete');
+
+        Route::post('/account/addresses', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.addresses');
+        Route::put('/account/addresses/{id}', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.address');
 
         Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
 

@@ -15,6 +15,8 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Data\Address;
+use Lunar\Storefront\Data\Country;
 use Lunar\Storefront\Data\Currency;
 use Lunar\Storefront\Facades\Props;
 
@@ -63,6 +65,26 @@ class StorefrontServiceProvider extends ServiceProvider
                     $productOptions = (new GetProductOptions)->get($product);
                     return (new GetProductOptionPermutations)->get($productOptions, $product);
                 },
+            ),
+            new PropData(
+                page: 'account.addresses.index',
+                key: 'addresses',
+                callback: function () {
+                    $user = auth()->user();
+
+                    $customer = $user->latestCustomer();
+
+                    return Address::collect($customer->addresses);
+                }
+            ),
+            new PropData(
+                page: 'account.addresses.index',
+                key: 'countries',
+                callback: function () {
+                    return Country::collect(
+                        \Lunar\Models\Country::get()
+                    );
+                }
             )
         ]);
     }
