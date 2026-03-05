@@ -21,7 +21,7 @@ use Lunar\Storefront\Facades\Props;
 
 class StorefrontServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
         $this->app->singleton(PropManager::class, fn () => new \Lunar\Storefront\Managers\PropManager);
         $this->app->singleton(StorefrontManager::class, fn () => new \Lunar\Storefront\Managers\StorefrontManager);
@@ -33,7 +33,7 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->bind(PricingManager::class, fn () => new \Lunar\Storefront\Managers\PricingManager);
     }
 
-    public function boot()
+    public function boot(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/storefront.php', 'storefront');
 

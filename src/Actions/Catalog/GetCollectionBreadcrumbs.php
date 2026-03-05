@@ -26,6 +26,10 @@ class GetCollectionBreadcrumbs
     public function buildBreadcrumbs(Collection $collection): void
     {
         foreach ($collection->ancestors as $ancestor) {
+            if (! $ancestor->defaultUrl) {
+                continue;
+            }
+
             $this->breadcrumbs->add(
                 Breadcrumb::from([
                     'label' => $ancestor->attr('name'),
@@ -35,13 +39,14 @@ class GetCollectionBreadcrumbs
             );
         }
 
-
-        $this->breadcrumbs->add(
-            Breadcrumb::from([
-                'label' => $collection->attr('name'),
-                'model' => 'collection',
-                'slug' => $collection->defaultUrl->slug,
-            ])
-        );
+        if ($collection->defaultUrl) {
+            $this->breadcrumbs->add(
+                Breadcrumb::from([
+                    'label' => $collection->attr('name'),
+                    'model' => 'collection',
+                    'slug' => $collection->defaultUrl->slug,
+                ])
+            );
+        }
     }
 }

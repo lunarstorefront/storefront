@@ -20,7 +20,7 @@ class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
                 StorefrontSession::getCurrency()
             )->qty($quantity)->get();
         } catch (\Exception $e) {
-
+            report($e);
         }
 
         return null;

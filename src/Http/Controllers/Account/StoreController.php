@@ -5,8 +5,6 @@ namespace Lunar\Storefront\Http\Controllers\Account;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Lunar\Models\Currency;
-use Lunar\Storefront\Facades\Storefront;
 
 class StoreController extends Controller
 {

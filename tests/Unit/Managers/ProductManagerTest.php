@@ -189,3 +189,26 @@ test('it can get permutations for product with multiple options', function () {
     // 2 colors x 1 size = 2 permutations
     expect($permutations)->toHaveCount(2);
 });
+
+test('it can get product model by slug', function () {
+    $productType = ProductType::factory()->create();
+    $language = Language::getDefault();
+
+    $product = Product::factory()
+        ->for($productType)
+        ->create(['status' => 'published']);
+
+    $product->urls()->create([
+        'slug' => 'test-product',
+        'default' => true,
+        'language_id' => $language->id,
+    ]);
+
+    $result = $this->manager->getModelBySlug('test-product');
+
+    expect($result->id)->toBe($product->id);
+});
+
+test('it throws when product slug not found', function () {
+    $this->manager->getModelBySlug('nonexistent');
+})->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);

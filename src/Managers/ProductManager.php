@@ -33,12 +33,10 @@ class ProductManager implements \Lunar\Storefront\Contracts\ProductManager
 
     public function getAssociations(Product $product, ProductAssociation $association): Collection
     {
-        $associations = (new GetProductAssociations)->get($product);
+        $associations = (new GetProductAssociations)->get($product, type: $association);
 
         return \Lunar\Storefront\Data\Product::collect(
-            $associations->filter(function ($association) {
-                return $association->type === $association->value;
-            })->pluck('target')
+            $associations->pluck('target')
         );
     }
 

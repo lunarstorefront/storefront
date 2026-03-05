@@ -2,26 +2,22 @@
 
 namespace Lunar\Storefront\Console;
 
-use Illuminate\Foundation\Console\KeyGenerateCommand;
+use Illuminate\Console\Command;
 use Laravel\Scout\Scout;
 use Meilisearch\Meilisearch;
 
-class ConfigureMeilisearchQuerySuggestions extends KeyGenerateCommand
+class ConfigureMeilisearchQuerySuggestions extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'storefront:meilisearch:query-suggestions';
 
     protected $description = 'Configure meilisearch query suggestions';
 
-    public function handle()
+    public function handle(): int
     {
         if (! class_exists(Meilisearch::class) || ! version_compare(Meilisearch::VERSION, '1.0.0')) {
             $this->error('Please install the suggested Meilisearch client: meilisearch/meilisearch-php.');
-            return;
+
+            return self::FAILURE;
         }
 
         $meilisearch = Scout::engine('meilisearch');
@@ -41,5 +37,7 @@ class ConfigureMeilisearchQuerySuggestions extends KeyGenerateCommand
         ]);
 
         $this->info('Index created');
+
+        return self::SUCCESS;
     }
 }

@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Laravel\Scout\Scout;
-use Lunar\Storefront\Data\SearchQueryHit;
 
 class GetTwoFactorCodesController extends Controller
 {

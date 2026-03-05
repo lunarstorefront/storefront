@@ -38,6 +38,12 @@ class InStock implements ValidationRule, DataAwareRule
 
         if ($this->cartLineId) {
             $cartLine = CartLine::find($this->cartLineId);
+
+            if (! $cartLine) {
+                $fail('Cart line not found.');
+                return;
+            }
+
             $variant = $cartLine->purchasable;
         }
 
