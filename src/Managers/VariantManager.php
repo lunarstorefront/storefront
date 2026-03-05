@@ -16,14 +16,17 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
 
     public function encryptOptions(array $options): string
     {
-        // Create HMAC signature (prevents tampering)
-        $signature = hash_hmac('sha256', serialize($options), Crypt::getKey());
+        ksort($options);
 
-        // Combine and encode: "data.signature"
-        $combined = base64_encode(serialize($options).'.'.substr($signature, 0, 16));
+        $payload = collect($options)
+            ->map(fn ($value, $key) => $key.':'.$value)
+            ->implode(',');
 
-        // Make URL-safe
-        return rtrim(strtr($combined, '+/', '-_'), '=');
+        $signature = hash_hmac('sha256', $payload, Crypt::getKey(), binary: true);
+
+        $combined = $payload.'.'.substr($signature, 0, 16);
+
+        return rtrim(strtr(base64_encode($combined), '+/', '-_'), '=');
     }
 
     public function decryptOptions(?string $hash = null): array
@@ -35,21 +38,32 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
         try {
             $combined = base64_decode(strtr($hash, '-_', '+/'));
 
-            $parts = explode('.', $combined);
+            $dotPosition = strrpos($combined, '.');
 
-            if (count($parts) !== 2) {
+            if ($dotPosition === false) {
                 return [];
             }
 
-            $fullSig = hash_hmac('sha256', $parts[0], Crypt::getKey());
-            if (! hash_equals(substr($fullSig, 0, 16), $parts[1])) {
-                throw new \ErrorException('Tampered');
+            $payload = substr($combined, 0, $dotPosition);
+            $signature = substr($combined, $dotPosition + 1);
+
+            $expectedSignature = hash_hmac('sha256', $payload, Crypt::getKey(), binary: true);
+
+            if (! hash_equals(substr($expectedSignature, 0, 16), $signature)) {
+                return [];
             }
+
+            $options = [];
+
+            foreach (explode(',', $payload) as $pair) {
+                [$key, $value] = explode(':', $pair, 2);
+                $options[$key] = $value;
+            }
+
+            return $options;
         } catch (\Exception $e) {
             return [];
         }
-
-        return unserialize($parts[0]);
     }
 
     public function getProvidedVariant(Product $product, ?string $hash = null): ?ProductVariant
