@@ -11,22 +11,36 @@ use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
 class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
 {
-    public function getResults(?string $term = null, ?Collection $collection = null, int $perPage = 40, ?string $sort = 'popularity:desc'): SearchResults
-    {
-        $facetables = collect(array_keys(config('lunar.search.facets.'.Product::class, [])))->mapWithKeys(
-            fn ($facet) => [$facet => request()->get(str_replace('.', '_', $facet))]
-        )->filter();
+    public function getResults(
+        ?string $query = null,
+        ?Collection $collection = null,
+        int $perPage = 40,
+        ?string $sort = 'relevance:asc',
+        array $filters = [],
+    ): SearchResults {
+        $facetables = collect(
+            array_keys(config('lunar.search.facets.'.Product::class, [])),
+        )
+            ->mapWithKeys(
+                fn ($facet) => [
+                    $facet => request()->get(str_replace('.', '_', $facet)),
+                ],
+            )
+            ->filter();
 
-        $results = (new SearchProducts)->handle(
-            query: $term,
+        $results = new SearchProducts()->handle(
+            query: $query,
             facets: $facetables->toArray(),
-            collectionIds: collect([$collection?->id])->filter()->toArray(),
+            collectionIds: collect([$collection?->id])
+                ->filter()
+                ->toArray(),
+            filters: $filters,
             sort: $sort,
-            perPage: $perPage
+            perPage: $perPage,
         );
 
-        if ($results->count && $term) {
-            $this->updateQuerySuggestion($term);
+        if ($results->count && $query) {
+            $this->updateQuerySuggestion($query);
         }
 
         return $results;
@@ -34,26 +48,32 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
 
     public function updateQuerySuggestion(string $term)
     {
-        $index = Scout::engine('meilisearch')->createIndex('storefront_query_suggestions');
+        $index = Scout::engine('meilisearch')->createIndex(
+            'storefront_query_suggestions',
+        );
 
         $term = trim(mb_strtolower($term));
         $termId = Str::slug($term);
 
         try {
             $doc = $index->getDocument($termId); // exact match by primary key
-            $index->updateDocuments([[
-                'signature' => $termId,
-                'term'  => $term,
-                'count' => ((int) ($doc['count'] ?? 0)) + 1,
-            ]]);
+            $index->updateDocuments([
+                [
+                    'signature' => $termId,
+                    'term' => $term,
+                    'count' => ((int) ($doc['count'] ?? 0)) + 1,
+                ],
+            ]);
         } catch (\Meilisearch\Exceptions\ApiException $e) {
             // If it doesn't exist, Meilisearch returns 404
             if (($e->httpStatus ?? null) === 404) {
-                $index->addDocuments([[
-                    'signature' => $termId,
-                    'term'  => $term,
-                    'count' => 1,
-                ]]);
+                $index->addDocuments([
+                    [
+                        'signature' => $termId,
+                        'term' => $term,
+                        'count' => 1,
+                    ],
+                ]);
             } else {
                 throw $e;
             }

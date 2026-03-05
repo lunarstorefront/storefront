@@ -9,14 +9,14 @@ class GetCollectionTree
 {
     public function get(string $group = 'main', int $maxDepth = 3)
     {
-        $collections =  \Lunar\Models\Collection::whereHas(
+        $collections = \Lunar\Models\Collection::whereHas(
             'group',
             fn (Builder $builder) => $builder->where('handle', $group)
         )->with(['defaultUrl'])
             ->withDepth()
-            ->having('depth', '<', $maxDepth)
             ->defaultOrder()
             ->get()
+            ->filter(fn ($collection) => $collection->depth < $maxDepth)
             ->toTree();
 
         return Collection::collect($collections);

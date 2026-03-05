@@ -5,17 +5,16 @@ namespace Lunar\Storefront;
 class PropData
 {
     public function __construct(
-        public string $page,
+        public StorefrontPage|string $page,
         public string $key,
         public \Closure|string $callback,
-    )
-    {
-
-    }
+    ) {}
 
     public function getPage(): string
     {
-        return $this->page;
+        return $this->page instanceof StorefrontPage
+            ? $this->page->value
+            : $this->page;
     }
 
     public function getCallbackOrClass(): \Closure|string

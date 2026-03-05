@@ -10,6 +10,8 @@ interface StorefrontManager
 
     public function collections(): CollectionManager;
 
+    public function brands(): BrandManager;
+
     public function search(): SearchManager;
 
     public function pricing(): PricingManager;

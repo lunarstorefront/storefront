@@ -4,19 +4,22 @@ namespace Lunar\Storefront;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Laravel\Scout\Scout;
+use Lunar\Base\CheckoutManagerInterface;
 use Lunar\Facades\CartSession;
+use Lunar\Facades\Checkout;
 use Lunar\Models\CartLine;
 use Lunar\Models\ProductVariant;
 use Lunar\Rules\ValidCoupon;
-use Lunar\Storefront\Data\SearchQueryHit;
 use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
+use Lunar\Storefront\Http\Controllers\Checkout\CreateDraftOrderController;
+use Lunar\Storefront\Http\Controllers\Checkout\OrderIssueController;
+use Lunar\Storefront\Http\Controllers\Checkout\ProcessingController;
+use Lunar\Storefront\Http\Controllers\Checkout\SuccessController;
 use Lunar\Storefront\Http\Controllers\GetQuerySuggestionsController;
 use Lunar\Storefront\Http\Controllers\SetCurrencyController;
 use Lunar\Storefront\Rules\InStock;
-use Meilisearch\Contracts\SearchQuery;
 
 class RouteRegistrar
 {
@@ -29,7 +32,7 @@ class RouteRegistrar
                 'quantity' => [
                     'required',
                     'numeric',
-                    new InStock($cart, cartLineId: $id)
+                    new InStock($cart, cartLineId: $id),
                 ],
             ]);
 
@@ -46,6 +49,7 @@ class RouteRegistrar
             ]);
 
             $cart?->lines()->where('id', $request->input('id'))->delete();
+
             return back();
         })->name('lunar.storefront.cart.lines.delete')->middleware(['web']);
 
@@ -60,7 +64,7 @@ class RouteRegistrar
                 'quantity' => [
                     'required',
                     'numeric',
-                    new InStock($cart)
+                    new InStock($cart),
                 ],
             ]);
 
@@ -100,11 +104,32 @@ class RouteRegistrar
 
         Route::post('/account/addresses', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.addresses');
         Route::put('/account/addresses/{id}', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.address');
-
         Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
-
         Route::post('/api/currency', SetCurrencyController::class)->middleware(['web'])->name('storefront.currency');
-
         Route::get('/api/auth/codes', GetTwoFactorCodesController::class)->middleware(['web', 'auth'])->name('auth.codes');
+
+        Route::post('checkout/elements', function (Request $request, CheckoutManagerInterface $checkoutManager) {
+            $cart = CartSession::current();
+            $element = Checkout::cart($cart)->hydrate()->getElement($request->input('handle'));
+
+            $request->validate($element->rules());
+
+            $element->store($request->all());
+
+            return back();
+
+        })->middleware(['web'])->name('checkout.element');
+
+        Route::post('checkout/draft-order', CreateDraftOrderController::class)
+            ->middleware(['web'])->name('checkout.draft-order');
+
+        Route::get('checkout/processing', ProcessingController::class)
+            ->middleware(['web'])->name('checkout.processing');
+
+        Route::get('checkout/success', SuccessController::class)
+            ->middleware(['web'])->name('checkout.success');
+
+        Route::get('checkout/order-issue', OrderIssueController::class)
+            ->middleware(['web'])->name('checkout.order-issue');
     }
 }

@@ -20,7 +20,7 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
         $signature = hash_hmac('sha256', serialize($options), Crypt::getKey());
 
         // Combine and encode: "data.signature"
-        $combined = base64_encode(serialize($options) . '.' . substr($signature, 0, 16));
+        $combined = base64_encode(serialize($options).'.'.substr($signature, 0, 16));
 
         // Make URL-safe
         return rtrim(strtr($combined, '+/', '-_'), '=');
@@ -28,7 +28,9 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
 
     public function decryptOptions(?string $hash = null): array
     {
-        if (! $hash) return [];
+        if (! $hash) {
+            return [];
+        }
 
         try {
             $combined = base64_decode(strtr($hash, '-_', '+/'));
@@ -40,7 +42,7 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
             }
 
             $fullSig = hash_hmac('sha256', $parts[0], Crypt::getKey());
-            if (!hash_equals(substr($fullSig, 0, 16), $parts[1])) {
+            if (! hash_equals(substr($fullSig, 0, 16), $parts[1])) {
                 throw new \ErrorException('Tampered');
             }
         } catch (\Exception $e) {
@@ -52,7 +54,9 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
 
     public function getProvidedVariant(Product $product, ?string $hash = null): ?ProductVariant
     {
-        if (! $hash) return null;
+        if (! $hash) {
+            return $product->variants->first();
+        }
 
         return (new GetProductVariantByProvidedOptions)->get($product, $hash);
     }

@@ -5,15 +5,18 @@ namespace Lunar\Storefront\Managers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lunar\Storefront\PropData;
+use Lunar\Storefront\StorefrontPage;
 
 class PropManager implements \Lunar\Storefront\Contracts\PropManager
 {
     protected array $props = [];
 
-    public function resolve(string $page, ?Model $record = null): array
+    public function resolve(StorefrontPage|string $page, ?Model $record = null): array
     {
+        $pageValue = $page instanceof StorefrontPage ? $page->value : $page;
+
         $props = collect($this->props)->filter(
-            fn ($prop) => $prop->getPage() === $page
+            fn ($prop) => $prop->getPage() === $pageValue
         );
 
         $data = [];

@@ -4,6 +4,7 @@ namespace Lunar\Storefront\Managers;
 
 use Lunar\Storefront\Actions\SetCurrency;
 use Lunar\Storefront\Actions\SetLocale;
+use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
 use Lunar\Storefront\Contracts\ProductManager;
@@ -25,6 +26,11 @@ class StorefrontManager implements \Lunar\Storefront\Contracts\StorefrontManager
     public function collections(): CollectionManager
     {
         return app(CollectionManager::class);
+    }
+
+    public function brands(): BrandManager
+    {
+        return app(BrandManager::class);
     }
 
     public function search(): SearchManager

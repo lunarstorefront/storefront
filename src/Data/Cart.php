@@ -5,7 +5,6 @@ namespace Lunar\Storefront\Data;
 use Illuminate\Support\Collection;
 use Lunar\Base\ValueObjects\Cart\ShippingBreakdown;
 use Lunar\DataTypes\Price;
-use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -13,31 +12,31 @@ use Spatie\LaravelData\Lazy;
 class Cart extends Data
 {
     public function __construct(
-        public ?int $id,
+        public string $fingerprint,
         public ?string $coupon,
         public Price $subTotal,
         public Price $subTotalDiscounted,
-        public Price                 $discountTotal,
-        public Price                 $shippingTotal,
-        public Price                 $taxTotal,
-        public Price                 $total,
-        public Currency          $currency,
+        public Price $discountTotal,
+        public Price $shippingTotal,
+        public Price $taxTotal,
+        public Price $total,
+        public Currency $currency,
         public ?int $linesCount,
         /** @var CartLine[] */
-        public Lazy|Collection       $lines,
+        public Lazy|Collection $lines,
         /** @var Discount[] */
-        public Lazy|Collection       $discounts,
+        public Lazy|Collection $discounts,
         /** @var CartAddress */
         public Lazy|CartAddress|null $shippingAddress,
         /** @var CartAddress */
         public Lazy|CartAddress|null $billingAddress,
-        public ShippingBreakdown     $shippingBreakdown,
+        public ShippingBreakdown $shippingBreakdown,
     ) {}
 
     public static function fromModel(\Lunar\Models\Contracts\Cart $cart): self
     {
         return new self(
-            id: $cart->id,
+            fingerprint: $cart->fingerprint(),
             coupon: $cart->coupon_code,
             subTotal: $cart->subTotal,
             subTotalDiscounted: $cart->subTotalDiscounted,

@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
 use Lunar\Storefront\Contracts\ProductManager;
@@ -14,6 +15,7 @@ use Lunar\Storefront\Contracts\VariantManager;
  * @method static VariantManager variants()
  * @method static ProductManager products()
  * @method static CollectionManager collections()
+ * @method static BrandManager brands()
  * @method static SearchManager search()
  * @method static PricingManager pricing()
  * @method static void setCurrency(string $code)
