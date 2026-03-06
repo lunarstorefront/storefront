@@ -15,6 +15,4 @@ interface ProductManager
     public function getPermutations(Product $product, ?Collection $options = null): Collection;
 
     public function getAssociations(Product $product, ProductAssociation $association): Collection;
-
-    public function getShowPageProps(Product $product, ?string $optionHash, int $quantity = 1): array;
 }

@@ -2,9 +2,12 @@
 
 namespace Lunar\Storefront\Contracts;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Lunar\Models\Brand;
+
 interface BrandManager
 {
-    public function getIndexPageProps(): array;
+    public function getBySlug(string $slug): Brand;
 
-    public function getShowPageProps(string $slug, ?string $sort, int $perPage): array;
+    public function getPaginated(int $perPage = 150): LengthAwarePaginator;
 }

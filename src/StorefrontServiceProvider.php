@@ -3,9 +3,6 @@
 namespace Lunar\Storefront;
 
 use Illuminate\Support\ServiceProvider;
-use Lunar\Models\Contracts\Product;
-use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
-use Lunar\Storefront\Actions\Catalog\GetProductOptions;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
@@ -15,9 +12,6 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
-use Lunar\Storefront\Data\Address;
-use Lunar\Storefront\Data\Country;
-use Lunar\Storefront\Facades\Props;
 
 class StorefrontServiceProvider extends ServiceProvider
 {
@@ -42,36 +36,5 @@ class StorefrontServiceProvider extends ServiceProvider
                 ConfigureMeilisearchQuerySuggestions::class,
             ]);
         }
-
-        Props::add([
-            new PropData(
-                page: StorefrontPage::ProductsShow,
-                key: 'permutations',
-                callback: function (Product $product) {
-                    $productOptions = (new GetProductOptions)->get($product);
-
-                    return (new GetProductOptionPermutations)->get($productOptions, $product);
-                },
-            ),
-            new PropData(
-                page: StorefrontPage::AccountAddressesIndex,
-                key: 'addresses',
-                callback: function () {
-                    $user = auth()->user();
-                    $customer = $user->latestCustomer();
-
-                    return Address::collect($customer->addresses);
-                }
-            ),
-            new PropData(
-                page: StorefrontPage::AccountAddressesIndex,
-                key: 'countries',
-                callback: function () {
-                    return Country::collect(
-                        \Lunar\Models\Country::get()
-                    );
-                }
-            ),
-        ]);
     }
 }

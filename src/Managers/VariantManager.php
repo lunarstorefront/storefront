@@ -66,6 +66,13 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
         }
     }
 
+    public function getSelectedOptions(?string $hash = null): \Illuminate\Support\Collection
+    {
+        return collect($this->decryptOptions($hash))->mapWithKeys(
+            fn ($value, $option) => [$option => $value]
+        );
+    }
+
     public function getProvidedVariant(Product $product, ?string $hash = null): ?ProductVariant
     {
         if (! $hash) {
