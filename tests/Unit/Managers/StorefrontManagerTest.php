@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Session;
+use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
 use Lunar\Storefront\Contracts\ProductManager;
@@ -28,6 +29,12 @@ test('it returns collection manager instance', function () {
     $collections = $this->manager->collections();
 
     expect($collections)->toBeInstanceOf(CollectionManager::class);
+});
+
+test('it returns brand manager instance', function () {
+    $brands = $this->manager->brands();
+
+    expect($brands)->toBeInstanceOf(BrandManager::class);
 });
 
 test('it returns search manager instance', function () {
