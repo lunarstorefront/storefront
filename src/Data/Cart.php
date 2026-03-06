@@ -45,7 +45,7 @@ class Cart extends Data
             taxTotal: $cart->taxTotal,
             total: $cart->total,
             currency: Currency::from($cart->currency),
-            linesCount: $cart->linesCount,
+            linesCount: $cart->lines_count,
             lines: Lazy::whenLoaded('lines', $cart, fn () => CartLine::collect($cart->lines)),
             discounts: Lazy::when(fn () => $cart->discounts, fn () => Discount::collect($cart->discounts->pluck('discount'))),
             shippingAddress: Lazy::whenLoaded('shippingAddress', $cart, fn () => CartAddress::from($cart->shippingAddress)),
