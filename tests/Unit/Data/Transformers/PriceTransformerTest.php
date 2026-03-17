@@ -1,14 +1,9 @@
 <?php
 
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
-use Lunar\Models\Price;
-use Lunar\Models\Product;
-use Lunar\Models\ProductType;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Data\Transformers\PriceTransformer;
 use Spatie\LaravelData\Support\DataProperty;
 use Spatie\LaravelData\Support\Transformation\TransformationContext;
@@ -23,29 +18,25 @@ beforeEach(function () {
     CustomerGroup::factory()->create(['default' => true]);
 });
 
-test('it transforms a price object to array', function () {
-    $priceDataType = new \Lunar\DataTypes\Price(1500, $this->currency, 1);
-
+test('it transforms a price integer to int', function () {
     $transformer = new PriceTransformer();
 
     $property = Mockery::mock(DataProperty::class);
     $context = Mockery::mock(TransformationContext::class);
 
-    $result = $transformer->transform($property, $priceDataType, $context);
+    $result = $transformer->transform($property, 1500, $context);
 
-    expect($result)->toBeArray()
-        ->and($result)->toHaveKeys(['decimal', 'decimal_unit', 'formatted', 'formatted_unit', 'value', 'unit_qty']);
+    expect($result)->toBeInt()
+        ->and($result)->toBe(1500);
 });
 
 test('it includes correct value in transformation', function () {
-    $priceDataType = new \Lunar\DataTypes\Price(2500, $this->currency, 1);
-
     $transformer = new PriceTransformer();
 
     $property = Mockery::mock(DataProperty::class);
     $context = Mockery::mock(TransformationContext::class);
 
-    $result = $transformer->transform($property, $priceDataType, $context);
+    $result = $transformer->transform($property, 2500, $context);
 
-    expect($result['value'])->toBe(2500);
+    expect($result)->toBe(2500);
 });

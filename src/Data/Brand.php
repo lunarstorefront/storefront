@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Lunar\Catalog\Models\Brand as BrandModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
@@ -20,7 +21,7 @@ class Brand extends Data
         public Lazy|Url $url,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\Brand $brand): self
+    public static function fromModel(BrandModel $brand): self
     {
         return new self(
             name: $brand->name,

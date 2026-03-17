@@ -11,7 +11,7 @@ class ShippingOption extends Data
         public string $name,
         public ?string $description,
         public ?string $identifier,
-        public \Lunar\DataTypes\Price $price,
+        public int $price,
         public ?string $cutoff = null,
     ) {}
 }

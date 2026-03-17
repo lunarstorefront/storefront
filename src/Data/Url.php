@@ -2,10 +2,9 @@
 
 namespace Lunar\Storefront\Data;
 
-use Illuminate\Support\Collection;
+use Lunar\Kernel\Models\Url as UrlModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Lazy;
 
 /** @typescript  */
 class Url extends Data
@@ -19,7 +18,7 @@ class Url extends Data
 
     }
 
-    public static function fromModel(\Lunar\Models\Contracts\Url $url): self
+    public static function fromModel(UrlModel $url): self
     {
         return new self(
             slug: $url->slug,

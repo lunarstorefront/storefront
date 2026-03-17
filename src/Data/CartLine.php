@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\DataTypes\Price;
+use Lunar\Sales\Models\CartLine as CartLineModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -19,18 +19,16 @@ class CartLine extends Data
         public Lazy|string $slug,
         public Lazy|string|null $thumbnail,
         public int $quantity,
-        public Price $unitPrice,
-        public Price $unitPriceIncTax,
-        public Price $subTotal,
-        public Price $discountTotal,
-        public Price $subTotalDiscounted,
-        public Price $taxAmount,
-        public Price $total,
+        public int $unitPrice,
+        public int $subTotal,
+        public int $discountTotal,
+        public int $taxAmount,
+        public int $total,
         /** @var ProductOption[] */
         public Collection $optionValues
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\CartLine $cartLine): self
+    public static function fromModel(CartLineModel $cartLine): self
     {
         return new self(
             id: $cartLine->id,
@@ -39,14 +37,12 @@ class CartLine extends Data
             identifier: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getIdentifier()),
             name: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->attr('name')),
             slug: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->defaultUrl?->slug),
-            thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getThumbnail()?->getUrl('thumbnail')),
+            thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->thumbnail?->getUrl('thumbnail')),
             quantity: $cartLine->quantity,
-            unitPrice: $cartLine->unitPrice,
-            unitPriceIncTax: $cartLine->unitPriceInclTax,
-            subTotal: $cartLine->subTotal,
-            discountTotal: $cartLine->discountTotal,
-            subTotalDiscounted: $cartLine->subTotalDiscounted,
-            taxAmount: $cartLine->taxAmount,
+            unitPrice: $cartLine->unit_price,
+            subTotal: $cartLine->sub_total,
+            discountTotal: $cartLine->discount_total,
+            taxAmount: $cartLine->tax_amount,
             total: $cartLine->total,
             optionValues: ProductOptionValue::collect(
                 $cartLine->purchasable->values

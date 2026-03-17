@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
+use Lunar\Catalog\DataObjects\PricingResponse as PricingResponseDto;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -13,7 +14,7 @@ class PricingResponse extends Data
         public \Illuminate\Support\Collection $priceBreaks,
     ) {}
 
-    public static function fromDto(\Lunar\Base\DataTransferObjects\PricingResponse $response): self
+    public static function fromDto(PricingResponseDto $response): self
     {
         return new self(
             matched: Price::from($response->matched),

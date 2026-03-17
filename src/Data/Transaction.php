@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\DataTypes\Price;
+use Lunar\Sales\Models\Transaction as TransactionModel;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -13,11 +13,11 @@ class Transaction extends Data
         public ?int $lastFour,
         public string $type,
         public bool $success,
-        public Price $amount,
+        public int $amount,
         public ?string $notes,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\Transaction $transaction): self
+    public static function fromModel(TransactionModel $transaction): self
     {
         return new self(
             cardType: $transaction->card_type,

@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection as LaravelCollection;
-use Lunar\Models\Contracts\Collection as CollectionContract;
+use Lunar\Catalog\Models\Collection as CollectionModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
@@ -24,7 +24,7 @@ class Collection extends Data
 
     }
 
-    public static function fromModel(CollectionContract $collection): self
+    public static function fromModel(CollectionModel $collection): self
     {
         return new self(
             name: $collection->attr('name'),

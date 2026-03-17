@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Base\Addressable;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -20,7 +20,6 @@ class Address extends Data
         public ?string $city,
         public ?string $state,
         public ?string $postcode,
-        public ?string $deliveryInstructions,
         public ?string $countryId,
         public ?string $contactEmail,
         public ?string $contactPhone,
@@ -28,7 +27,7 @@ class Address extends Data
         public ?string $countryName,
     ) {}
 
-    public static function fromModel(Addressable $address): self
+    public static function fromModel(Model $address): self
     {
         return new self(
             id: $address->id,
@@ -42,7 +41,6 @@ class Address extends Data
             city: $address->city,
             state: $address->state,
             postcode: $address->postcode,
-            deliveryInstructions: $address->delivery_instructions,
             countryId: $address->country_id,
             contactEmail: $address->contact_email,
             contactPhone: $address->contact_phone,

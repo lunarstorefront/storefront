@@ -1,14 +1,12 @@
 <?php
 
-use Lunar\FieldTypes\Text;
-use Lunar\Models\Attribute;
-use Lunar\Models\AttributeGroup;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
-use Lunar\Models\Product;
-use Lunar\Models\ProductType;
+use Lunar\Kernel\FieldTypes\Text;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductType;
 use Lunar\Storefront\Data\AttributeDataValue;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 
@@ -21,17 +19,6 @@ beforeEach(function () {
 
 test('it maps model attributes to AttributeDataValue collection', function () {
     $productType = ProductType::factory()->create();
-
-    $attributeGroup = AttributeGroup::factory()->create([
-        'attributable_type' => Product::class,
-    ]);
-
-    $attribute = Attribute::factory()->create([
-        'attribute_type' => Product::class,
-        'attribute_group_id' => $attributeGroup->id,
-        'handle' => 'material',
-        'name' => collect(['en' => 'Material']),
-    ]);
 
     $product = Product::factory()
         ->for($productType)

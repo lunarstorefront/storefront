@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Lunar\Catalog\Models\Product as ProductModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
@@ -24,7 +25,7 @@ class Product extends Data
 
     }
 
-    public static function fromModel(\Lunar\Models\Contracts\Product $product): self
+    public static function fromModel(ProductModel $product): self
     {
         return new self(
             name: $product->attr('name'),

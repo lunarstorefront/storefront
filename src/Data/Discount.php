@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
+use Lunar\Promotions\Models\Discount as DiscountModel;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -13,7 +14,7 @@ class Discount extends Data
         public string $coupon,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\Discount $discount): self
+    public static function fromModel(DiscountModel $discount): self
     {
         return new self(
             id: $discount->id,

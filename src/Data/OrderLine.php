@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\DataTypes\Price;
+use Lunar\Sales\Models\OrderLine as OrderLineModel;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -15,21 +15,21 @@ class OrderLine extends Data
         public ?string $description,
         public ?string $option,
         public string $identifier,
-        public Price $unitPrice,
+        public int $unitPrice,
         public int $unitQuantity,
         public int $quantity,
-        public Price $subTotal,
-        public Price $discountTotal,
-        public Price $taxTotal,
-        public Price $total
+        public int $subTotal,
+        public int $discountTotal,
+        public int $taxTotal,
+        public int $total
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\OrderLine $orderLine): self
+    public static function fromModel(OrderLineModel $orderLine): self
     {
         return new self(
             id: $orderLine->id,
             type: $orderLine->type,
-            thumbnail: $orderLine->purchasable?->getThumbnail()?->getUrl('thumbnail'),
+            thumbnail: $orderLine->purchasable?->thumbnail?->getUrl('thumbnail'),
             description: $orderLine->description,
             option: $orderLine->option,
             identifier: $orderLine->identifier,

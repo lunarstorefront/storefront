@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
+use Lunar\Sales\Models\CartAddress as CartAddressModel;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
@@ -23,7 +24,6 @@ class CartAddress extends Data
         public ?string $state,
         #[Max(8)]
         public ?string $postcode,
-        public ?string $deliveryInstructions,
         public ?string $countryId,
         public ?string $countryIso,
         public ?string $countryName,
@@ -34,7 +34,7 @@ class CartAddress extends Data
         public ?string $shippingOption,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\CartAddress $cartAddress): self
+    public static function fromModel(CartAddressModel $cartAddress): self
     {
         return new self(
             id: $cartAddress->id,
@@ -48,7 +48,6 @@ class CartAddress extends Data
             city: $cartAddress->city,
             state: $cartAddress->state,
             postcode: $cartAddress->postcode ?: '',
-            deliveryInstructions: $cartAddress->delivery_instructions,
             countryId: $cartAddress->country?->id,
             countryIso: $cartAddress->country?->iso2,
             countryName: $cartAddress->country?->name,

@@ -46,11 +46,19 @@ abstract class TestCase extends Orchestra
         ]);
 
         $app['config']->set('lunar.kernel.database.connection', 'testing');
+        $app['config']->set('activitylog.database_connection', 'testing');
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
     protected function defineDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
+
+        $this->artisan('vendor:publish', [
+            '--provider' => ActivitylogServiceProvider::class,
+            '--tag' => 'activitylog-migrations',
+        ])->run();
+
+        $this->loadMigrationsFrom($this->app->databasePath('migrations'));
     }
 }

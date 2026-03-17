@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
+use Lunar\Kernel\Models\Customer as CustomerModel;
 use Spatie\LaravelData\Data;
 
 /** @typescript */
@@ -14,7 +15,7 @@ class Customer extends Data
         public ?string $taxIdentifier,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\Customer $customer): self
+    public static function fromModel(CustomerModel $customer): self
     {
         return new self(
             firstName: $customer->first_name,

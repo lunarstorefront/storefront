@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\DataTypes\Price;
+use Lunar\Sales\Models\Order as OrderModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -12,23 +12,23 @@ class Order extends Data
 {
     public function __construct(
         public string $id,
-        public string               $status,
-        public string               $reference,
-        public int|Price            $subTotal,
-        public int|Price            $discountTotal,
-        public int|Price            $shippingTotal,
-        public int|Price            $taxTotal,
-        public int|Price            $total,
-        public ?string              $notes,
-        public string               $currencyCode,
-        public ?\DateTime           $placedAt,
-        public Lazy|OrderAddress    $billingAddress,
-        public Lazy|OrderAddress    $shippingAddress,
-        public Lazy|Collection      $transactions,
+        public string $status,
+        public string $reference,
+        public int $subTotal,
+        public int $discountTotal,
+        public int $shippingTotal,
+        public int $taxTotal,
+        public int $total,
+        public ?string $notes,
+        public string $currencyCode,
+        public ?\DateTime $placedAt,
+        public Lazy|OrderAddress $billingAddress,
+        public Lazy|OrderAddress $shippingAddress,
+        public Lazy|Collection $transactions,
         public Lazy|Collection|null $physicalLines = null,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\Order $order): self
+    public static function fromModel(OrderModel $order): self
     {
         return new self(
             id: $order->id,

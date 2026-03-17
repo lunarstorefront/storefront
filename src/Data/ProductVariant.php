@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Lunar\Catalog\Models\ProductVariant as ProductVariantModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -17,7 +18,7 @@ class ProductVariant extends Data
         public Lazy|Collection $values,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\ProductVariant $variant): self
+    public static function fromModel(ProductVariantModel $variant): self
     {
         return new self(
             id: $variant->id,

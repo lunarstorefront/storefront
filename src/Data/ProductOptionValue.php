@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
+use Lunar\Catalog\Models\ProductOptionValue as ProductOptionValueModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -14,11 +15,11 @@ class ProductOptionValue extends Data
         public Lazy|ProductOption $productOption,
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\ProductOptionValue $productOptionValue): self
+    public static function fromModel(ProductOptionValueModel $productOptionValue): self
     {
         return new self(
             id: $productOptionValue->id,
-            name: $productOptionValue->translate('name'),
+            name: (string) $productOptionValue->name,
             productOption: Lazy::whenLoaded('option', $productOptionValue, fn () => ProductOption::from($productOptionValue->option))
         );
     }

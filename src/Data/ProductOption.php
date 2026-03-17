@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Lunar\Catalog\Models\ProductOption as ProductOptionModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -17,11 +18,11 @@ class ProductOption extends Data
         public Lazy|Collection $values
     ) {}
 
-    public static function fromModel(\Lunar\Models\Contracts\ProductOption $productOption): self
+    public static function fromModel(ProductOptionModel $productOption): self
     {
         return new self(
             id: $productOption->id,
-            name: $productOption->translate('name'),
+            name: (string) $productOption->name,
             handle: $productOption->handle,
             values: Lazy::whenLoaded('values', $productOption, fn () => ProductOptionValue::collect($productOption->values))
         );
