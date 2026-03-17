@@ -2,15 +2,15 @@
 
 namespace Lunar\Storefront\Tests;
 
-use Cartalyst\Converter\Laravel\ConverterServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
-use Lunar\LunarServiceProvider;
+use Lunar\Catalog\CatalogServiceProvider;
+use Lunar\Kernel\KernelServiceProvider;
+use Lunar\Sales\SalesServiceProvider;
 use Lunar\Storefront\StorefrontServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
-use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 
 abstract class TestCase extends Orchestra
@@ -28,10 +28,10 @@ abstract class TestCase extends Orchestra
             NestedSetServiceProvider::class,
             ActivitylogServiceProvider::class,
             MediaLibraryServiceProvider::class,
-            ConverterServiceProvider::class,
             LaravelDataServiceProvider::class,
-            BlinkServiceProvider::class,
-            LunarServiceProvider::class,
+            KernelServiceProvider::class,
+            CatalogServiceProvider::class,
+            SalesServiceProvider::class,
             StorefrontServiceProvider::class,
         ];
     }
@@ -45,13 +45,12 @@ abstract class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
-        $app['config']->set('lunar.database.connection', 'testing');
+        $app['config']->set('lunar.kernel.database.connection', 'testing');
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
     protected function defineDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
-        $this->loadMigrationsFrom(__DIR__ . '/../vendor/lunarphp/core/database/migrations');
     }
 }
