@@ -1,9 +1,9 @@
 <?php
 
 use Lunar\FieldTypes\Text;
-use Lunar\Models\Collection;
-use Lunar\Models\CollectionGroup;
-use Lunar\Models\Language;
+use Lunar\Catalog\Models\Collection;
+use Lunar\Catalog\Models\CollectionGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionTree;
 use Lunar\Storefront\Data\Collection as CollectionData;
 

@@ -1,12 +1,12 @@
 <?php
 
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
-use Lunar\Models\Product;
-use Lunar\Models\ProductAssociation;
-use Lunar\Models\ProductType;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductAssociation;
+use Lunar\Catalog\Models\ProductType;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetProductAssociations;
 
 beforeEach(function () {
@@ -91,7 +91,7 @@ test('it can filter by association type', function () {
     expect($all)->toHaveCount(2);
 
     // Filter by cross-sell type
-    $crossSells = $action->get($product, \Lunar\Base\Enums\ProductAssociation::CROSS_SELL);
+    $crossSells = $action->get($product, \Lunar\Catalog\Enums\ProductAssociationType::CrossSell);
     expect($crossSells)->toHaveCount(1)
         ->and($crossSells->first()->target->id)->toBe($crossSellProduct->id);
 });

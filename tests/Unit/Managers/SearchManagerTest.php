@@ -1,9 +1,9 @@
 <?php
 
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Contracts\SearchManager as SearchManagerContract;
 use Lunar\Storefront\Managers\SearchManager;
 

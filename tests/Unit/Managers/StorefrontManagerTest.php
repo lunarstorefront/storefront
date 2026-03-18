@@ -56,20 +56,20 @@ test('it sets locale in session', function () {
 });
 
 test('it can set currency', function () {
-    \Lunar\Models\Currency::factory()->create([
+    \Lunar\Kernel\Models\Currency::factory()->create([
         'code' => 'USD',
         'default' => true,
     ]);
 
-    $currency = \Lunar\Models\Currency::factory()->create([
+    $currency = \Lunar\Kernel\Models\Currency::factory()->create([
         'code' => 'EUR',
         'default' => false,
     ]);
 
-    \Lunar\Models\Channel::factory()->create(['default' => true]);
-    \Lunar\Models\CustomerGroup::factory()->create(['default' => true]);
+    \Lunar\Kernel\Models\Channel::factory()->create(['default' => true]);
+    \Lunar\Kernel\Models\CustomerGroup::factory()->create(['default' => true]);
 
     $this->manager->setCurrency('EUR');
 
-    expect(\Lunar\Facades\StorefrontSession::getCurrency()->code)->toBe('EUR');
+    expect(\Lunar\Sales\Facades\CartSession::getCurrency()->code)->toBe('EUR');
 });

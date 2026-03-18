@@ -1,8 +1,8 @@
 <?php
 
 use Lunar\FieldTypes\Text;
-use Lunar\Models\Collection;
-use Lunar\Models\Language;
+use Lunar\Catalog\Models\Collection;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Data\Breadcrumb;
 use Lunar\Storefront\Managers\CollectionManager;
 

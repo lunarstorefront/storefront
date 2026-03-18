@@ -1,10 +1,10 @@
 <?php
 
-use Lunar\Models\Brand;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
+use Lunar\Catalog\Models\Brand;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Contracts\BrandManager as BrandManagerContract;
 use Lunar\Storefront\Managers\BrandManager;
 

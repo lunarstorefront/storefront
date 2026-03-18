@@ -1,16 +1,16 @@
 <?php
 
 use Lunar\FieldTypes\Text;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
-use Lunar\Models\Product;
-use Lunar\Models\ProductOption;
-use Lunar\Models\ProductOptionValue;
-use Lunar\Models\ProductType;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductOption;
+use Lunar\Catalog\Models\ProductOptionValue;
+use Lunar\Catalog\Models\ProductType;
+use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductVariantByProvidedOptions;
 use Lunar\Storefront\Managers\VariantManager;
 
@@ -159,7 +159,7 @@ test('it eager loads prices and tax class relations', function () {
         ->create();
     $variant->values()->attach($red);
 
-    \Lunar\Models\Price::factory()->create([
+    \Lunar\Catalog\Models\Price::factory()->create([
         'priceable_type' => ProductVariant::class,
         'priceable_id' => $variant->id,
         'currency_id' => $currency->id,

@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
-use Lunar\Models\Product;
-use Lunar\Models\ProductType;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductType;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetProductBySlug;
 use Lunar\Storefront\Data\Product as ProductData;
 

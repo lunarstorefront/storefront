@@ -1,10 +1,10 @@
 <?php
 
-use Lunar\Facades\StorefrontSession;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Language;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Kernel\Models\CustomerGroup;
+use Lunar\Kernel\Models\Language;
+use Lunar\Sales\Facades\CartSession;
 use Lunar\Storefront\Actions\SetCurrency;
 
 beforeEach(function () {
@@ -27,7 +27,7 @@ test('it sets currency by code', function () {
     $action = new SetCurrency();
     $action->set('EUR');
 
-    expect(StorefrontSession::getCurrency()->code)->toBe('EUR');
+    expect(CartSession::getCurrency()->code)->toBe('EUR');
 });
 
 test('it uses default currency when code is null', function () {
@@ -49,8 +49,8 @@ test('it uses default currency when code is null', function () {
     $action->set(null);
 
     // This tests the behavior when currencyCode is null
-    // The code fetches from StorefrontSession::getCurrency()
-    expect(StorefrontSession::getCurrency())->not->toBeNull();
+    // The code fetches from CartSession::getCurrency()
+    expect(CartSession::getCurrency())->not->toBeNull();
 });
 
 test('it sets currency to default when code not found', function () {
@@ -68,5 +68,5 @@ test('it sets currency to default when code not found', function () {
 
     // If currency is null, this would fail
     // Let's check current behavior
-    expect(StorefrontSession::getCurrency())->toBeNull();
+    expect(CartSession::getCurrency())->toBeNull();
 })->skip('Investigating: What should happen when currency code is not found?');
