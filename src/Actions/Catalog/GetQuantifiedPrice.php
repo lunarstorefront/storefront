@@ -2,8 +2,7 @@
 
 namespace Lunar\Storefront\Actions\Catalog;
 
-use Lunar\Base\DataTransferObjects\PricingResponse;
-use Lunar\DataTypes\Price;
+use Lunar\Catalog\DataObjects\PricingResponse;
 use Lunar\Storefront\Data\Currency;
 
 class GetQuantifiedPrice
@@ -12,29 +11,18 @@ class GetQuantifiedPrice
     {
         $price = $pricingResponse->matched;
 
-        $unitPriceIncTax = $price->priceIncTax();
-        $unitPriceExTax = $price->priceExTax();
-
-        $quantifiedPriceIncTax = (int) round($unitPriceIncTax->unitDecimal(rounding: false) * $quantity * 100);
-        $quantifiedPriceExTax = (int) round($unitPriceExTax->unitDecimal(rounding: false) * $quantity * 100);
-
-        $quantifiedIncTax = new Price(
-            $quantifiedPriceIncTax,
-            $price->currency,
-            1,
-        );
-
-        $quantifiedExTax = new Price(
-            $quantifiedPriceExTax,
-            $price->currency,
-            1,
-        );
+        $unitPrice = $price->price;
+        $quantifiedPrice = (int) round($unitPrice * $quantity);
 
         return new \Lunar\Storefront\Data\Price(
-            exclTax: $quantifiedExTax,
-            inclTax: $quantifiedIncTax,
+            exclTax: $quantifiedPrice,
+            inclTax: $quantifiedPrice,
             comparePriceExcTax: null,
             comparePriceIncTax: null,
+            formattedExclTax: null,
+            formattedInclTax: null,
+            formattedComparePriceExcTax: null,
+            formattedComparePriceIncTax: null,
             minQuantity: $price->min_quantity,
             currency: Currency::from($price->currency),
         );

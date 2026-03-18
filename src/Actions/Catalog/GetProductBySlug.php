@@ -4,7 +4,7 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Lunar\Models\Product;
+use Lunar\Catalog\Models\Product;
 use Lunar\Storefront\Data\Collection;
 
 class GetProductBySlug

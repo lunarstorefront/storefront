@@ -4,8 +4,8 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Lunar\Models\Contracts\Product;
-use Lunar\Models\ProductVariant;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductVariant;
 use Lunar\Storefront\Managers\VariantManager;
 
 class GetProductVariantByProvidedOptions

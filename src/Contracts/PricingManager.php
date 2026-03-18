@@ -2,8 +2,8 @@
 
 namespace Lunar\Storefront\Contracts;
 
-use Lunar\Base\DataTransferObjects\PricingResponse;
-use Lunar\Base\Purchasable;
+use Lunar\Catalog\DataObjects\PricingResponse;
+use Lunar\Kernel\Contracts\Purchasable;
 use Lunar\Storefront\Data\Price;
 
 interface PricingManager

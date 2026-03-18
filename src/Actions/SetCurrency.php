@@ -2,10 +2,9 @@
 
 namespace Lunar\Storefront\Actions;
 
-use Lunar\Facades\CartSession;
-use Lunar\Facades\Pricing;
-use Lunar\Facades\StorefrontSession;
-use Lunar\Models\Currency;
+use Lunar\Catalog\Facades\Pricing;
+use Lunar\Kernel\Models\Currency;
+use Lunar\Sales\Facades\CartSession;
 
 class SetCurrency
 {
@@ -15,10 +14,9 @@ class SetCurrency
             $currencyCode,
             fn ($query, $value) => $query->where('code', $value),
             fn ($query) => $query->where('default', true),
-        )->first() : StorefrontSession::getCurrency();
+        )->first() : CartSession::getCurrency();
 
         CartSession::setCurrency($currency);
         Pricing::currency($currency);
-        StorefrontSession::setCurrency($currency);
     }
 }

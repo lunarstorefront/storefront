@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Contracts;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Lunar\Models\Brand;
+use Lunar\Catalog\Models\Brand;
 
 interface BrandManager
 {

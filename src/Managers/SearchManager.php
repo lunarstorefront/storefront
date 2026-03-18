@@ -4,9 +4,9 @@ namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Str;
 use Laravel\Scout\Scout;
-use Lunar\Models\Contracts\Collection;
-use Lunar\Models\Product;
-use Lunar\Search\Data\SearchResults;
+use Lunar\Catalog\Models\Collection;
+use Lunar\Catalog\Models\Product;
+use Lunar\Search\DataObjects\SearchResults;
 use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
 class SearchManager implements \Lunar\Storefront\Contracts\SearchManager

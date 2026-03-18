@@ -4,7 +4,7 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Lunar\Storefront\Data\Breadcrumb;
 use Illuminate\Support\Collection as LaravelCollection;
-use Lunar\Models\Collection;
+use Lunar\Catalog\Models\Collection;
 
 class GetCollectionBreadcrumbs
 {

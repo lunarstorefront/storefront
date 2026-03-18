@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Contracts;
 
 use Illuminate\Support\Collection;
-use Lunar\Models\Contracts\Product;
-use Lunar\Models\Contracts\ProductVariant;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductVariant;
 
 interface VariantManager
 {

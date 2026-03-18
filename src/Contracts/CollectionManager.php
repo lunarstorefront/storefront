@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Contracts;
 
-use Lunar\Models\Contracts\Collection;
+use Lunar\Catalog\Models\Collection;
 
 interface CollectionManager
 {

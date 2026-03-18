@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Actions\Catalog;
 
-use Lunar\Search\Data\SearchResults;
+use Lunar\Search\DataObjects\SearchResults;
 use Lunar\Search\Facades\Search;
 
 class SearchProducts

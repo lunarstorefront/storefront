@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Collection;
-use Lunar\Base\Enums\ProductAssociation;
-use Lunar\Models\Contracts\Product;
+use Lunar\Catalog\Enums\ProductAssociationType;
+use Lunar\Catalog\Models\Product;
 use Lunar\Storefront\Actions\Catalog\GetProductAssociations;
 use Lunar\Storefront\Actions\Catalog\GetProductBySlug;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;

@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
-use Lunar\Base\Enums\Concerns\ProvidesProductAssociationType;
-use Lunar\Facades\StorefrontSession;
-use Lunar\Models\Contracts\Product;
+use Lunar\Catalog\Enums\ProductAssociationType;
+use Lunar\Catalog\Models\Product;
+use Lunar\Sales\Facades\CartSession;
 
 class GetProductAssociations
 {
-    public function get(Product $product, ?ProvidesProductAssociationType $type = null, bool $inverse = false): Collection
+    public function get(Product $product, ?ProductAssociationType $type = null, bool $inverse = false): Collection
     {
-        $currency = StorefrontSession::getCurrency();
+        $currency = CartSession::getCurrency();
 
         return ($inverse ? $product->inverseAssociations() : $product->associations())->when(
             $type,
@@ -22,7 +22,7 @@ class GetProductAssociations
         )->with(
             match ($inverse) {
                 true =>  [
-                    'parent' => fn (BelongsTo $query) => $query->withoutTrashed(),
+                    'parent',
                     'parent.defaultUrl',
                     'parent.thumbnail' => fn (MorphOne $query) => $query->where('collection_name', config('lunar.media.collection')),
                     'parent.prices' => fn ($query) => $query->where('currency_id', $currency->id),
@@ -31,7 +31,7 @@ class GetProductAssociations
                     'parent.media',
                 ],
                 false => [
-                    'target' => fn (BelongsTo $query) => $query->withoutTrashed(),
+                    'target',
                     'target.defaultUrl',
                     'target.thumbnail' => fn (MorphOne $query) => $query->where('collection_name', config('lunar.media.collection')),
                     'target.prices' => fn ($query) => $query->where('currency_id', $currency->id),

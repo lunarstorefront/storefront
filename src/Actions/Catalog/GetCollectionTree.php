@@ -9,7 +9,7 @@ class GetCollectionTree
 {
     public function get(string $group = 'main', int $maxDepth = 3)
     {
-        $collections = \Lunar\Models\Collection::whereHas(
+        $collections = \Lunar\Catalog\Models\Collection::whereHas(
             'group',
             fn (Builder $builder) => $builder->where('handle', $group)
         )->with(['defaultUrl'])

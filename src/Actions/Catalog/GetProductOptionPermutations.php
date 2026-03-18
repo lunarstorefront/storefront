@@ -4,9 +4,9 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Lunar\Models\Contracts\Product;
-use Lunar\Models\Contracts\ProductOption;
-use Lunar\Models\ProductOptionValue;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductOption;
+use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Managers\VariantManager;

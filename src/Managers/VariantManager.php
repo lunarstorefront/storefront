@@ -3,15 +3,15 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Facades\Crypt;
-use Lunar\Models\Contracts\Product;
-use Lunar\Models\Contracts\ProductVariant;
+use Lunar\Catalog\Models\Product;
+use Lunar\Catalog\Models\ProductVariant;
 use Lunar\Storefront\Actions\Catalog\GetProductVariantByProvidedOptions;
 
 class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
 {
     public function getBySku(string $sku): ?ProductVariant
     {
-        return \Lunar\Models\ProductVariant::whereSku($sku)->first();
+        return ProductVariant::whereSku($sku)->first();
     }
 
     public function encryptOptions(array $options): string

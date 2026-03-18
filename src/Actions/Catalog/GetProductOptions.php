@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
-use Lunar\Models\Contracts\Product;
+use Lunar\Catalog\Models\Product;
 use Lunar\Storefront\Data\ProductOption;
 
 class GetProductOptions

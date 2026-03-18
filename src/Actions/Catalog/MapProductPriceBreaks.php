@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
-use Lunar\Base\DataTransferObjects\PricingResponse;
+use Lunar\Catalog\DataObjects\PricingResponse;
 use Lunar\Storefront\Data\Price;
 use Lunar\Storefront\Data\PriceBreak;
 
@@ -20,7 +20,7 @@ class MapProductPriceBreaks
 
         $baseTiers = collect([
             new PriceBreak(
-                price: Price::from($basePrice),
+                price: Price::fromModel($basePrice),
                 lowerLimit: $min,
                 upperLimit: $priceBreaks->first()->min_quantity - 1,
             ),
@@ -31,7 +31,7 @@ class MapProductPriceBreaks
                 $upperLimit = $priceBreaks[$index + 1] ?? null;
 
                 return new PriceBreak(
-                    price: Price::from($priceBreak),
+                    price: Price::fromModel($priceBreak),
                     lowerLimit: $priceBreak->min_quantity,
                     upperLimit: $upperLimit ? $upperLimit->min_quantity - 1 : null,
                 );
