@@ -4,13 +4,21 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 /**
@@ -18,15 +26,14 @@ beforeEach(function () {
  * Full integration tests would require a running Meilisearch instance.
  * These tests verify the action class structure and parameter handling.
  */
-
 test('it can be instantiated', function () {
-    $action = new SearchProducts();
+    $action = new SearchProducts;
 
     expect($action)->toBeInstanceOf(SearchProducts::class);
 });
 
 test('it has handle method with correct signature', function () {
-    $action = new SearchProducts();
+    $action = new SearchProducts;
 
     $reflection = new ReflectionMethod($action, 'handle');
     $parameters = $reflection->getParameters();
@@ -58,7 +65,7 @@ test('it has handle method with correct signature', function () {
 test('sort direction validation accepts only asc and desc', function () {
     // This tests the internal logic by examining the code
     // The action validates sort direction and defaults to 'asc' if invalid
-    $action = new SearchProducts();
+    $action = new SearchProducts;
 
     $reflection = new ReflectionClass($action);
     $source = file_get_contents($reflection->getFileName());

@@ -9,15 +9,23 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
 use Lunar\Storefront\Data\PriceBreak;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
     $this->currency = Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $this->currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns empty collection when no price breaks', function () {
@@ -45,7 +53,7 @@ test('it returns empty collection when no price breaks', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new MapProductPriceBreaks();
+    $action = new MapProductPriceBreaks;
     $result = $action->map($pricingResponse);
 
     expect($result)->toBeEmpty();
@@ -84,7 +92,7 @@ test('it maps single price break with base price', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new MapProductPriceBreaks();
+    $action = new MapProductPriceBreaks;
     $result = $action->map($pricingResponse);
 
     // Should have base tier (1-9) and price break tier (10+)
@@ -149,7 +157,7 @@ test('it maps multiple price breaks in correct order', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new MapProductPriceBreaks();
+    $action = new MapProductPriceBreaks;
     $result = $action->map($pricingResponse);
 
     // Should have 4 tiers: base (1-9), 10-49, 50-99, 100+
@@ -202,7 +210,7 @@ test('it uses custom min value for base tier', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new MapProductPriceBreaks();
+    $action = new MapProductPriceBreaks;
     $result = $action->map($pricingResponse, min: 5);
 
     // Base tier should start at 5, not 1
@@ -261,7 +269,7 @@ test('it handles non-sequential keys after sorting', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new MapProductPriceBreaks();
+    $action = new MapProductPriceBreaks;
     $result = $action->map($pricingResponse);
 
     // This test verifies the boundaries are correct despite key ordering issues

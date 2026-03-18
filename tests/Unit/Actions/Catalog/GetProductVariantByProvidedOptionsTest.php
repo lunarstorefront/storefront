@@ -1,31 +1,40 @@
 <?php
 
-use Lunar\FieldTypes\Text;
+use Lunar\Catalog\Models\Price;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductOption;
 use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Catalog\Models\ProductType;
 use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductVariantByProvidedOptions;
 use Lunar\Storefront\Managers\VariantManager;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns null when hash is null', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     $result = $action->get($product, null);
 
     expect($result)->toBeNull();
@@ -35,7 +44,7 @@ test('it returns null when hash is empty string', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     // Empty string is truthy for the null check but decrypts to empty array
     $result = $action->get($product, '');
 
@@ -63,12 +72,12 @@ test('it finds variant by encrypted options hash', function () {
     $variant->values()->attach($red);
 
     // Create hash using VariantManager (same as GetProductOptionPermutations)
-    $variantManager = new VariantManager();
+    $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
         $colorOption->id => $red->id,
     ]);
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     $result = $action->get($product, $hash);
 
     expect($result)->not->toBeNull()
@@ -79,7 +88,7 @@ test('it returns null for invalid hash', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     $result = $action->get($product, 'invalid-hash-value');
 
     // Invalid hash decrypts to empty array, which should return first variant or null
@@ -126,13 +135,13 @@ test('it finds correct variant with multiple options', function () {
         ->create(['sku' => 'RED-SMALL']);
     $otherVariant->values()->attach([$red->id, $small->id]);
 
-    $variantManager = new VariantManager();
+    $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
         $colorOption->id => $blue->id,
         $sizeOption->id => $large->id,
     ]);
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     $result = $action->get($product, $hash);
 
     expect($result)->not->toBeNull()
@@ -159,19 +168,19 @@ test('it eager loads prices and tax class relations', function () {
         ->create();
     $variant->values()->attach($red);
 
-    \Lunar\Catalog\Models\Price::factory()->create([
+    Price::factory()->create([
         'priceable_type' => ProductVariant::class,
         'priceable_id' => $variant->id,
         'currency_id' => $currency->id,
         'price' => 1000,
     ]);
 
-    $variantManager = new VariantManager();
+    $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
         $colorOption->id => $red->id,
     ]);
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     $result = $action->get($product, $hash);
 
     expect($result->relationLoaded('prices'))->toBeTrue()
@@ -205,12 +214,12 @@ test('it returns null when variant does not belong to product', function () {
         ->create();
     $variant->values()->attach($red);
 
-    $variantManager = new VariantManager();
+    $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
         $colorOption->id => $red->id,
     ]);
 
-    $action = new GetProductVariantByProvidedOptions();
+    $action = new GetProductVariantByProvidedOptions;
     // Query product1, but variant belongs to product2
     $result = $action->get($product1, $hash);
 

@@ -1,5 +1,6 @@
 <?php
 
+use Lunar\Catalog\Enums\ProductAssociationType;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductAssociation;
 use Lunar\Catalog\Models\ProductType;
@@ -7,20 +8,28 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Storefront\Actions\Catalog\GetProductAssociations;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
     $this->currency = Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $this->currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns empty collection when product has no associations', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductAssociations();
+    $action = new GetProductAssociations;
     $result = $action->get($product);
 
     expect($result)->toBeEmpty();
@@ -45,7 +54,7 @@ test('it returns product associations', function () {
         'type' => 'cross-sell',
     ]);
 
-    $action = new GetProductAssociations();
+    $action = new GetProductAssociations;
     $result = $action->get($product);
 
     expect($result)->toHaveCount(1)
@@ -84,14 +93,14 @@ test('it can filter by association type', function () {
         'type' => 'up-sell',
     ]);
 
-    $action = new GetProductAssociations();
+    $action = new GetProductAssociations;
 
     // Get all associations
     $all = $action->get($product);
     expect($all)->toHaveCount(2);
 
     // Filter by cross-sell type
-    $crossSells = $action->get($product, \Lunar\Catalog\Enums\ProductAssociationType::CrossSell);
+    $crossSells = $action->get($product, ProductAssociationType::CrossSell);
     expect($crossSells)->toHaveCount(1)
         ->and($crossSells->first()->target->id)->toBe($crossSellProduct->id);
 });
@@ -115,7 +124,7 @@ test('it can get inverse associations', function () {
         'type' => 'cross-sell',
     ]);
 
-    $action = new GetProductAssociations();
+    $action = new GetProductAssociations;
 
     // Normal direction: parent -> child (target)
     $normalResult = $action->get($parentProduct, inverse: false);
@@ -147,7 +156,7 @@ test('it eager loads target product relations', function () {
         'type' => 'cross-sell',
     ]);
 
-    $action = new GetProductAssociations();
+    $action = new GetProductAssociations;
     $result = $action->get($product);
 
     $association = $result->first();

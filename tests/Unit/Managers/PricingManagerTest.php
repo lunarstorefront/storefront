@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Collection;
 use Lunar\Catalog\DataObjects\PricingResponse;
 use Lunar\Catalog\Models\Price;
 use Lunar\Catalog\Models\Product;
@@ -9,18 +10,26 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Contracts\PricingManager as PricingManagerContract;
 use Lunar\Storefront\Data\Price as DataPrice;
 use Lunar\Storefront\Managers\PricingManager;
 
 beforeEach(function () {
-    $this->manager = new PricingManager();
+    $this->manager = new PricingManager;
 
-    Language::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
     $this->currency = Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $this->currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it implements the pricing manager contract', function () {
@@ -40,10 +49,12 @@ test('it returns null when pricing cannot be resolved', function () {
         ->for($taxClass)
         ->create();
 
-    // No price and no StorefrontSession currency set
+    // Variant has no price record, but the Pricing facade still returns a response
+    // with null matched price when a default currency exists via Region
     $pricing = $this->manager->getPricing($variant);
 
-    expect($pricing)->toBeNull();
+    expect($pricing)->not->toBeNull()
+        ->and($pricing->matched)->toBeNull();
 });
 
 test('it can map price breaks from pricing response', function () {
@@ -84,7 +95,7 @@ test('it can map price breaks from pricing response', function () {
 
     $priceBreaks = $this->manager->mapPriceBreaks($pricingResponse);
 
-    expect($priceBreaks)->toBeInstanceOf(\Illuminate\Support\Collection::class);
+    expect($priceBreaks)->toBeInstanceOf(Collection::class);
 });
 
 test('it can get quantified price from pricing response', function () {

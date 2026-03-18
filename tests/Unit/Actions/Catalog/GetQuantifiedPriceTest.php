@@ -9,19 +9,27 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetQuantifiedPrice;
 use Lunar\Storefront\Data\Price as PriceData;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
     $this->currency = Currency::factory()->create([
         'default' => true,
         'code' => 'USD',
         'decimal_places' => 2,
     ]);
-    Channel::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $this->currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns price data object', function () {
@@ -49,7 +57,7 @@ test('it returns price data object', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new GetQuantifiedPrice();
+    $action = new GetQuantifiedPrice;
     $result = $action->get($pricingResponse, 1);
 
     expect($result)->toBeInstanceOf(PriceData::class);
@@ -80,14 +88,14 @@ test('it multiplies price by quantity', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new GetQuantifiedPrice();
+    $action = new GetQuantifiedPrice;
 
     // Quantity of 5 should give 5000 ($50.00)
     $result = $action->get($pricingResponse, 5);
 
     // The result prices are in minor units (cents)
-    expect($result->inclTax->value)->toBe(5000)
-        ->and($result->exclTax->value)->toBe(5000);
+    expect($result->inclTax)->toBe(5000)
+        ->and($result->exclTax)->toBe(5000);
 });
 
 test('it includes currency information', function () {
@@ -115,7 +123,7 @@ test('it includes currency information', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new GetQuantifiedPrice();
+    $action = new GetQuantifiedPrice;
     $result = $action->get($pricingResponse, 1);
 
     expect($result->currency)->not->toBeNull()
@@ -147,7 +155,7 @@ test('it preserves min quantity from price', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new GetQuantifiedPrice();
+    $action = new GetQuantifiedPrice;
     $result = $action->get($pricingResponse, 15);
 
     expect($result->minQuantity)->toBe(10);
@@ -178,11 +186,11 @@ test('it handles decimal quantities correctly', function () {
         customerGroupPrices: collect([]),
     );
 
-    $action = new GetQuantifiedPrice();
+    $action = new GetQuantifiedPrice;
 
     // Test with quantity that could cause floating point issues
     $result = $action->get($pricingResponse, 3);
 
     // $10.00 * 3 = $30.00 = 3000 cents
-    expect($result->inclTax->value)->toBe(3000);
+    expect($result->inclTax)->toBe(3000);
 });

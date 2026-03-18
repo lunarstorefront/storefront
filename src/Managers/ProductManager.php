@@ -30,7 +30,7 @@ class ProductManager implements \Lunar\Storefront\Contracts\ProductManager
         return (new GetProductOptions)->get($product);
     }
 
-    public function getAssociations(Product $product, ProductAssociation $association): Collection
+    public function getAssociations(Product $product, ProductAssociationType $association): Collection
     {
         $associations = (new GetProductAssociations)->get($product, type: $association);
 

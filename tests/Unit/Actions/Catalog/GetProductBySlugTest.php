@@ -7,14 +7,22 @@ use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Storefront\Actions\Catalog\GetProductBySlug;
 use Lunar\Storefront\Data\Product as ProductData;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns product data by default', function () {
@@ -23,7 +31,7 @@ test('it returns product data by default', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -31,7 +39,7 @@ test('it returns product data by default', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $result = $action->get('test-product');
 
     expect($result)->toBeInstanceOf(ProductData::class);
@@ -43,7 +51,7 @@ test('it returns model when asModel is true', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -51,7 +59,7 @@ test('it returns model when asModel is true', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $result = $action->get('test-product', asModel: true);
 
     expect($result)->toBeInstanceOf(Product::class)
@@ -59,7 +67,7 @@ test('it returns model when asModel is true', function () {
 });
 
 test('it throws exception for non-existent product', function () {
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $action->get('non-existent');
 })->throws(ModelNotFoundException::class);
 
@@ -77,7 +85,7 @@ test('it only finds published products', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $action->get('draft-product');
 })->throws(ModelNotFoundException::class);
 
@@ -87,7 +95,7 @@ test('it only matches default urls', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'non-default',
@@ -101,7 +109,7 @@ test('it only matches default urls', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
 
     // Non-default URL should not be found
     expect(fn () => $action->get('non-default'))->toThrow(ModelNotFoundException::class);
@@ -117,7 +125,7 @@ test('it eager loads product type with mapped attributes', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -125,11 +133,11 @@ test('it eager loads product type with mapped attributes', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $result = $action->get('test-product', asModel: true);
 
     expect($result->relationLoaded('productType'))->toBeTrue()
-        ->and($result->productType->relationLoaded('mappedAttributes'))->toBeTrue();
+        ->and($result->productType->relationLoaded('productBlueprint'))->toBeTrue();
 });
 
 test('it eager loads images and thumbnail', function () {
@@ -138,7 +146,7 @@ test('it eager loads images and thumbnail', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -146,9 +154,9 @@ test('it eager loads images and thumbnail', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetProductBySlug();
+    $action = new GetProductBySlug;
     $result = $action->get('test-product', asModel: true);
 
-    expect($result->relationLoaded('images'))->toBeTrue()
+    expect($result->relationLoaded('media'))->toBeTrue()
         ->and($result->relationLoaded('thumbnail'))->toBeTrue();
 });

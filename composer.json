@@ -83,7 +83,8 @@
         "orchestra/testbench": "^9.0|^10.0",
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0",
-        "larastan/larastan": "^3.9"
+        "larastan/larastan": "^3.9",
+        "laravel/pint": "^1.29"
     },
     "autoload-dev": {
         "psr-4": {

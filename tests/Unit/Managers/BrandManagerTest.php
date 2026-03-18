@@ -1,20 +1,30 @@
 <?php
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Lunar\Catalog\Models\Brand;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Storefront\Contracts\BrandManager as BrandManagerContract;
 use Lunar\Storefront\Managers\BrandManager;
 
 beforeEach(function () {
-    $this->manager = new BrandManager();
+    $this->manager = new BrandManager;
 
     $this->language = Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $this->language->id,
+    ]);
 });
 
 test('it implements the brand manager contract', function () {
@@ -38,7 +48,7 @@ test('it can get brand by slug', function () {
 
 test('it throws when brand slug not found', function () {
     $this->manager->getBySlug('nonexistent');
-})->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+})->throws(ModelNotFoundException::class);
 
 test('it returns paginated brands with default urls', function () {
     $brandA = Brand::factory()->create(['name' => 'Acme']);
@@ -61,7 +71,7 @@ test('it returns paginated brands with default urls', function () {
 
     $result = $this->manager->getPaginated();
 
-    expect($result)->toBeInstanceOf(\Illuminate\Contracts\Pagination\LengthAwarePaginator::class)
+    expect($result)->toBeInstanceOf(LengthAwarePaginator::class)
         ->and($result->total())->toBe(2);
 });
 

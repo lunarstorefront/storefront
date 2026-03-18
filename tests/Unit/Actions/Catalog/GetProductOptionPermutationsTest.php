@@ -1,32 +1,40 @@
 <?php
 
-use Lunar\FieldTypes\Text;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductOption;
 use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Catalog\Models\ProductType;
 use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
 use Lunar\Storefront\Actions\Catalog\GetProductOptions;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns empty collection when no options', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductOptionPermutations();
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get(collect(), $product);
 
     expect($permutations)->toBeEmpty();
@@ -63,8 +71,8 @@ test('it generates permutations for single option', function () {
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     // 2 colors = 2 permutations
@@ -114,8 +122,8 @@ test('it generates cartesian product for multiple options', function () {
         $sizeOption->id => ['position' => 2],
     ]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     // 2 colors x 2 sizes = 4 permutations
@@ -164,8 +172,8 @@ test('it indicates which permutations have variants', function () {
         $sizeOption->id => ['position' => 2],
     ]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     // Both permutations should exist
@@ -202,8 +210,8 @@ test('permutation includes hash for variant lookup', function () {
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     $permutation = $permutations->first();
@@ -234,8 +242,8 @@ test('permutation includes value names for display', function () {
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     $permutation = $permutations->first();
@@ -266,7 +274,7 @@ test('it detects backorder availability', function () {
     $variantRed = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 0, 'purchasable' => 'in_stock']);
+        ->create(['stock' => 0, 'purchasable' => 'in-stock']);
     $variantRed->values()->attach($red);
 
     // Blue variant: always purchasable (backorder)
@@ -278,8 +286,8 @@ test('it detects backorder availability', function () {
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $options = (new GetProductOptions())->get($product);
-    $action = new GetProductOptionPermutations();
+    $options = (new GetProductOptions)->get($product);
+    $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
     $redPerm = $permutations->first(fn ($p) => in_array($red->id, array_values($p->values)));

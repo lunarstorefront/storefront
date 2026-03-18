@@ -1,7 +1,7 @@
 <?php
 
-use Lunar\FieldTypes\Text;
 use Lunar\Catalog\Models\Collection;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBreadcrumbs;
 use Lunar\Storefront\Data\Breadcrumb;
@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 test('it returns empty collection for null input', function () {
-    $action = new GetCollectionBreadcrumbs();
+    $action = new GetCollectionBreadcrumbs;
     $breadcrumbs = $action->get(null);
 
     expect($breadcrumbs)->toBeEmpty();
@@ -34,7 +34,7 @@ test('it returns single breadcrumb for root collection', function () {
 
     $collection->load('defaultUrl', 'ancestors.defaultUrl');
 
-    $action = new GetCollectionBreadcrumbs();
+    $action = new GetCollectionBreadcrumbs;
     $breadcrumbs = $action->get($collection);
 
     expect($breadcrumbs)->toHaveCount(1)
@@ -85,7 +85,7 @@ test('it includes ancestors in breadcrumbs', function () {
 
     $child->load('defaultUrl', 'ancestors.defaultUrl');
 
-    $action = new GetCollectionBreadcrumbs();
+    $action = new GetCollectionBreadcrumbs;
     $breadcrumbs = $action->get($child);
 
     expect($breadcrumbs)->toHaveCount(3);
@@ -130,7 +130,7 @@ test('breadcrumbs are in correct order from root to current', function () {
 
     $level2->load('defaultUrl', 'ancestors.defaultUrl');
 
-    $action = new GetCollectionBreadcrumbs();
+    $action = new GetCollectionBreadcrumbs;
     $breadcrumbs = $action->get($level2);
 
     // Should be: Root -> Level 1 -> Level 2

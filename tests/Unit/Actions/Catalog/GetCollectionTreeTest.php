@@ -1,8 +1,8 @@
 <?php
 
-use Lunar\FieldTypes\Text;
 use Lunar\Catalog\Models\Collection;
 use Lunar\Catalog\Models\CollectionGroup;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionTree;
 use Lunar\Storefront\Data\Collection as CollectionData;
@@ -15,11 +15,10 @@ beforeEach(function () {
  * Note: GetCollectionTree uses withDepth()->having() which is not supported by SQLite.
  * These tests would pass with MySQL/PostgreSQL but are skipped for the SQLite test database.
  */
-
 test('it returns empty collection when no collections exist', function () {
     CollectionGroup::factory()->create(['handle' => 'main']);
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
     $result = $action->get('main');
 
     expect($result)->toBeEmpty();
@@ -51,7 +50,7 @@ test('it returns collections for specified group', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
     $result = $action->get('main');
 
     expect($result)->toHaveCount(1);
@@ -72,7 +71,7 @@ test('it returns data objects', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
     $result = $action->get('main');
 
     expect($result->first())->toBeInstanceOf(CollectionData::class);
@@ -127,7 +126,7 @@ test('it respects max depth parameter', function () {
     ]);
     $level3->appendToNode($level2)->save();
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
 
     // Max depth 2 should only include root and level1 (depth 0 and 1)
     $result = $action->get('main', maxDepth: 2);
@@ -185,7 +184,7 @@ test('it returns hierarchical tree structure', function () {
     ]);
     $child2->appendToNode($parent)->save();
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
     $result = $action->get('main', maxDepth: 3);
 
     // Should have 1 root with 2 children
@@ -210,7 +209,7 @@ test('it eager loads default url', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionTree();
+    $action = new GetCollectionTree;
     $result = $action->get('main');
 
     // The data object should have the URL info

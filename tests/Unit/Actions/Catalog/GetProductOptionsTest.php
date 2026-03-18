@@ -1,30 +1,38 @@
 <?php
 
-use Lunar\FieldTypes\Text;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductOption;
 use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Catalog\Models\ProductType;
 use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductOptions;
 
 beforeEach(function () {
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it returns empty collection for product with no options', function () {
     $productType = ProductType::factory()->create();
     $product = Product::factory()->for($productType)->create();
 
-    $action = new GetProductOptions();
+    $action = new GetProductOptions;
     $options = $action->get($product);
 
     expect($options)->toBeEmpty();
@@ -52,7 +60,7 @@ test('it returns product options', function () {
     $variant->values()->attach($red);
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $action = new GetProductOptions();
+    $action = new GetProductOptions;
     $options = $action->get($product);
 
     expect($options)->toHaveCount(1)
@@ -96,7 +104,7 @@ test('it only returns option values that have variants for this product', functi
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $action = new GetProductOptions();
+    $action = new GetProductOptions;
     $options = $action->get($product);
 
     // The option should only have red and blue values, not green
@@ -139,7 +147,7 @@ test('it returns multiple options', function () {
         $sizeOption->id => ['position' => 2],
     ]);
 
-    $action = new GetProductOptions();
+    $action = new GetProductOptions;
     $options = $action->get($product);
 
     expect($options)->toHaveCount(2);
@@ -167,7 +175,7 @@ test('it eager loads values with their option relation', function () {
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
 
-    $action = new GetProductOptions();
+    $action = new GetProductOptions;
     $options = $action->get($product);
 
     $option = $options->first();

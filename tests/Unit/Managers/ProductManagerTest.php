@@ -1,26 +1,35 @@
 <?php
 
-use Lunar\FieldTypes\Text;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductOption;
 use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Catalog\Models\ProductType;
 use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Kernel\FieldTypes\Text;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Kernel\Models\TaxClass;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Managers\ProductManager;
 
 beforeEach(function () {
-    $this->manager = new ProductManager();
+    $this->manager = new ProductManager;
 
-    Language::factory()->create(['default' => true]);
-    Currency::factory()->create(['default' => true]);
-    Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
     CustomerGroup::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it can get product options', function () {
@@ -196,7 +205,7 @@ test('it can get product model by slug', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'published']);
+        ->create(['status' => 'active']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -211,4 +220,4 @@ test('it can get product model by slug', function () {
 
 test('it throws when product slug not found', function () {
     $this->manager->getModelBySlug('nonexistent');
-})->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+})->throws(ModelNotFoundException::class);

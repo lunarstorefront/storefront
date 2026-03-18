@@ -46,6 +46,7 @@ abstract class TestCase extends Orchestra
         ]);
 
         $app['config']->set('lunar.kernel.database.connection', 'testing');
+        $app['config']->set('lunar.kernel.urls.generator', null);
         $app['config']->set('activitylog.database_connection', 'testing');
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
@@ -57,6 +58,11 @@ abstract class TestCase extends Orchestra
         $this->artisan('vendor:publish', [
             '--provider' => ActivitylogServiceProvider::class,
             '--tag' => 'activitylog-migrations',
+        ])->run();
+
+        $this->artisan('vendor:publish', [
+            '--provider' => MediaLibraryServiceProvider::class,
+            '--tag' => 'medialibrary-migrations',
         ])->run();
 
         $this->loadMigrationsFrom($this->app->databasePath('migrations'));

@@ -1,15 +1,27 @@
 <?php
 
-use Lunar\FieldTypes\Text;
 use Lunar\Catalog\Models\Collection;
+use Lunar\Kernel\FieldTypes\Text;
+use Lunar\Kernel\Models\Channel;
+use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\Language;
+use Lunar\Kernel\Models\Region;
 use Lunar\Storefront\Data\Breadcrumb;
 use Lunar\Storefront\Managers\CollectionManager;
 
 beforeEach(function () {
-    $this->manager = new CollectionManager();
+    $this->manager = new CollectionManager;
 
-    Language::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
+
+    Region::factory()->create([
+        'default' => true,
+        'channel_id' => $channel->id,
+        'currency_id' => $currency->id,
+        'language_id' => $language->id,
+    ]);
 });
 
 test('it can get collection by slug', function () {

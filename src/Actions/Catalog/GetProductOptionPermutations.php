@@ -9,14 +9,11 @@ use Lunar\Catalog\Models\ProductOption;
 use Lunar\Catalog\Models\ProductOptionValue;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Facades\Storefront;
-use Lunar\Storefront\Managers\VariantManager;
 
 class GetProductOptionPermutations
 {
     /**
-     * @param Collection<ProductOption> $productOptions
-     * @param Product $product
-     * @return Collection
+     * @param  Collection<ProductOption>  $productOptions
      */
     public function get(Collection $productOptions, Product $product): Collection
     {
@@ -37,7 +34,7 @@ class GetProductOptionPermutations
 
             $variantQuery = $product->variants()
                 ->whereHas(
-                    relation:'values',
+                    relation: 'values',
                     callback: fn (Builder $query) => $query->whereIn((new ProductOptionValue)->getTable().'.id', $values->pluck('id')->all()),
                     operator: '=',
                     count: $values->count()
@@ -54,7 +51,7 @@ class GetProductOptionPermutations
                     fn ($value) => [(string) $value->product_option_id => $value->id]
                 )->toArray(),
                 valueNames: $values->mapWithKeys(
-                    fn ($value) => [(string) $value->option->translate('name') => $value->translate('name')]
+                    fn ($value) => [(string) $value->option->name => (string) $value->name]
                 )->toArray()
             );
         });
