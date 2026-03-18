@@ -35,7 +35,7 @@ class CartLine extends Data
             productId: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product_id),
             stockLevel: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getTotalInventory()),
             identifier: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getIdentifier()),
-            name: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->attr('name')),
+            name: Lazy::whenLoaded('purchasable', $cartLine, fn () => (string) $cartLine->purchasable->product->name),
             slug: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->defaultUrl?->slug),
             thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->thumbnail?->getUrl('thumbnail')),
             quantity: $cartLine->quantity,

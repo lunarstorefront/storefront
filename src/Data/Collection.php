@@ -27,8 +27,8 @@ class Collection extends Data
     public static function fromModel(CollectionModel $collection): self
     {
         return new self(
-            name: $collection->attr('name'),
-            description: $collection->attr('description'),
+            name: (string) $collection->name,
+            description: $collection->description ? (string) $collection->description : null,
             thumbnail: Lazy::whenLoaded('thumbnail', $collection, fn () => Media::from($collection->thumbnail)),
             children: Lazy::whenLoaded('children', $collection, fn () => self::collect($collection->children)),
             url: $collection->defaultUrl ? Url::from($collection->defaultUrl) : null,

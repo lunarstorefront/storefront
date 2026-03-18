@@ -32,7 +32,7 @@ class GetCollectionBreadcrumbs
 
             $this->breadcrumbs->add(
                 Breadcrumb::from([
-                    'label' => $ancestor->attr('name'),
+                    'label' => (string) $ancestor->name,
                     'model' => 'collection',
                     'slug' => $ancestor->defaultUrl->slug,
                 ])
@@ -42,7 +42,7 @@ class GetCollectionBreadcrumbs
         if ($collection->defaultUrl) {
             $this->breadcrumbs->add(
                 Breadcrumb::from([
-                    'label' => $collection->attr('name'),
+                    'label' => (string) $collection->name,
                     'model' => 'collection',
                     'slug' => $collection->defaultUrl->slug,
                 ])
