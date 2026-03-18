@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Session;
+use Lunar\Kernel\Contracts\StorefrontContextInterface;
 use Lunar\Kernel\Models\Channel;
 use Lunar\Kernel\Models\Currency;
 use Lunar\Kernel\Models\CustomerGroup;
 use Lunar\Kernel\Models\Language;
 use Lunar\Kernel\Models\Region;
-use Lunar\Sales\Facades\CartSession;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
@@ -69,7 +69,7 @@ test('it can set currency', function () {
         'default' => true,
     ]);
 
-    $currency = Currency::factory()->create([
+    $eur = Currency::factory()->create([
         'code' => 'EUR',
         'default' => false,
     ]);
@@ -84,7 +84,16 @@ test('it can set currency', function () {
         'language_id' => $language->id,
     ]);
 
+    Region::factory()->create([
+        'default' => false,
+        'channel_id' => $channel->id,
+        'currency_id' => $eur->id,
+        'language_id' => $language->id,
+    ]);
+
     $this->manager->setCurrency('EUR');
 
-    expect(CartSession::getCurrency()->code)->toBe('EUR');
-})->skip('V2: SetCurrency needs rework — CartSession::setCurrency only affects active carts, not the StorefrontContext');
+    $context = app(StorefrontContextInterface::class);
+
+    expect($context->getCurrency()->code)->toBe('EUR');
+});
