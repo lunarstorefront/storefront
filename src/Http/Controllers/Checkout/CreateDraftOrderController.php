@@ -4,8 +4,8 @@ namespace Lunar\Storefront\Http\Controllers\Checkout;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Lunar\Facades\CartSession;
-use Lunar\Facades\Payments;
+use Lunar\Sales\Facades\CartSession;
+use Lunar\Sales\Facades\Payments;
 use Lunar\Stripe\Facades\Stripe;
 use Stripe\PaymentIntent;
 
@@ -36,7 +36,7 @@ class CreateDraftOrderController extends Controller
         try {
             Stripe::updateIntentById(
                 Stripe::getCartIntentId($cart), [
-                    'amount' => $order->total->value,
+                    'amount' => $order->total,
                     'metadata' => [
                         'order_id' => $order->id,
                     ],

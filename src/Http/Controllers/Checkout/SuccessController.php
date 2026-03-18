@@ -5,8 +5,8 @@ namespace Lunar\Storefront\Http\Controllers\Checkout;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Lunar\Facades\CartSession;
-use Lunar\Models\Order;
+use Lunar\Sales\Facades\CartSession;
+use Lunar\Sales\Models\Order;
 use Lunar\Storefront\Data\Order as OrderData;
 
 class SuccessController extends Controller

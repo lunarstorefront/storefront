@@ -4,9 +4,9 @@ namespace Lunar\Storefront\Rules;
 
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Lunar\Models\CartLine;
-use Lunar\Models\Contracts\Cart;
-use Lunar\Models\ProductVariant;
+use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Sales\Models\Cart;
+use Lunar\Sales\Models\CartLine;
 
 class InStock implements ValidationRule, DataAwareRule
 {

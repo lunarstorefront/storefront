@@ -4,12 +4,9 @@ namespace Lunar\Storefront;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lunar\Base\CheckoutManagerInterface;
-use Lunar\Facades\CartSession;
-use Lunar\Facades\Checkout;
-use Lunar\Models\CartLine;
-use Lunar\Models\ProductVariant;
-use Lunar\Rules\ValidCoupon;
+use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Sales\Facades\CartSession;
+use Lunar\Sales\Models\CartLine;
 use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
@@ -79,7 +76,7 @@ class RouteRegistrar
             $request->validate([
                 'coupon' => [
                     'required',
-                    new ValidCoupon,
+                    new Rules\ValidCoupon,
                 ],
             ]);
 
@@ -107,18 +104,6 @@ class RouteRegistrar
         Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
         Route::post('/api/currency', SetCurrencyController::class)->middleware(['web'])->name('storefront.currency');
         Route::get('/api/auth/codes', GetTwoFactorCodesController::class)->middleware(['web', 'auth'])->name('auth.codes');
-
-        Route::post('checkout/elements', function (Request $request, CheckoutManagerInterface $checkoutManager) {
-            $cart = CartSession::current();
-            $element = Checkout::cart($cart)->hydrate()->getElement($request->input('handle'));
-
-            $request->validate($element->rules());
-
-            $element->store($request->all());
-
-            return back();
-
-        })->middleware(['web'])->name('checkout.element');
 
         Route::post('checkout/draft-order', CreateDraftOrderController::class)
             ->middleware(['web'])->name('checkout.draft-order');

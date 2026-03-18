@@ -3,10 +3,10 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Collection;
-use Lunar\Base\DataTransferObjects\PricingResponse;
-use Lunar\Base\Purchasable;
-use Lunar\Facades\Pricing;
-use Lunar\Facades\StorefrontSession;
+use Lunar\Catalog\DataObjects\PricingResponse;
+use Lunar\Catalog\Facades\Pricing;
+use Lunar\Kernel\Contracts\Purchasable;
+use Lunar\Sales\Facades\CartSession;
 use Lunar\Storefront\Actions\Catalog\GetQuantifiedPrice;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
 use Lunar\Storefront\Data\Price;
@@ -17,7 +17,7 @@ class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
     {
         try {
             return Pricing::for($purchasable)->currency(
-                StorefrontSession::getCurrency()
+                CartSession::getCurrency()
             )->qty($quantity)->get();
         } catch (\Exception $e) {
             report($e);

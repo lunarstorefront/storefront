@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Lunar\Facades\CartSession;
-use Lunar\Facades\Payments;
+use Lunar\Sales\Facades\CartSession;
+use Lunar\Sales\Facades\Payments;
 use Lunar\Stripe\Facades\Stripe;
 use Lunar\Stripe\Models\StripePaymentIntent;
 use Stripe\PaymentIntent;
@@ -41,9 +41,9 @@ class ProcessingController extends Controller
             }
         }
 
-        if ($cart->completedOrder()->exists()) {
+        if ($cart->completedOrders()->exists()) {
             CartSession::forget(delete: false);
-            session()->put('checkout.order', $cart->completedOrder->reference);
+            session()->put('checkout.order', $cart->completedOrders()->latest()->first()->reference);
 
             return redirect()->route('checkout.success');
         }
