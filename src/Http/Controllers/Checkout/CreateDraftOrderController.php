@@ -19,7 +19,7 @@ class CreateDraftOrderController extends Controller
             abort(404);
         }
 
-        if (! $cart->canCreateOrder()) {
+        if ($cart->hasCompletedOrders()) {
             return $this->handleExistingIntent($cart);
         }
 

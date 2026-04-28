@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Lunar\Kernel\DataObjects\PriceValue;
 use Lunar\Sales\DataObjects\ShippingBreakdown;
 use Lunar\Sales\Models\Cart as CartModel;
 use Spatie\LaravelData\Data;
@@ -37,6 +38,9 @@ class Cart extends Data
 
     public static function fromModel(CartModel $cart): self
     {
+        $totalExclTax = (int) $cart->total - (int) $cart->tax_total;
+        $totalExclTaxFormatted = (new PriceValue($totalExclTax, $cart->currency))->format();
+
         return new self(
             fingerprint: $cart->fingerprint ?? $cart->generateFingerprint(),
             coupon: $cart->coupon_code,
@@ -48,7 +52,7 @@ class Cart extends Data
             taxTotal: $cart->tax_total,
             taxTotalFormatted: $cart->format('tax_total'),
             total: $cart->total,
-            totalFormattedExclTax: $cart->format('sub_total'),
+            totalFormattedExclTax: $totalExclTaxFormatted,
             totalFormattedInclTax: $cart->format('total'),
             currency: Currency::from($cart->currency),
             linesCount: $cart->lines_count,
