@@ -18,13 +18,17 @@ class MapProductPriceBreaks
         $priceBreaks = $pricing->priceBreaks->sortBy('min_quantity')->values();
         $basePrice = $pricing->base;
 
-        $baseTiers = collect([
-            new PriceBreak(
-                price: Price::fromModel($basePrice),
-                lowerLimit: $min,
-                upperLimit: $priceBreaks->first()->min_quantity - 1,
-            ),
-        ]);
+        $firstBreakQuantity = $priceBreaks->first()->min_quantity;
+
+        $baseTiers = $firstBreakQuantity > $min
+            ? collect([
+                new PriceBreak(
+                    price: Price::fromModel($basePrice),
+                    lowerLimit: $min,
+                    upperLimit: $firstBreakQuantity - 1,
+                ),
+            ])
+            : collect();
 
         $mappedTiers = $priceBreaks
             ->map(function ($priceBreak, $index) use ($priceBreaks) {

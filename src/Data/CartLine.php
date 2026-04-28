@@ -20,12 +20,15 @@ class CartLine extends Data
         public Lazy|string|null $thumbnail,
         public int $quantity,
         public int $unitPrice,
+        public ?string $unitPriceFormatted,
         public int $subTotal,
         public int $discountTotal,
         public int $taxAmount,
         public int $total,
+        public ?string $totalFormattedExclTax,
+        public ?string $totalFormattedInclTax,
         /** @var ProductOption[] */
-        public Collection $optionValues
+        public Lazy|Collection $optionValues
     ) {}
 
     public static function fromModel(CartLineModel $cartLine): self
@@ -37,15 +40,20 @@ class CartLine extends Data
             identifier: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getIdentifier()),
             name: Lazy::whenLoaded('purchasable', $cartLine, fn () => (string) $cartLine->purchasable->product->name),
             slug: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->defaultUrl?->slug),
-            thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->thumbnail?->getUrl('thumbnail')),
+            thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => ($cartLine->purchasable->thumbnail ?? $cartLine->purchasable->product->thumbnail)?->getUrl('small')),
             quantity: $cartLine->quantity,
             unitPrice: $cartLine->unit_price,
+            unitPriceFormatted: $cartLine->format('unit_price'),
             subTotal: $cartLine->sub_total,
             discountTotal: $cartLine->discount_total,
             taxAmount: $cartLine->tax_amount,
             total: $cartLine->total,
-            optionValues: ProductOptionValue::collect(
-                $cartLine->purchasable->values
+            totalFormattedExclTax: $cartLine->format('sub_total'),
+            totalFormattedInclTax: $cartLine->format('total'),
+            optionValues: Lazy::whenLoaded(
+                'purchasable',
+                $cartLine,
+                fn () => ProductOptionValue::collect($cartLine->purchasable->values)
             )
         );
     }

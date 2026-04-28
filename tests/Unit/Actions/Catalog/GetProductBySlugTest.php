@@ -137,7 +137,7 @@ test('it eager loads product type with mapped attributes', function () {
     $result = $action->get('test-product', asModel: true);
 
     expect($result->relationLoaded('productType'))->toBeTrue()
-        ->and($result->productType->relationLoaded('productBlueprint'))->toBeTrue();
+        ->and($result->productType->relationLoaded('mappedAttributes'))->toBeTrue();
 });
 
 test('it eager loads images and thumbnail', function () {

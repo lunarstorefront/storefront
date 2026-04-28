@@ -218,6 +218,39 @@ test('it uses custom min value for base tier', function () {
         ->and($result->first()->upperLimit)->toBe(9);
 });
 
+test('it does not duplicate base tier when first price break starts at min quantity', function () {
+    $productType = ProductType::factory()->create();
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    $product = Product::factory()->for($productType)->create();
+
+    $variant = ProductVariant::factory()
+        ->for($product)
+        ->for($taxClass)
+        ->create();
+
+    $basePrice = Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => 4550,
+        'min_quantity' => 1,
+    ]);
+
+    $pricingResponse = new PricingResponse(
+        matched: $basePrice,
+        base: $basePrice,
+        priceBreaks: collect([$basePrice]),
+        customerGroupPrices: collect([]),
+    );
+
+    $action = new MapProductPriceBreaks;
+    $result = $action->map($pricingResponse);
+
+    expect($result)->toHaveCount(1)
+        ->and($result[0]->lowerLimit)->toBe(1)
+        ->and($result[0]->upperLimit)->toBeNull();
+});
+
 /**
  * POTENTIAL BUG: sortBy() preserves original keys, so $priceBreaks[$index + 1]
  * may not reference the next item in sorted order

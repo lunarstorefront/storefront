@@ -2,9 +2,9 @@
 
 namespace Lunar\Storefront\Actions\Catalog;
 
-use Lunar\Storefront\Data\Breadcrumb;
 use Illuminate\Support\Collection as LaravelCollection;
 use Lunar\Catalog\Models\Collection;
+use Lunar\Storefront\Data\Breadcrumb;
 
 class GetCollectionBreadcrumbs
 {
@@ -25,7 +25,9 @@ class GetCollectionBreadcrumbs
 
     public function buildBreadcrumbs(Collection $collection): void
     {
-        foreach ($collection->ancestors as $ancestor) {
+        $ancestors = $collection->ancestors->values();
+
+        foreach ($ancestors as $ancestor) {
             if (! $ancestor->defaultUrl) {
                 continue;
             }

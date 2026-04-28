@@ -2,8 +2,6 @@
 
 namespace Lunar\Storefront\Managers;
 
-use Illuminate\Support\Str;
-use Laravel\Scout\Scout;
 use Lunar\Catalog\Models\Collection;
 use Lunar\Catalog\Models\Product;
 use Lunar\Search\DataObjects\SearchResults;
@@ -39,7 +37,7 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
             perPage: $perPage,
         );
 
-        if ($results->count && $query) {
+        if ($results->total && $query) {
             $this->updateQuerySuggestion($query);
         }
 
@@ -48,35 +46,6 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
 
     public function updateQuerySuggestion(string $term)
     {
-        $index = Scout::engine('meilisearch')->createIndex(
-            'storefront_query_suggestions',
-        );
-
-        $term = trim(mb_strtolower($term));
-        $termId = Str::slug($term);
-
-        try {
-            $doc = $index->getDocument($termId); // exact match by primary key
-            $index->updateDocuments([
-                [
-                    'signature' => $termId,
-                    'term' => $term,
-                    'count' => ((int) ($doc['count'] ?? 0)) + 1,
-                ],
-            ]);
-        } catch (\Meilisearch\Exceptions\ApiException $e) {
-            // If it doesn't exist, Meilisearch returns 404
-            if (($e->httpStatus ?? null) === 404) {
-                $index->addDocuments([
-                    [
-                        'signature' => $termId,
-                        'term' => $term,
-                        'count' => 1,
-                    ],
-                ]);
-            } else {
-                throw $e;
-            }
-        }
+        // Disabled — requires Meilisearch. TODO: implement for Typesense.
     }
 }
