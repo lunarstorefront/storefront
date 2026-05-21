@@ -26,7 +26,7 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
             )
             ->filter();
 
-        $results = new SearchProducts()->handle(
+        $results = (new SearchProducts())->handle(
             query: $query,
             facets: $facetables->toArray(),
             collectionIds: collect([$collection?->id])

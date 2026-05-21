@@ -13,5 +13,5 @@ interface PricingManager
 
     public function getPricingWithTax(Purchasable $purchasable, int $quantity = 1): ?TaxAwarePricingResponse;
 
-    public function getQuantifiedPrice(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity): Price;
+    public function getQuantifiedPrice(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity): ?Price;
 }

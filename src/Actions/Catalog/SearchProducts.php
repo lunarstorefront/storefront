@@ -40,6 +40,6 @@ class SearchProducts
             );
         }
 
-        return $products->get();
+        return $products->search();
     }
 }

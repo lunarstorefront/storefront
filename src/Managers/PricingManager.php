@@ -50,7 +50,7 @@ class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
         return (new MapProductPriceBreaks)->map($pricingResponse);
     }
 
-    public function getQuantifiedPrice(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity): Price
+    public function getQuantifiedPrice(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity): ?Price
     {
         return (new GetQuantifiedPrice)->get($pricingResponse, $quantity);
     }

@@ -10,13 +10,18 @@ use Lunar\Storefront\Data\Price;
 
 class GetQuantifiedPrice
 {
-    public function get(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity = 1): Price
+    public function get(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity = 1): ?Price
     {
         if ($pricingResponse instanceof TaxAwarePricingResponse) {
-            return $this->fromTaxAware($pricingResponse, $quantity);
+            return $pricingResponse->matched ? $this->fromTaxAware($pricingResponse, $quantity) : null;
         }
 
         $price = $pricingResponse->matched;
+
+        if (! $price) {
+            return null;
+        }
+
         $unitPrice = $price->price;
         $quantifiedPrice = (int) round($unitPrice * $quantity);
 
