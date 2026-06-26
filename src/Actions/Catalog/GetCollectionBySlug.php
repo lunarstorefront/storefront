@@ -7,6 +7,9 @@ use Lunar\Catalog\Models\Collection;
 
 class GetCollectionBySlug
 {
+    /**
+     * @param  array<int, string>  $eager
+     */
     public function get(string $slug, ?string $child = null, array $eager = []): ?Collection
     {
         $targetSlug = $child ?: $slug;

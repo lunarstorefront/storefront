@@ -3,10 +3,13 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Lunar\Catalog\DataObjects\PricingResponse;
+use Lunar\Catalog\DataObjects\TaxAwarePrice;
 use Lunar\Catalog\DataObjects\TaxAwarePricingResponse;
+use Lunar\Catalog\Models\Price as PriceModel;
 use Lunar\Kernel\DataObjects\PriceValue;
 use Lunar\Storefront\Data\Currency;
 use Lunar\Storefront\Data\Price;
+use RuntimeException;
 
 class GetQuantifiedPrice
 {
@@ -17,10 +20,16 @@ class GetQuantifiedPrice
         }
 
         $price = $pricingResponse->matched;
+
+        if (! $price instanceof PriceModel) {
+            throw new RuntimeException('Pricing response is missing a matched price.');
+        }
+
+        $currency = $price->resolveCurrency();
         $unitPrice = $price->price;
         $quantifiedPrice = (int) round($unitPrice * $quantity);
 
-        $priceValue = new PriceValue($quantifiedPrice, $price->currency);
+        $priceValue = new PriceValue($quantifiedPrice, $currency);
 
         return new Price(
             exclTax: $quantifiedPrice,
@@ -32,13 +41,18 @@ class GetQuantifiedPrice
             formattedComparePriceExcTax: null,
             formattedComparePriceIncTax: null,
             minQuantity: $price->min_quantity,
-            currency: Currency::from($price->currency),
+            currency: Currency::from($currency),
         );
     }
 
     protected function fromTaxAware(TaxAwarePricingResponse $response, int $quantity): Price
     {
         $matched = $response->matched;
+
+        if (! $matched instanceof TaxAwarePrice) {
+            throw new RuntimeException('Tax aware pricing response is missing a matched price.');
+        }
+
         $currency = $matched->priceExcTax->resolveCurrency();
 
         $excTax = (int) round($matched->priceExcTax->value * $quantity);

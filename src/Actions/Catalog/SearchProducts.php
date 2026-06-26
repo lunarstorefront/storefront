@@ -8,6 +8,11 @@ use Lunar\Search\Facades\Search;
 
 class SearchProducts
 {
+    /**
+     * @param  array<array-key, mixed>|null  $facets
+     * @param  array<int, int|string>  $collectionIds
+     * @param  array<string, mixed>  $filters
+     */
     public function handle(?string $query = '', ?array $facets = [], array $collectionIds = [], array $filters = [], ?string $sort = null, int $perPage = 40): SearchResults
     {
         if (! blank($collectionIds)) {
@@ -19,7 +24,7 @@ class SearchProducts
             ->filter($filters)
             ->query($query ?: '');
 
-        $sorting = explode(':', $sort);
+        $sorting = explode(':', $sort ?? '');
 
         $sortDir = $sorting[1] ?? 'asc';
         $sortField = $sorting[0] ?? '';

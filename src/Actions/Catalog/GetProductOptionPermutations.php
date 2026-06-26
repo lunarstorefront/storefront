@@ -13,23 +13,27 @@ use Lunar\Storefront\Facades\Storefront;
 class GetProductOptionPermutations
 {
     /**
-     * @param  Collection<ProductOption>  $productOptions
+     * @param  Collection<int, ProductOption>  $productOptions
+     * @return Collection<int, ProductOptionPermutation>
      */
     public function get(Collection $productOptions, Product $product): Collection
     {
         $permutations = $productOptions
             ->pluck('values')
-            ->reduce(function ($carry, $values) {
+            ->reduce(function (?Collection $carry, mixed $values): Collection {
+                /** @var iterable<int, ProductOptionValue> $values */
                 if ($carry === null) {
-                    return collect($values)->map(fn ($v) => [$v]);
+                    return collect($values)->map(fn (ProductOptionValue $v): array => [$v]);
                 }
 
-                return collect($carry)->flatMap(function ($combo) use ($values) {
-                    return collect($values)->map(fn ($v) => array_merge($combo, [$v]));
+                return $carry->flatMap(function (mixed $combo) use ($values): Collection {
+                    /** @var array<int, ProductOptionValue> $combo */
+                    return collect($values)->map(fn (ProductOptionValue $v): array => array_merge($combo, [$v]));
                 })->values();
             }, null) ?: collect();
 
-        return $permutations->map(function ($values) use ($product) {
+        return $permutations->map(function (mixed $values) use ($product): ProductOptionPermutation {
+            /** @var Collection<int, ProductOptionValue> $values */
             $values = collect($values);
 
             $variantQuery = $product->variants()
@@ -42,16 +46,16 @@ class GetProductOptionPermutations
 
             return new ProductOptionPermutation(
                 hash: Storefront::variants()->encryptOptions($values->mapWithKeys(
-                    fn ($value) => [$value->product_option_id => $value->id]
+                    fn (ProductOptionValue $value) => [$value->product_option_id => $value->id]
                 )->toArray()),
                 hasVariant: $variantQuery->exists(),
-                stock: $variantQuery->sum('stock'),
+                stock: (int) $variantQuery->sum('stock'),
                 backorder: $variantQuery->clone()->where('purchasable', 'always')->exists(),
                 values: $values->mapWithKeys(
-                    fn ($value) => [(string) $value->product_option_id => $value->id]
+                    fn (ProductOptionValue $value) => [(string) $value->product_option_id => $value->id]
                 )->toArray(),
                 valueNames: $values->mapWithKeys(
-                    fn ($value) => [(string) $value->option->name => (string) $value->name]
+                    fn (ProductOptionValue $value) => [(string) $value->option->name => (string) $value->name]
                 )->toArray()
             );
         });
