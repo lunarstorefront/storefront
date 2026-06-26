@@ -4,23 +4,29 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
 use Lunar\Catalog\DataObjects\PricingResponse;
+use Lunar\Catalog\Models\Price as PriceModel;
 use Lunar\Storefront\Data\Price;
 use Lunar\Storefront\Data\PriceBreak;
 
 class MapProductPriceBreaks
 {
-    public function map(PricingResponse $pricing, $min = 1): Collection
+    /**
+     * @return Collection<int, PriceBreak>
+     */
+    public function map(PricingResponse $pricing, int $min = 1): Collection
     {
         if (! $pricing->priceBreaks->count()) {
             return collect();
         }
 
+        /** @var Collection<int, PriceModel> $priceBreaks */
         $priceBreaks = $pricing->priceBreaks->sortBy('min_quantity')->values();
         $basePrice = $pricing->base;
 
-        $firstBreakQuantity = $priceBreaks->first()->min_quantity;
+        $firstBreak = $priceBreaks->first();
+        $firstBreakQuantity = $firstBreak?->min_quantity ?? $min;
 
-        $baseTiers = $firstBreakQuantity > $min
+        $baseTiers = $firstBreakQuantity > $min && $basePrice instanceof PriceModel
             ? collect([
                 new PriceBreak(
                     price: Price::fromModel($basePrice),
@@ -31,13 +37,13 @@ class MapProductPriceBreaks
             : collect();
 
         $mappedTiers = $priceBreaks
-            ->map(function ($priceBreak, $index) use ($priceBreaks) {
+            ->map(function (PriceModel $priceBreak, int $index) use ($priceBreaks): PriceBreak {
                 $upperLimit = $priceBreaks[$index + 1] ?? null;
 
                 return new PriceBreak(
                     price: Price::fromModel($priceBreak),
                     lowerLimit: $priceBreak->min_quantity,
-                    upperLimit: $upperLimit ? $upperLimit->min_quantity - 1 : null,
+                    upperLimit: $upperLimit ? (int) $upperLimit->min_quantity - 1 : null,
                 );
             })->values();
 

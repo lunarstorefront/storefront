@@ -7,6 +7,9 @@ use Lunar\Search\DataObjects\SearchResults;
 
 interface SearchManager
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     */
     public function getResults(
         ?string $query = null,
         ?Collection $collection = null,

@@ -8,7 +8,7 @@ use Lunar\Catalog\States\Product\Active;
 
 class GetProductBySlug
 {
-    public function get(string $slug, bool $asModel = false)
+    public function get(string $slug, bool $asModel = false): Product|\Lunar\Storefront\Data\Product
     {
         $product = Product::with([
             'productType.mappedAttributes',

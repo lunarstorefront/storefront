@@ -3,11 +3,15 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection as LaravelCollection;
 use Lunar\Storefront\Data\Collection;
 
 class GetCollectionTree
 {
-    public function get(string $group = 'main', int $maxDepth = 3)
+    /**
+     * @return LaravelCollection<int, Collection>
+     */
+    public function get(string $group = 'main', int $maxDepth = 3): LaravelCollection
     {
         $collections = \Lunar\Catalog\Models\Collection::whereHas(
             'group',

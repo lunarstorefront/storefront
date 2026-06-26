@@ -8,12 +8,23 @@ use Lunar\Storefront\Data\Breadcrumb;
 
 class GetCollectionBreadcrumbs
 {
+    /**
+     * @var LaravelCollection<int, Breadcrumb>
+     */
+    private LaravelCollection $breadcrumbs;
+
+    /**
+     * @param  LaravelCollection<int, Breadcrumb>|null  $breadcrumbs
+     */
     public function __construct(
-        private ?LaravelCollection $breadcrumbs = null
+        ?LaravelCollection $breadcrumbs = null
     ) {
         $this->breadcrumbs = $breadcrumbs ?: collect();
     }
 
+    /**
+     * @return LaravelCollection<int, Breadcrumb>
+     */
     public function get(?Collection $collection): LaravelCollection
     {
         if ($collection) {

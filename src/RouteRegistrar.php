@@ -10,9 +10,7 @@ use Lunar\Sales\Models\CartLine;
 use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
-use Lunar\Storefront\Http\Controllers\Checkout\CreateDraftOrderController;
 use Lunar\Storefront\Http\Controllers\Checkout\OrderIssueController;
-use Lunar\Storefront\Http\Controllers\Checkout\ProcessingController;
 use Lunar\Storefront\Http\Controllers\Checkout\SuccessController;
 use Lunar\Storefront\Http\Controllers\GetQuerySuggestionsController;
 use Lunar\Storefront\Http\Controllers\SetCurrencyController;
@@ -104,12 +102,6 @@ class RouteRegistrar
         Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
         Route::post('/api/currency', SetCurrencyController::class)->middleware(['web'])->name('storefront.currency');
         Route::get('/api/auth/codes', GetTwoFactorCodesController::class)->middleware(['web', 'auth'])->name('auth.codes');
-
-        Route::post('checkout/draft-order', CreateDraftOrderController::class)
-            ->middleware(['web'])->name('checkout.draft-order');
-
-        Route::get('checkout/processing', ProcessingController::class)
-            ->middleware(['web'])->name('checkout.processing');
 
         Route::get('checkout/success', SuccessController::class)
             ->middleware(['web'])->name('checkout.success');

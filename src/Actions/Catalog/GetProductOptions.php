@@ -8,6 +8,9 @@ use Lunar\Storefront\Data\ProductOption;
 
 class GetProductOptions
 {
+    /**
+     * @return Collection<int, \Lunar\Catalog\Models\ProductOption>
+     */
     public function get(Product $product): Collection
     {
         return $product->productOptions()->with([
