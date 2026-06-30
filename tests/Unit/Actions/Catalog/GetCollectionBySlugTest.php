@@ -1,7 +1,7 @@
 <?php
 
 use Lunar\Catalog\Models\Collection;
-use Lunar\Kernel\Models\Language;
+use Lunar\Core\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBySlug;
 
 beforeEach(function () {

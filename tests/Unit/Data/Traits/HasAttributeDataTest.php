@@ -1,10 +1,10 @@
 <?php
 
-use Lunar\Kernel\FieldTypes\Text;
-use Lunar\Kernel\Models\Channel;
-use Lunar\Kernel\Models\Currency;
-use Lunar\Kernel\Models\CustomerGroup;
-use Lunar\Kernel\Models\Language;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Language;
 use Lunar\Catalog\Models\Product;
 use Lunar\Catalog\Models\ProductType;
 use Lunar\Storefront\Data\AttributeDataValue;

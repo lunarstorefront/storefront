@@ -3,11 +3,11 @@
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Lunar\Catalog\Models\Brand;
-use Lunar\Kernel\Models\Channel;
-use Lunar\Kernel\Models\Currency;
-use Lunar\Kernel\Models\CustomerGroup;
-use Lunar\Kernel\Models\Language;
-use Lunar\Kernel\Models\Region;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Region;
 use Lunar\Storefront\Contracts\BrandManager as BrandManagerContract;
 use Lunar\Storefront\Managers\BrandManager;
 

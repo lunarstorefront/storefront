@@ -2,8 +2,8 @@
 
 use Lunar\Catalog\Models\Collection;
 use Lunar\Catalog\Models\CollectionGroup;
-use Lunar\Kernel\FieldTypes\Text;
-use Lunar\Kernel\Models\Language;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionTree;
 use Lunar\Storefront\Data\Collection as CollectionData;
 

@@ -80,11 +80,11 @@ test('it encrypts different options to different hashes', function () {
 });
 
 test('it can get variant by sku', function () {
-    $currency = \Lunar\Kernel\Models\Currency::factory()->create(['default' => true]);
-    $channel = \Lunar\Kernel\Models\Channel::factory()->create(['default' => true]);
-    $language = \Lunar\Kernel\Models\Language::factory()->create(['default' => true]);
-    $customerGroup = \Lunar\Kernel\Models\CustomerGroup::factory()->create(['default' => true]);
-    $taxClass = \Lunar\Kernel\Models\TaxClass::factory()->create(['default' => true]);
+    $currency = \Lunar\Core\Models\Currency::factory()->create(['default' => true]);
+    $channel = \Lunar\Core\Models\Channel::factory()->create(['default' => true]);
+    $language = \Lunar\Core\Models\Language::factory()->create(['default' => true]);
+    $customerGroup = \Lunar\Core\Models\CustomerGroup::factory()->create(['default' => true]);
+    $taxClass = \Lunar\Core\Models\TaxClass::factory()->create(['default' => true]);
     $productType = \Lunar\Catalog\Models\ProductType::factory()->create();
 
     $product = \Lunar\Catalog\Models\Product::factory()

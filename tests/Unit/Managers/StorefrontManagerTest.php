@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Session;
-use Lunar\Kernel\Contracts\StorefrontContextInterface;
-use Lunar\Kernel\Models\Channel;
-use Lunar\Kernel\Models\Currency;
-use Lunar\Kernel\Models\CustomerGroup;
-use Lunar\Kernel\Models\Language;
-use Lunar\Kernel\Models\Region;
+use Lunar\Core\Contracts\StorefrontSession;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Region;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
@@ -93,7 +93,7 @@ test('it can set currency', function () {
 
     $this->manager->setCurrency('EUR');
 
-    $context = app(StorefrontContextInterface::class);
+    $context = app(StorefrontSession::class);
 
     expect($context->getCurrency()->code)->toBe('EUR');
 });
