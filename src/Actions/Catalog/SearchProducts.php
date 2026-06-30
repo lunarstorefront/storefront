@@ -2,8 +2,8 @@
 
 namespace Lunar\Storefront\Actions\Catalog;
 
-use Lunar\Catalog\Models\Product;
-use Lunar\Search\DataObjects\SearchResults;
+use Lunar\Core\Models\Product;
+use Lunar\Search\Data\SearchResults;
 use Lunar\Search\Facades\Search;
 
 class SearchProducts
@@ -41,10 +41,10 @@ class SearchProducts
             $products->setFacets(
                 array_map(function ($facet) {
                     return is_array($facet) ? $facet : [$facet];
-                }, $facets)
+                }, $facets ?: [])
             );
         }
 
-        return $products->search();
+        return $products->get();
     }
 }

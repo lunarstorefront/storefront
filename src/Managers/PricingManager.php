@@ -3,12 +3,10 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\DataObjects\PricingResponse;
-use Lunar\Catalog\DataObjects\TaxAwarePricingResponse;
-use Lunar\Catalog\Facades\Pricing;
-use Lunar\Kernel\Contracts\Purchasable;
-use Lunar\Kernel\Contracts\StorefrontContextInterface;
-use Lunar\Sales\Facades\CartSession;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\DataObjects\PricingResponse;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Facades\Pricing;
 use Lunar\Storefront\Actions\Catalog\GetQuantifiedPrice;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
 use Lunar\Storefront\Data\Price;
@@ -28,21 +26,9 @@ class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
         return null;
     }
 
-    public function getPricingWithTax(Purchasable $purchasable, int $quantity = 1): ?TaxAwarePricingResponse
+    public function getPricingWithTax(Purchasable $purchasable, int $quantity = 1): ?PricingResponse
     {
-        try {
-            $region = app(StorefrontContextInterface::class)->getRegion();
-
-            return Pricing::for($purchasable)
-                ->qty($quantity)
-                ->region($region)
-                ->currency(CartSession::getCurrency())
-                ->getWithTax();
-        } catch (\Exception $e) {
-            report($e);
-        }
-
-        return null;
+        return $this->getPricing($purchasable, $quantity);
     }
 
     public function mapPriceBreaks(PricingResponse $pricingResponse): Collection
@@ -50,7 +36,7 @@ class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
         return (new MapProductPriceBreaks)->map($pricingResponse);
     }
 
-    public function getQuantifiedPrice(PricingResponse|TaxAwarePricingResponse $pricingResponse, int $quantity): ?Price
+    public function getQuantifiedPrice(PricingResponse $pricingResponse, int $quantity): ?Price
     {
         return (new GetQuantifiedPrice)->get($pricingResponse, $quantity);
     }

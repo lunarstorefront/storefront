@@ -2,10 +2,11 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Sales\Models\Transaction as TransactionModel;
+use Lunar\Core\Models\Transaction as TransactionModel;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Transaction extends Data
 {
     public function __construct(

@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Enums\ProductAssociationType;
-use Lunar\Catalog\Models\Product;
+use Lunar\Core\Enums\ProductAssociation;
+use Lunar\Core\Models\Product;
 use Lunar\Storefront\Actions\Catalog\GetProductAssociations;
 use Lunar\Storefront\Actions\Catalog\GetProductBySlug;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
@@ -30,7 +30,7 @@ class ProductManager implements \Lunar\Storefront\Contracts\ProductManager
         return (new GetProductOptions)->get($product);
     }
 
-    public function getAssociations(Product $product, ProductAssociationType $association): Collection
+    public function getAssociations(Product $product, ProductAssociation $association): Collection
     {
         $associations = (new GetProductAssociations)->get($product, type: $association);
 

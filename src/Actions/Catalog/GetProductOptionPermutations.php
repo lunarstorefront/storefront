@@ -4,9 +4,9 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductOption;
-use Lunar\Catalog\Models\ProductOptionValue;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Facades\Storefront;
 
@@ -55,7 +55,7 @@ class GetProductOptionPermutations
                     fn (ProductOptionValue $value) => [(string) $value->product_option_id => $value->id]
                 )->toArray(),
                 valueNames: $values->mapWithKeys(
-                    fn (ProductOptionValue $value) => [(string) $value->option->name => (string) $value->name]
+                    fn (ProductOptionValue $value) => [(string) $value->option->translate('name') => (string) $value->translate('name')]
                 )->toArray()
             );
         });

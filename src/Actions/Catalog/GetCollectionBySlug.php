@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
-use Lunar\Catalog\Models\Collection;
+use Lunar\Core\Models\Collection;
 
 class GetCollectionBySlug
 {
@@ -23,6 +23,6 @@ class GetCollectionBySlug
                 $builder->whereHas('defaultUrl', fn ($query) => $query->where('slug', $slug));
             }),
             fn (Builder $query) => $query->whereIsRoot()
-        )->with($eager)->first();
+        )->with($eager)->firstOrFail();
     }
 }

@@ -2,10 +2,11 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Sales\Models\OrderLine as OrderLineModel;
+use Lunar\Core\Models\OrderLine as OrderLineModel;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class OrderLine extends Data
 {
     public function __construct(

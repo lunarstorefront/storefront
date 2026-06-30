@@ -4,9 +4,9 @@ namespace Lunar\Storefront;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lunar\Catalog\Models\ProductVariant;
-use Lunar\Sales\Facades\CartSession;
-use Lunar\Sales\Models\CartLine;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Models\CartLine;
 use Lunar\Storefront\Facades\Storefront;
 use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;

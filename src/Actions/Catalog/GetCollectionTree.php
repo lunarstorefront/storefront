@@ -13,7 +13,7 @@ class GetCollectionTree
      */
     public function get(string $group = 'main', int $maxDepth = 3): LaravelCollection
     {
-        $collections = \Lunar\Catalog\Models\Collection::whereHas(
+        $collections = \Lunar\Core\Models\Collection::whereHas(
             'group',
             fn (Builder $builder) => $builder->where('handle', $group)
         )->with(['defaultUrl'])

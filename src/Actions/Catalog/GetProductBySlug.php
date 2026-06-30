@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\States\Product\Active;
+use Lunar\Core\Models\Product;
+use Lunar\Core\States\Product\Published;
 
 class GetProductBySlug
 {
@@ -14,7 +14,7 @@ class GetProductBySlug
             'productType.mappedAttributes',
             'media',
             'thumbnail',
-        ])->whereState('status', Active::class)
+        ])->whereState('status', Published::class)
             ->whereHas('defaultUrl', fn (Builder $query) => $query->where('slug', $slug))->firstOrFail();
 
         return $asModel ? $product : \Lunar\Storefront\Data\Product::from($product);

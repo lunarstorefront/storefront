@@ -2,12 +2,12 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Catalog\DataObjects\TaxAwarePrice;
-use Lunar\Catalog\Models\Price as PriceModel;
+use Lunar\Core\Models\Price as PriceModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Price extends Data
 {
     public function __construct(
@@ -29,32 +29,15 @@ class Price extends Data
         return new self(
             exclTax: $price->price,
             inclTax: $price->price,
-            comparePriceExcTax: $price->compare_price,
-            comparePriceIncTax: $price->compare_price,
+            comparePriceExcTax: $price->list_price,
+            comparePriceIncTax: $price->list_price,
             formattedExclTax: $price->format('price'),
             formattedInclTax: $price->format('price'),
             formattedComparePriceExcTax: null,
             formattedComparePriceIncTax: null,
             minQuantity: $price->min_quantity,
             currency: Lazy::whenLoaded('currency', $price, fn () => Currency::from($price->currency)),
-            hasComparePrice: (bool) $price->compare_price,
-        );
-    }
-
-    public static function fromTaxAwarePrice(TaxAwarePrice $taxAwarePrice, int $minQuantity, Lazy|Currency $currency): self
-    {
-        return new self(
-            exclTax: $taxAwarePrice->priceExcTax->value,
-            inclTax: $taxAwarePrice->priceIncTax->value,
-            comparePriceExcTax: $taxAwarePrice->comparePriceExcTax?->value,
-            comparePriceIncTax: $taxAwarePrice->comparePriceIncTax?->value,
-            formattedExclTax: $taxAwarePrice->priceExcTax->format(),
-            formattedInclTax: $taxAwarePrice->priceIncTax->format(),
-            formattedComparePriceExcTax: $taxAwarePrice->comparePriceExcTax?->format(),
-            formattedComparePriceIncTax: $taxAwarePrice->comparePriceIncTax?->format(),
-            minQuantity: $minQuantity,
-            currency: $currency,
-            hasComparePrice: $taxAwarePrice->comparePriceExcTax !== null,
+            hasComparePrice: (bool) $price->list_price,
         );
     }
 }

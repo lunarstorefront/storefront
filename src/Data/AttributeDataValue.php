@@ -2,7 +2,9 @@
 
 namespace Lunar\Storefront\Data;
 
-/** @typescript */
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+#[TypeScript]
 class AttributeDataValue
 {
     public function __construct(

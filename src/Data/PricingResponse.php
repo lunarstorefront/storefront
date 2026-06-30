@@ -3,10 +3,11 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\DataObjects\PricingResponse as PricingResponseDto;
+use Lunar\Core\DataObjects\PricingResponse as PricingResponseDto;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class PricingResponse extends Data
 {
     public function __construct(

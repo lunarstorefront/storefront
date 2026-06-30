@@ -2,10 +2,11 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Promotions\Models\Discount as DiscountModel;
+use Lunar\Core\Models\Discount as DiscountModel;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Discount extends Data
 {
     public function __construct(

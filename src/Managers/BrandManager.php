@@ -4,7 +4,7 @@ namespace Lunar\Storefront\Managers;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Lunar\Catalog\Models\Brand;
+use Lunar\Core\Models\Brand;
 
 class BrandManager implements \Lunar\Storefront\Contracts\BrandManager
 {

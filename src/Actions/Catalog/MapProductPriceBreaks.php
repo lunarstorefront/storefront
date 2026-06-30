@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\DataObjects\PricingResponse;
-use Lunar\Catalog\Models\Price as PriceModel;
+use Lunar\Core\DataObjects\PricingResponse;
+use Lunar\Core\Models\Price as PriceModel;
 use Lunar\Storefront\Data\Price;
 use Lunar\Storefront\Data\PriceBreak;
 

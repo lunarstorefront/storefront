@@ -6,16 +6,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Enums\ProductAssociationType;
-use Lunar\Catalog\Models\Product;
-use Lunar\Sales\Facades\CartSession;
+use Lunar\Core\Enums\ProductAssociation;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Facades\CartSession;
 
 class GetProductAssociations
 {
     /**
-     * @return Collection<int, \Lunar\Catalog\Models\ProductAssociation>
+     * @return Collection<int, \Lunar\Core\Models\ProductAssociation>
      */
-    public function get(Product $product, ?ProductAssociationType $type = null, bool $inverse = false): Collection
+    public function get(Product $product, ?ProductAssociation $type = null, bool $inverse = false): Collection
     {
         $currency = CartSession::getCurrency();
         $currencyId = $currency?->id;

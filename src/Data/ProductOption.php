@@ -3,11 +3,12 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\ProductOption as ProductOptionModel;
+use Lunar\Core\Models\ProductOption as ProductOptionModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class ProductOption extends Data
 {
     public function __construct(
@@ -22,7 +23,7 @@ class ProductOption extends Data
     {
         return new self(
             id: $productOption->id,
-            name: (string) $productOption->name,
+            name: (string) $productOption->translate('name'),
             handle: $productOption->handle,
             values: Lazy::whenLoaded('values', $productOption, fn () => ProductOptionValue::collect($productOption->values))
         );

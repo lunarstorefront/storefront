@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Facades\Crypt;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Storefront\Actions\Catalog\GetProductVariantByProvidedOptions;
 
 class VariantManager implements \Lunar\Storefront\Contracts\VariantManager

@@ -4,14 +4,18 @@ namespace Lunar\Storefront\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
-use Lunar\Catalog\CatalogServiceProvider;
-use Lunar\Kernel\KernelServiceProvider;
-use Lunar\Sales\SalesServiceProvider;
+use Lunar\Core\LunarServiceProvider;
+use Lunar\Search\SearchServiceProvider;
 use Lunar\Storefront\StorefrontServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
+use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
+use Spatie\Permission\PermissionServiceProvider;
+
+use function Orchestra\Testbench\after_resolving;
+use function Orchestra\Testbench\default_migration_path;
 
 abstract class TestCase extends Orchestra
 {
@@ -20,18 +24,22 @@ abstract class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
+
+        activity()->disableLogging();
+        $this->freezeTime();
     }
 
     protected function getPackageProviders($app): array
     {
         return [
+            LaravelDataServiceProvider::class,
             NestedSetServiceProvider::class,
             ActivitylogServiceProvider::class,
             MediaLibraryServiceProvider::class,
-            LaravelDataServiceProvider::class,
-            KernelServiceProvider::class,
-            CatalogServiceProvider::class,
-            SalesServiceProvider::class,
+            BlinkServiceProvider::class,
+            PermissionServiceProvider::class,
+            LunarServiceProvider::class,
+            SearchServiceProvider::class,
             StorefrontServiceProvider::class,
         ];
     }
@@ -45,26 +53,19 @@ abstract class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
-        $app['config']->set('lunar.kernel.database.connection', 'testing');
-        $app['config']->set('lunar.kernel.urls.generator', null);
+        $app['config']->set('lunar.database.connection', 'testing');
+        $app['config']->set('lunar.urls.generator', null);
         $app['config']->set('activitylog.database_connection', 'testing');
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
+    // Register Laravel's default migrations on the migrator alongside the
+    // package migrations so all migrations share one global ordering. Running
+    // them in a separate pass breaks ordering (and RefreshDatabase's cache).
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadLaravelMigrations();
-
-        $this->artisan('vendor:publish', [
-            '--provider' => ActivitylogServiceProvider::class,
-            '--tag' => 'activitylog-migrations',
-        ])->run();
-
-        $this->artisan('vendor:publish', [
-            '--provider' => MediaLibraryServiceProvider::class,
-            '--tag' => 'medialibrary-migrations',
-        ])->run();
-
-        $this->loadMigrationsFrom($this->app->databasePath('migrations'));
+        after_resolving($this->app, 'migrator', static function ($migrator) {
+            $migrator->path(default_migration_path());
+        });
     }
 }

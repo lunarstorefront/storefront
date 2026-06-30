@@ -2,10 +2,11 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Kernel\Models\Currency as CurrencyModel;
+use Lunar\Core\Models\Currency as CurrencyModel;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Currency extends Data
 {
     public function __construct(

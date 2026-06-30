@@ -2,11 +2,10 @@
 
 namespace Lunar\Storefront\Data;
 
-use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class ProductOptionPermutation extends Data
 {
     public bool $purchasable = true;

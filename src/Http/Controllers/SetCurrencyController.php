@@ -5,7 +5,7 @@ namespace Lunar\Storefront\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Lunar\Kernel\Models\Currency;
+use Lunar\Core\Models\Currency;
 use Lunar\Storefront\Facades\Storefront;
 
 class SetCurrencyController extends Controller

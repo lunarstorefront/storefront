@@ -3,13 +3,13 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\Product;
+use Lunar\Core\Models\Product;
 use Lunar\Storefront\Data\ProductOption;
 
 class GetProductOptions
 {
     /**
-     * @return Collection<int, \Lunar\Catalog\Models\ProductOption>
+     * @return Collection<int, \Lunar\Core\Models\ProductOption>
      */
     public function get(Product $product): Collection
     {

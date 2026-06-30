@@ -3,8 +3,8 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Storefront\Managers\VariantManager;
 
 class GetProductVariantByProvidedOptions

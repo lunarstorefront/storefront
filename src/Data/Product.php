@@ -3,12 +3,13 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\Product as ProductModel;
+use Lunar\Core\Models\Product as ProductModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript  */
+#[TypeScript]
 class Product extends Data
 {
     use HasAttributeData;
@@ -19,6 +20,7 @@ class Product extends Data
         /** @var Collection<AttributeDataValue> */
         public Collection $attributeData,
         public Lazy|Media $thumbnail,
+        /** @var Media[] */
         public Lazy|Collection $images,
         public ?Url $url = null,
     ) {}
@@ -26,8 +28,8 @@ class Product extends Data
     public static function fromModel(ProductModel $product): self
     {
         return new self(
-            name: (string) $product->name,
-            description: $product->description ? (string) $product->description : null,
+            name: (string) $product->translate('name'),
+            description: $product->translate('description'),
             attributeData: static::mapAttributes($product),
             thumbnail: Lazy::whenLoaded('thumbnail', $product, fn () => Media::from($product->thumbnail)),
             images: Lazy::whenLoaded('media', $product, fn () => Media::collect($product->media)),

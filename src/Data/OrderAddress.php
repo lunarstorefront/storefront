@@ -2,7 +2,7 @@
 
 namespace Lunar\Storefront\Data;
 
-/** @typescript */
-class OrderAddress extends Address
-{
-}
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
+
+#[TypeScript]
+class OrderAddress extends Address {}

@@ -2,9 +2,9 @@
 
 namespace Lunar\Storefront\Managers;
 
-use Lunar\Catalog\Models\Collection;
-use Lunar\Catalog\Models\Product;
-use Lunar\Search\DataObjects\SearchResults;
+use Lunar\Core\Models\Collection;
+use Lunar\Core\Models\Product;
+use Lunar\Search\Data\SearchResults;
 use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
 class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
@@ -26,7 +26,7 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
             )
             ->filter();
 
-        $results = (new SearchProducts())->handle(
+        $results = (new SearchProducts)->handle(
             query: $query,
             facets: $facetables->toArray(),
             collectionIds: collect([$collection?->id])
@@ -37,7 +37,7 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
             perPage: $perPage,
         );
 
-        if ($results->total && $query) {
+        if ($results->count && $query) {
             $this->updateQuerySuggestion($query);
         }
 

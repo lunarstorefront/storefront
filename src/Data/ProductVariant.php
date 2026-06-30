@@ -3,11 +3,12 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\ProductVariant as ProductVariantModel;
+use Lunar\Core\Models\ProductVariant as ProductVariantModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class ProductVariant extends Data
 {
     public function __construct(

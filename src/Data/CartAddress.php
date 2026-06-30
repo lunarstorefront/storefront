@@ -2,13 +2,14 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Sales\Models\CartAddress as CartAddressModel;
+use Lunar\Core\Models\CartAddress as CartAddressModel;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript  */
+#[TypeScript]
 class CartAddress extends Data
 {
     public function __construct(

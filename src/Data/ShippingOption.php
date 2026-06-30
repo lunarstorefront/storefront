@@ -3,8 +3,9 @@
 namespace Lunar\Storefront\Data;
 
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class ShippingOption extends Data
 {
     public function __construct(

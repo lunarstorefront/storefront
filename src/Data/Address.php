@@ -4,8 +4,9 @@ namespace Lunar\Storefront\Data;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Address extends Data
 {
     public function __construct(

@@ -3,11 +3,12 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Sales\Models\CartLine as CartLineModel;
+use Lunar\Core\Models\CartLine as CartLineModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class CartLine extends Data
 {
     public function __construct(
@@ -33,23 +34,24 @@ class CartLine extends Data
 
     public static function fromModel(CartLineModel $cartLine): self
     {
+
         return new self(
             id: $cartLine->id,
             productId: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product_id),
             stockLevel: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getTotalInventory()),
             identifier: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getIdentifier()),
-            name: Lazy::whenLoaded('purchasable', $cartLine, fn () => (string) $cartLine->purchasable->product->name),
+            name: Lazy::whenLoaded('purchasable', $cartLine, fn () => (string) $cartLine->purchasable->product->translate('name')),
             slug: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->defaultUrl?->slug),
             thumbnail: Lazy::whenLoaded('purchasable', $cartLine, fn () => ($cartLine->purchasable->thumbnail ?? $cartLine->purchasable->product->thumbnail)?->getUrl('small')),
             quantity: $cartLine->quantity,
-            unitPrice: $cartLine->unit_price,
-            unitPriceFormatted: $cartLine->format('unit_price'),
-            subTotal: $cartLine->sub_total,
-            discountTotal: $cartLine->discount_total,
-            taxAmount: $cartLine->tax_amount,
-            total: $cartLine->total,
-            totalFormattedExclTax: $cartLine->format('sub_total'),
-            totalFormattedInclTax: $cartLine->format('total'),
+            unitPrice: $cartLine->unitPrice->value,
+            unitPriceFormatted: $cartLine->unitPrice->format(),
+            subTotal: $cartLine->subTotal->value,
+            discountTotal: $cartLine->discountTotal->value,
+            taxAmount: $cartLine->taxAmount->value,
+            total: $cartLine->total->value,
+            totalFormattedExclTax: $cartLine->subTotal->format(),
+            totalFormattedInclTax: $cartLine->total->format(),
             optionValues: Lazy::whenLoaded(
                 'purchasable',
                 $cartLine,

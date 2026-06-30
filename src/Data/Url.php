@@ -2,11 +2,12 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Kernel\Models\Url as UrlModel;
+use Lunar\Core\Models\Url as UrlModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript  */
+#[TypeScript]
 class Url extends Data
 {
     use HasAttributeData;
@@ -14,9 +15,7 @@ class Url extends Data
     public function __construct(
         public string $slug,
         public bool $isDefault,
-    ) {
-
-    }
+    ) {}
 
     public static function fromModel(UrlModel $url): self
     {

@@ -4,8 +4,7 @@ namespace Lunar\Storefront\Data\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Lunar\Kernel\FieldTypes\Contracts\FieldType;
-use Lunar\Kernel\FieldTypes\Dropdown;
+use Lunar\Core\FieldTypes\Dropdown;
 use Lunar\Storefront\Data\AttributeDataValue;
 
 trait HasAttributeData

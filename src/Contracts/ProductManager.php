@@ -3,9 +3,9 @@
 namespace Lunar\Storefront\Contracts;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Enums\ProductAssociationType;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductOption;
+use Lunar\Core\Enums\ProductAssociation;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
 use Lunar\Storefront\Data\Product as ProductData;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 
@@ -27,5 +27,5 @@ interface ProductManager
     /**
      * @return Collection<int, ProductData>
      */
-    public function getAssociations(Product $product, ProductAssociationType $association): Collection;
+    public function getAssociations(Product $product, ProductAssociation $association): Collection;
 }

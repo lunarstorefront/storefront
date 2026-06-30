@@ -2,10 +2,11 @@
 
 namespace Lunar\Storefront\Data;
 
-use Lunar\Kernel\Models\Customer as CustomerModel;
+use Lunar\Core\Models\Customer as CustomerModel;
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Customer extends Data
 {
     public function __construct(

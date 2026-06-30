@@ -2,11 +2,9 @@
 
 namespace Lunar\Storefront\Actions;
 
-use Lunar\Catalog\Facades\Pricing;
-use Lunar\Kernel\Contracts\StorefrontContextInterface;
-use Lunar\Kernel\Models\Currency;
-use Lunar\Kernel\Models\Region;
-use Lunar\Sales\Facades\CartSession;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Facades\Pricing;
+use Lunar\Core\Models\Currency;
 
 class SetCurrency
 {
@@ -16,12 +14,6 @@ class SetCurrency
 
         if (! $currency) {
             return;
-        }
-
-        $region = Region::where('currency_id', $currency->id)->enabled()->first();
-
-        if ($region) {
-            app(StorefrontContextInterface::class)->setRegion($region);
         }
 
         CartSession::setCurrency($currency);

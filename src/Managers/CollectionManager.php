@@ -7,14 +7,14 @@ use Lunar\Storefront\Actions\Catalog\GetCollectionBySlug;
 
 class CollectionManager implements \Lunar\Storefront\Contracts\CollectionManager
 {
-    public function getBySlug(string $slug, ?string $child = null): ?\Lunar\Catalog\Models\Collection
+    public function getBySlug(string $slug, ?string $child = null): ?\Lunar\Core\Models\Collection
     {
         return (new GetCollectionBySlug)->get($slug, $child, [
             'defaultUrl', 'children.defaultUrl',
         ]);
     }
 
-    public function getBreadcrumbs(\Lunar\Catalog\Models\Collection $collection): \Illuminate\Support\Collection
+    public function getBreadcrumbs(\Lunar\Core\Models\Collection $collection): \Illuminate\Support\Collection
     {
         return (new GetCollectionBreadcrumbs)->get($collection);
     }

@@ -3,12 +3,13 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Catalog\Models\Brand as BrandModel;
+use Lunar\Core\Models\Brand as BrandModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Brand extends Data
 {
     use HasAttributeData;

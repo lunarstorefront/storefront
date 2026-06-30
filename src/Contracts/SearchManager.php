@@ -2,8 +2,8 @@
 
 namespace Lunar\Storefront\Contracts;
 
-use Lunar\Catalog\Models\Collection;
-use Lunar\Search\DataObjects\SearchResults;
+use Lunar\Core\Models\Collection;
+use Lunar\Search\Data\SearchResults;
 
 interface SearchManager
 {

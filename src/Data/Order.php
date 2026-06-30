@@ -3,11 +3,12 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
-use Lunar\Sales\Models\Order as OrderModel;
+use Lunar\Core\Models\Order as OrderModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** @typescript */
+#[TypeScript]
 class Order extends Data
 {
     public function __construct(
@@ -24,7 +25,9 @@ class Order extends Data
         public ?\DateTime $placedAt,
         public Lazy|OrderAddress $billingAddress,
         public Lazy|OrderAddress $shippingAddress,
+        /** @var Transaction[] */
         public Lazy|Collection $transactions,
+        /** @var OrderLine[] */
         public Lazy|Collection|null $physicalLines = null,
     ) {}
 

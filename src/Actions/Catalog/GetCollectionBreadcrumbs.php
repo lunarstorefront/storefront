@@ -3,7 +3,7 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection as LaravelCollection;
-use Lunar\Catalog\Models\Collection;
+use Lunar\Core\Models\Collection;
 use Lunar\Storefront\Data\Breadcrumb;
 
 class GetCollectionBreadcrumbs
@@ -45,7 +45,7 @@ class GetCollectionBreadcrumbs
 
             $this->breadcrumbs->add(
                 Breadcrumb::from([
-                    'label' => (string) $ancestor->name,
+                    'label' => (string) $ancestor->translate('name'),
                     'model' => 'collection',
                     'slug' => $ancestor->defaultUrl->slug,
                 ])
@@ -55,7 +55,7 @@ class GetCollectionBreadcrumbs
         if ($collection->defaultUrl) {
             $this->breadcrumbs->add(
                 Breadcrumb::from([
-                    'label' => (string) $collection->name,
+                    'label' => (string) $collection->translate('name'),
                     'model' => 'collection',
                     'slug' => $collection->defaultUrl->slug,
                 ])
