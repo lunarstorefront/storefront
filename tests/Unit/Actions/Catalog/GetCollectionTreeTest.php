@@ -1,8 +1,8 @@
 <?php
 
+use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\CollectionGroup;
-use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionTree;
 use Lunar\Storefront\Data\Collection as CollectionData;
@@ -30,7 +30,7 @@ test('it returns collections for specified group', function () {
     $mainGroup = CollectionGroup::factory()->create(['handle' => 'main']);
     $otherGroup = CollectionGroup::factory()->create(['handle' => 'other']);
 
-    $mainCollection = Collection::factory()->create(['status' => 'published', 
+    $mainCollection = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $mainGroup->id,
         'attribute_data' => collect(['name' => new Text('Main Collection')]),
     ]);
@@ -40,7 +40,7 @@ test('it returns collections for specified group', function () {
         'language_id' => $language->id,
     ]);
 
-    $otherCollection = Collection::factory()->create(['status' => 'published', 
+    $otherCollection = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $otherGroup->id,
         'attribute_data' => collect(['name' => new Text('Other Collection')]),
     ]);
@@ -61,7 +61,7 @@ test('it returns data objects', function () {
 
     $group = CollectionGroup::factory()->create(['handle' => 'main']);
 
-    $collection = Collection::factory()->create(['status' => 'published', 
+    $collection = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Test')]),
     ]);
@@ -83,7 +83,7 @@ test('it respects max depth parameter', function () {
     $group = CollectionGroup::factory()->create(['handle' => 'main']);
 
     // Create 4 levels: root -> level1 -> level2 -> level3
-    $root = Collection::factory()->create(['status' => 'published', 
+    $root = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Root')]),
     ]);
@@ -93,7 +93,7 @@ test('it respects max depth parameter', function () {
         'language_id' => $language->id,
     ]);
 
-    $level1 = Collection::factory()->create(['status' => 'published', 
+    $level1 = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Level 1')]),
     ]);
@@ -104,7 +104,7 @@ test('it respects max depth parameter', function () {
     ]);
     $level1->appendToNode($root)->save();
 
-    $level2 = Collection::factory()->create(['status' => 'published', 
+    $level2 = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Level 2')]),
     ]);
@@ -115,7 +115,7 @@ test('it respects max depth parameter', function () {
     ]);
     $level2->appendToNode($level1)->save();
 
-    $level3 = Collection::factory()->create(['status' => 'published', 
+    $level3 = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Level 3')]),
     ]);
@@ -152,7 +152,7 @@ test('it returns hierarchical tree structure', function () {
 
     $group = CollectionGroup::factory()->create(['handle' => 'main']);
 
-    $parent = Collection::factory()->create(['status' => 'published', 
+    $parent = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Parent')]),
     ]);
@@ -162,7 +162,7 @@ test('it returns hierarchical tree structure', function () {
         'language_id' => $language->id,
     ]);
 
-    $child1 = Collection::factory()->create(['status' => 'published', 
+    $child1 = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Child 1')]),
     ]);
@@ -173,7 +173,7 @@ test('it returns hierarchical tree structure', function () {
     ]);
     $child1->appendToNode($parent)->save();
 
-    $child2 = Collection::factory()->create(['status' => 'published', 
+    $child2 = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Child 2')]),
     ]);
@@ -199,7 +199,7 @@ test('it eager loads default url', function () {
 
     $group = CollectionGroup::factory()->create(['handle' => 'main']);
 
-    $collection = Collection::factory()->create(['status' => 'published', 
+    $collection = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $group->id,
         'attribute_data' => collect(['name' => new Text('Test')]),
     ]);

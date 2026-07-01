@@ -23,6 +23,6 @@ class GetCollectionBySlug
                 $builder->whereHas('defaultUrl', fn ($query) => $query->where('slug', $slug));
             }),
             fn (Builder $query) => $query->whereIsRoot()
-        )->with($eager)->firstOrFail();
+        )->with($eager)->first();
     }
 }

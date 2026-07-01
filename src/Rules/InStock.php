@@ -4,11 +4,11 @@ namespace Lunar\Storefront\Rules;
 
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Cart;
 use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\ProductVariant;
 
-class InStock implements ValidationRule, DataAwareRule
+class InStock implements DataAwareRule, ValidationRule
 {
     public function __construct(
         protected ?Cart $cart = null,
@@ -41,6 +41,7 @@ class InStock implements ValidationRule, DataAwareRule
 
             if (! $cartLine) {
                 $fail('Cart line not found.');
+
                 return;
             }
 
@@ -61,15 +62,14 @@ class InStock implements ValidationRule, DataAwareRule
             fn ($line) => $line->purchasable_id == $variant->id
         );
 
-
         $value = $value + ($existingLine?->quantity ?: 0);
 
         if (! $variant->canBeFulfilledAtQuantity($value)) {
             $fail(
                 (
-                $existingLine ?
-                    'Insufficient stock for total quantity '.$value :
-                    'Insufficient stock.'
+                    $existingLine ?
+                        'Insufficient stock for total quantity '.$value :
+                        'Insufficient stock.'
                 )
             );
         }

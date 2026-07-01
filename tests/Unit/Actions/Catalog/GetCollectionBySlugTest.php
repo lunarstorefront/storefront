@@ -18,7 +18,7 @@ test('it returns collection by slug', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
     $found = $action->get('test-collection');
 
     expect($found)->not->toBeNull()
@@ -26,7 +26,7 @@ test('it returns collection by slug', function () {
 });
 
 test('it returns null for non-existent slug', function () {
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
     $found = $action->get('non-existent');
 
     expect($found)->toBeNull();
@@ -50,7 +50,7 @@ test('it only matches default urls', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
 
     expect($action->get('non-default-slug'))->toBeNull()
         ->and($action->get('default-slug'))->not->toBeNull();
@@ -66,7 +66,7 @@ test('it only matches root collections when no child specified', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create(['status' => 'published', 
+    $child = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $parent->collection_group_id,
     ]);
     $child->urls()->create([
@@ -76,7 +76,7 @@ test('it only matches root collections when no child specified', function () {
     ]);
     $child->appendToNode($parent)->save();
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
 
     // Root collection should be found
     expect($action->get('parent'))->not->toBeNull();
@@ -95,7 +95,7 @@ test('it can find child collection by parent and child slug', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create(['status' => 'published', 
+    $child = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $parent->collection_group_id,
     ]);
     $child->urls()->create([
@@ -105,7 +105,7 @@ test('it can find child collection by parent and child slug', function () {
     ]);
     $child->appendToNode($parent)->save();
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
     $found = $action->get('parent', 'child');
 
     expect($found)->not->toBeNull()
@@ -129,7 +129,7 @@ test('it returns null when child does not belong to parent', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create(['status' => 'published', 
+    $child = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $parent2->collection_group_id,
     ]);
     $child->urls()->create([
@@ -139,7 +139,7 @@ test('it returns null when child does not belong to parent', function () {
     ]);
     $child->appendToNode($parent2)->save();
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
 
     // Child belongs to parent2, not parent1
     expect($action->get('parent1', 'child'))->toBeNull();
@@ -155,7 +155,7 @@ test('it eager loads specified relations', function () {
         'language_id' => $language->id,
     ]);
 
-    $action = new GetCollectionBySlug();
+    $action = new GetCollectionBySlug;
     $found = $action->get('test', null, ['defaultUrl', 'children']);
 
     expect($found->relationLoaded('defaultUrl'))->toBeTrue()

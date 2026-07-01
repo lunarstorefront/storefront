@@ -19,7 +19,7 @@ beforeEach(function () {
 });
 
 test('it transforms a price integer to int', function () {
-    $transformer = new PriceTransformer();
+    $transformer = new PriceTransformer;
 
     $property = Mockery::mock(DataProperty::class);
     $context = Mockery::mock(TransformationContext::class);
@@ -31,7 +31,7 @@ test('it transforms a price integer to int', function () {
 });
 
 test('it includes correct value in transformation', function () {
-    $transformer = new PriceTransformer();
+    $transformer = new PriceTransformer;
 
     $property = Mockery::mock(DataProperty::class);
     $context = Mockery::mock(TransformationContext::class);

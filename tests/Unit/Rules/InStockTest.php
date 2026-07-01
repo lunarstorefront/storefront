@@ -1,12 +1,12 @@
 <?php
 
-use Lunar\Core\Models\Product;
-use Lunar\Core\Models\ProductType;
-use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Rules\InStock;
@@ -71,9 +71,9 @@ test('it passes for valid sku with sufficient stock', function () {
     ProductVariant::factory()
         ->for($product)
         ->for($this->taxClass)
+        ->inStock(100)
         ->create([
             'sku' => 'STOCK-TEST',
-            'stock' => 100,
         ]);
 
     $rule = new InStock;
@@ -95,9 +95,9 @@ test('it fails when quantity below min_quantity', function () {
     ProductVariant::factory()
         ->for($product)
         ->for($this->taxClass)
+        ->inStock(100)
         ->create([
             'sku' => 'MIN-QTY-TEST',
-            'stock' => 100,
             'min_quantity' => 10,
         ]);
 
@@ -120,9 +120,9 @@ test('it fails when quantity not in increment', function () {
     ProductVariant::factory()
         ->for($product)
         ->for($this->taxClass)
+        ->inStock(100)
         ->create([
             'sku' => 'INCREMENT-TEST',
-            'stock' => 100,
             'quantity_increment' => 5,
         ]);
 

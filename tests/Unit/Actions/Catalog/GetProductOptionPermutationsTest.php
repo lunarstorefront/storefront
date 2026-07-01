@@ -1,15 +1,15 @@
 <?php
 
-use Lunar\Core\Models\Product;
-use Lunar\Core\Models\ProductOption;
-use Lunar\Core\Models\ProductOptionValue;
-use Lunar\Core\Models\ProductType;
-use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
@@ -60,13 +60,13 @@ test('it generates permutations for single option', function () {
     $variantRed = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 10]);
+        ->inStock(10)->create();
     $variantRed->values()->attach($red);
 
     $variantBlue = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 5]);
+        ->inStock(5)->create();
     $variantBlue->values()->attach($blue);
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
@@ -112,7 +112,7 @@ test('it generates cartesian product for multiple options', function () {
             $variant = ProductVariant::factory()
                 ->for($product)
                 ->for($taxClass)
-                ->create(['stock' => 10]);
+                ->inStock(10)->create();
             $variant->values()->attach([$color->id, $size->id]);
         }
     }
@@ -157,14 +157,14 @@ test('it indicates which permutations have variants', function () {
     $variant = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 10]);
+        ->inStock(10)->create();
     $variant->values()->attach([$red->id, $small->id]);
 
     // Also attach blue to a variant so it shows up in options
     $variantBlue = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 0]);
+        ->inStock(0)->create();
     $variantBlue->values()->attach([$blue->id, $small->id]);
 
     $product->productOptions()->attach([
@@ -274,14 +274,14 @@ test('it detects backorder availability', function () {
     $variantRed = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 0, 'purchasable' => 'in-stock']);
+        ->create(['purchasable' => 'in-stock']);
     $variantRed->values()->attach($red);
 
     // Blue variant: always purchasable (backorder)
     $variantBlue = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 0, 'purchasable' => 'always']);
+        ->create(['purchasable' => 'always']);
     $variantBlue->values()->attach($blue);
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);

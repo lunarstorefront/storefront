@@ -2,14 +2,14 @@
 
 use Illuminate\Support\Collection;
 use Lunar\Core\DataObjects\PricingResponse;
-use Lunar\Core\Models\Price;
-use Lunar\Core\Models\Product;
-use Lunar\Core\Models\ProductType;
-use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Contracts\PricingManager as PricingManagerContract;
@@ -49,12 +49,11 @@ test('it returns null when pricing cannot be resolved', function () {
         ->for($taxClass)
         ->create();
 
-    // Variant has no price record, but the Pricing facade still returns a response
-    // with null matched price when a default currency exists via Region
+    // Variant has no price record: core Pricing throws MissingCurrencyPriceException,
+    // which the manager catches and resolves to null.
     $pricing = $this->manager->getPricing($variant);
 
-    expect($pricing)->not->toBeNull()
-        ->and($pricing->matched)->toBeNull();
+    expect($pricing)->toBeNull();
 });
 
 test('it can map price breaks from pricing response', function () {

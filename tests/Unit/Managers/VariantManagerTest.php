@@ -1,9 +1,17 @@
 <?php
 
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Managers\VariantManager;
 
 beforeEach(function () {
-    $this->manager = new VariantManager();
+    $this->manager = new VariantManager;
 });
 
 test('it can encrypt options array', function () {
@@ -43,7 +51,7 @@ test('it returns empty array when hash has been tampered with', function () {
     $options = ['color' => 'green'];
     $encrypted = $this->manager->encryptOptions($options);
 
-    $tampered = substr($encrypted, 0, -5) . 'xxxxx';
+    $tampered = substr($encrypted, 0, -5).'xxxxx';
     $decrypted = $this->manager->decryptOptions($tampered);
 
     expect($decrypted)->toBeEmpty();
@@ -80,18 +88,18 @@ test('it encrypts different options to different hashes', function () {
 });
 
 test('it can get variant by sku', function () {
-    $currency = \Lunar\Core\Models\Currency::factory()->create(['default' => true]);
-    $channel = \Lunar\Core\Models\Channel::factory()->create(['default' => true]);
-    $language = \Lunar\Core\Models\Language::factory()->create(['default' => true]);
-    $customerGroup = \Lunar\Core\Models\CustomerGroup::factory()->create(['default' => true]);
-    $taxClass = \Lunar\Core\Models\TaxClass::factory()->create(['default' => true]);
-    $productType = \Lunar\Core\Models\ProductType::factory()->create();
+    $currency = Currency::factory()->create(['default' => true]);
+    $channel = Channel::factory()->create(['default' => true]);
+    $language = Language::factory()->create(['default' => true]);
+    $customerGroup = CustomerGroup::factory()->create(['default' => true]);
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    $productType = ProductType::factory()->create();
 
-    $product = \Lunar\Core\Models\Product::factory()
+    $product = Product::factory()
         ->for($productType)
         ->create();
 
-    $variant = \Lunar\Core\Models\ProductVariant::factory()
+    $variant = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
         ->create(['sku' => 'TEST-SKU-123']);

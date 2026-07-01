@@ -1,8 +1,8 @@
 <?php
 
-use Lunar\Core\Models\Collection;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\Language;
 use Lunar\Core\Models\Region;
@@ -56,7 +56,7 @@ test('it can get child collection by parent and child slug', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create(['status' => 'published', 
+    $child = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $parent->collection_group_id,
     ]);
 
@@ -77,7 +77,7 @@ test('it can get child collection by parent and child slug', function () {
 test('it can get breadcrumbs for collection', function () {
     $language = Language::getDefault();
 
-    $collection = Collection::factory()->create(['status' => 'published', 
+    $collection = Collection::factory()->create(['status' => 'published',
         'attribute_data' => collect([
             'name' => new Text('Test Collection'),
         ]),
@@ -101,7 +101,7 @@ test('it can get breadcrumbs for collection', function () {
 test('it includes ancestors in breadcrumbs', function () {
     $language = Language::getDefault();
 
-    $parent = Collection::factory()->create(['status' => 'published', 
+    $parent = Collection::factory()->create(['status' => 'published',
         'attribute_data' => collect([
             'name' => new Text('Parent'),
         ]),
@@ -113,7 +113,7 @@ test('it includes ancestors in breadcrumbs', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create(['status' => 'published', 
+    $child = Collection::factory()->create(['status' => 'published',
         'collection_group_id' => $parent->collection_group_id,
         'attribute_data' => collect([
             'name' => new Text('Child'),

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Session;
 use Lunar\Storefront\Actions\SetLocale;
 
 test('it sets locale in session', function () {
-    $action = new SetLocale();
+    $action = new SetLocale;
 
     $action->set('fr');
 
@@ -12,7 +12,7 @@ test('it sets locale in session', function () {
 });
 
 test('it can change locale', function () {
-    $action = new SetLocale();
+    $action = new SetLocale;
 
     $action->set('en');
     expect(Session::get('locale'))->toBe('en');
@@ -22,7 +22,7 @@ test('it can change locale', function () {
 });
 
 test('it accepts any locale string', function () {
-    $action = new SetLocale();
+    $action = new SetLocale;
 
     $action->set('en-GB');
     expect(Session::get('locale'))->toBe('en-GB');

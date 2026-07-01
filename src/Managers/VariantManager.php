@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Managers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductVariant;
@@ -66,7 +67,7 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
         }
     }
 
-    public function getSelectedOptions(?string $hash = null): \Illuminate\Support\Collection
+    public function getSelectedOptions(?string $hash = null): Collection
     {
         return collect($this->decryptOptions($hash))->mapWithKeys(
             fn ($value, $option) => [$option => $value]

@@ -63,7 +63,9 @@ abstract class TestCase extends Orchestra
 
         $app['config']->set('database.connections.testing.database', $dbPath);
         $app['config']->set('lunar.urls.generator', null);
-        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+        // Fixed key (not random per test) so Crypt-based encrypt/decrypt round
+        // trips stay consistent across the encrypter singleton's lifecycle.
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
     }
 
     // Register Laravel's default migrations on the migrator instead of running

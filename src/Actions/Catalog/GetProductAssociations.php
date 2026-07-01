@@ -3,12 +3,11 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 use Lunar\Core\Enums\ProductAssociation;
-use Lunar\Core\Models\Product;
 use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Models\Product;
 
 class GetProductAssociations
 {
@@ -25,7 +24,7 @@ class GetProductAssociations
             fn (Builder $query): Builder => $query->type($type)
         )->with(
             match ($inverse) {
-                true =>  [
+                true => [
                     'parent',
                     'parent.defaultUrl',
                     'parent.thumbnail' => fn (MorphOne $query) => $query->where('collection_name', config('lunar.media.collection')),

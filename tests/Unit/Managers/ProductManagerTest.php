@@ -1,16 +1,16 @@
 <?php
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Lunar\Core\Models\Product;
-use Lunar\Core\Models\ProductOption;
-use Lunar\Core\Models\ProductOptionValue;
-use Lunar\Core\Models\ProductType;
-use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Data\ProductOptionPermutation;
@@ -113,12 +113,12 @@ test('it can get permutations for product with single option', function () {
     $variantSmall = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 10]);
+        ->inStock(10)->create();
 
     $variantLarge = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 5]);
+        ->inStock(5)->create();
 
     $variantSmall->values()->attach($small);
     $variantLarge->values()->attach($large);
@@ -178,12 +178,12 @@ test('it can get permutations for product with multiple options', function () {
     $variantRedSmall = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 10]);
+        ->inStock(10)->create();
 
     $variantBlueSmall = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['stock' => 5]);
+        ->inStock(5)->create();
 
     $variantRedSmall->values()->attach([$red->id, $small->id]);
     $variantBlueSmall->values()->attach([$blue->id, $small->id]);

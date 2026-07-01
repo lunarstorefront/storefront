@@ -17,14 +17,14 @@ class StorefrontServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(PropManager::class, fn () => new \Lunar\Storefront\Managers\PropManager);
-        $this->app->singleton(StorefrontManager::class, fn () => new \Lunar\Storefront\Managers\StorefrontManager);
-        $this->app->bind(ProductManager::class, fn () => new \Lunar\Storefront\Managers\ProductManager);
-        $this->app->bind(VariantManager::class, fn () => new \Lunar\Storefront\Managers\VariantManager);
-        $this->app->bind(BrandManager::class, fn () => new \Lunar\Storefront\Managers\BrandManager);
-        $this->app->bind(CollectionManager::class, fn () => new \Lunar\Storefront\Managers\CollectionManager);
-        $this->app->bind(SearchManager::class, fn () => new \Lunar\Storefront\Managers\SearchManager);
-        $this->app->bind(PricingManager::class, fn () => new \Lunar\Storefront\Managers\PricingManager);
+        $this->app->singleton(PropManager::class, fn () => new Managers\PropManager);
+        $this->app->singleton(StorefrontManager::class, fn () => new Managers\StorefrontManager);
+        $this->app->bind(ProductManager::class, fn () => new Managers\ProductManager);
+        $this->app->bind(VariantManager::class, fn () => new Managers\VariantManager);
+        $this->app->bind(BrandManager::class, fn () => new Managers\BrandManager);
+        $this->app->bind(CollectionManager::class, fn () => new Managers\CollectionManager);
+        $this->app->bind(SearchManager::class, fn () => new Managers\SearchManager);
+        $this->app->bind(PricingManager::class, fn () => new Managers\PricingManager);
     }
 
     public function boot(): void

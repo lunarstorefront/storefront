@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductOption;
 use Lunar\Core\Models\ProductOptionValue;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Facades\Storefront;
 
@@ -49,7 +50,9 @@ class GetProductOptionPermutations
                     fn (ProductOptionValue $value) => [$value->product_option_id => $value->id]
                 )->toArray()),
                 hasVariant: $variantQuery->exists(),
-                stock: (int) $variantQuery->sum('stock'),
+                stock: (int) $variantQuery->clone()->get()->sum(
+                    fn (ProductVariant $variant) => $variant->getTotalInventory()
+                ),
                 backorder: $variantQuery->clone()->where('purchasable', 'always')->exists(),
                 values: $values->mapWithKeys(
                     fn (ProductOptionValue $value) => [(string) $value->product_option_id => $value->id]

@@ -23,6 +23,7 @@ class PropManager implements \Lunar\Storefront\Contracts\PropManager
         foreach ($props as $prop) {
             if (is_string($prop->callback) && class_exists($prop->callback)) {
                 $data[$prop->key] = (new $prop->callback)($record);
+
                 continue;
             }
 
@@ -34,13 +35,13 @@ class PropManager implements \Lunar\Storefront\Contracts\PropManager
 
     public function add(array|Collection|PropData $propData): void
     {
-        if (!is_iterable($propData)) {
+        if (! is_iterable($propData)) {
             $propData = [$propData];
         }
 
         $this->props = [
             ...$this->props,
-            ...$propData
+            ...$propData,
         ];
     }
 }

@@ -8,7 +8,7 @@ use Lunar\Storefront\Contracts\SearchManager as SearchManagerContract;
 use Lunar\Storefront\Managers\SearchManager;
 
 beforeEach(function () {
-    $this->manager = new SearchManager();
+    $this->manager = new SearchManager;
 
     Language::factory()->create(['default' => true]);
     Currency::factory()->create(['default' => true]);

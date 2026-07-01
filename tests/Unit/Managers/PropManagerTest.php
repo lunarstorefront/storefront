@@ -1,11 +1,12 @@
 <?php
 
+use Illuminate\Database\Eloquent\Model;
 use Lunar\Storefront\Managers\PropManager;
 use Lunar\Storefront\PropData;
 use Lunar\Storefront\StorefrontPage;
 
 beforeEach(function () {
-    $this->manager = new PropManager();
+    $this->manager = new PropManager;
 });
 
 test('it can add a single prop', function () {
@@ -91,7 +92,8 @@ test('it only resolves props for the specified page', function () {
 });
 
 test('it passes model record to callback', function () {
-    $model = new class extends \Illuminate\Database\Eloquent\Model {
+    $model = new class extends Model
+    {
         public string $name = 'TestModel';
     };
 

@@ -2,6 +2,7 @@
 
 namespace Lunar\Storefront\Managers;
 
+use Illuminate\Support\Collection;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBreadcrumbs;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBySlug;
 
@@ -14,7 +15,7 @@ class CollectionManager implements \Lunar\Storefront\Contracts\CollectionManager
         ]);
     }
 
-    public function getBreadcrumbs(\Lunar\Core\Models\Collection $collection): \Illuminate\Support\Collection
+    public function getBreadcrumbs(\Lunar\Core\Models\Collection $collection): Collection
     {
         return (new GetCollectionBreadcrumbs)->get($collection);
     }

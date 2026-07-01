@@ -1,13 +1,13 @@
 <?php
 
 use Lunar\Core\Enums\ProductAssociation as ProductAssociationType;
-use Lunar\Core\Models\Product;
-use Lunar\Core\Models\ProductAssociation;
-use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductAssociation;
+use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\Region;
 use Lunar\Storefront\Actions\Catalog\GetProductAssociations;
 

@@ -25,32 +25,32 @@ test('it registers storefront manager as singleton', function () {
 
 test('it resolves product manager from container', function () {
     expect(app(ProductManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\ProductManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\ProductManager::class);
 });
 
 test('it resolves variant manager from container', function () {
     expect(app(VariantManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\VariantManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\VariantManager::class);
 });
 
 test('it resolves brand manager from container', function () {
     expect(app(BrandManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\BrandManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\BrandManager::class);
 });
 
 test('it resolves collection manager from container', function () {
     expect(app(CollectionManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\CollectionManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\CollectionManager::class);
 });
 
 test('it resolves search manager from container', function () {
     expect(app(SearchManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\SearchManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\SearchManager::class);
 });
 
 test('it resolves pricing manager from container', function () {
     expect(app(PricingManager::class))
-        ->toBeInstanceOf(\Lunar\Storefront\Managers\PricingManager::class);
+        ->toBeInstanceOf(Lunar\Storefront\Managers\PricingManager::class);
 });
 
 test('it merges storefront config', function () {
