@@ -1,10 +1,10 @@
 <?php
 
-use Lunar\Catalog\DataObjects\PricingResponse;
-use Lunar\Catalog\Models\Price;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductType;
-use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Core\DataObjects\PricingResponse;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;

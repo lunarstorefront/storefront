@@ -1,6 +1,6 @@
 <?php
 
-use Lunar\Catalog\Models\Collection;
+use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBySlug;
 
@@ -9,7 +9,7 @@ beforeEach(function () {
 });
 
 test('it returns collection by slug', function () {
-    $collection = Collection::factory()->create();
+    $collection = Collection::factory()->create(['status' => 'published']);
     $language = Language::getDefault();
 
     $collection->urls()->create([
@@ -33,7 +33,7 @@ test('it returns null for non-existent slug', function () {
 });
 
 test('it only matches default urls', function () {
-    $collection = Collection::factory()->create();
+    $collection = Collection::factory()->create(['status' => 'published']);
     $language = Language::getDefault();
 
     // Create non-default URL
@@ -59,14 +59,14 @@ test('it only matches default urls', function () {
 test('it only matches root collections when no child specified', function () {
     $language = Language::getDefault();
 
-    $parent = Collection::factory()->create();
+    $parent = Collection::factory()->create(['status' => 'published']);
     $parent->urls()->create([
         'slug' => 'parent',
         'default' => true,
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $parent->collection_group_id,
     ]);
     $child->urls()->create([
@@ -88,14 +88,14 @@ test('it only matches root collections when no child specified', function () {
 test('it can find child collection by parent and child slug', function () {
     $language = Language::getDefault();
 
-    $parent = Collection::factory()->create();
+    $parent = Collection::factory()->create(['status' => 'published']);
     $parent->urls()->create([
         'slug' => 'parent',
         'default' => true,
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $parent->collection_group_id,
     ]);
     $child->urls()->create([
@@ -115,21 +115,21 @@ test('it can find child collection by parent and child slug', function () {
 test('it returns null when child does not belong to parent', function () {
     $language = Language::getDefault();
 
-    $parent1 = Collection::factory()->create();
+    $parent1 = Collection::factory()->create(['status' => 'published']);
     $parent1->urls()->create([
         'slug' => 'parent1',
         'default' => true,
         'language_id' => $language->id,
     ]);
 
-    $parent2 = Collection::factory()->create();
+    $parent2 = Collection::factory()->create(['status' => 'published']);
     $parent2->urls()->create([
         'slug' => 'parent2',
         'default' => true,
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $parent2->collection_group_id,
     ]);
     $child->urls()->create([
@@ -146,7 +146,7 @@ test('it returns null when child does not belong to parent', function () {
 });
 
 test('it eager loads specified relations', function () {
-    $collection = Collection::factory()->create();
+    $collection = Collection::factory()->create(['status' => 'published']);
     $language = Language::getDefault();
 
     $collection->urls()->create([

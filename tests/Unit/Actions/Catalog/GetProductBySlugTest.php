@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductType;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -31,7 +31,7 @@ test('it returns product data by default', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -51,7 +51,7 @@ test('it returns model when asModel is true', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -95,7 +95,7 @@ test('it only matches default urls', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'non-default',
@@ -125,7 +125,7 @@ test('it eager loads product type with mapped attributes', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'test-product',
@@ -146,7 +146,7 @@ test('it eager loads images and thumbnail', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'test-product',

@@ -1,6 +1,6 @@
 <?php
 
-use Lunar\Catalog\Models\Collection;
+use Lunar\Core\Models\Collection;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -25,7 +25,7 @@ beforeEach(function () {
 });
 
 test('it can get collection by slug', function () {
-    $collection = Collection::factory()->create();
+    $collection = Collection::factory()->create(['status' => 'published']);
 
     $collection->urls()->create([
         'slug' => 'test-collection',
@@ -48,7 +48,7 @@ test('it returns null for non-existent slug', function () {
 test('it can get child collection by parent and child slug', function () {
     $language = Language::getDefault();
 
-    $parent = Collection::factory()->create();
+    $parent = Collection::factory()->create(['status' => 'published']);
 
     $parent->urls()->create([
         'slug' => 'parent-collection',
@@ -56,7 +56,7 @@ test('it can get child collection by parent and child slug', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $parent->collection_group_id,
     ]);
 
@@ -77,7 +77,7 @@ test('it can get child collection by parent and child slug', function () {
 test('it can get breadcrumbs for collection', function () {
     $language = Language::getDefault();
 
-    $collection = Collection::factory()->create([
+    $collection = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect([
             'name' => new Text('Test Collection'),
         ]),
@@ -101,7 +101,7 @@ test('it can get breadcrumbs for collection', function () {
 test('it includes ancestors in breadcrumbs', function () {
     $language = Language::getDefault();
 
-    $parent = Collection::factory()->create([
+    $parent = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect([
             'name' => new Text('Parent'),
         ]),
@@ -113,7 +113,7 @@ test('it includes ancestors in breadcrumbs', function () {
         'language_id' => $language->id,
     ]);
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $parent->collection_group_id,
         'attribute_data' => collect([
             'name' => new Text('Child'),

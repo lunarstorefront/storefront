@@ -5,8 +5,8 @@ use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductType;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
 use Lunar\Storefront\Data\AttributeDataValue;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 

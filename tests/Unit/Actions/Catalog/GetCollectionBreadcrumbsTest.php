@@ -1,6 +1,6 @@
 <?php
 
-use Lunar\Catalog\Models\Collection;
+use Lunar\Core\Models\Collection;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Language;
 use Lunar\Storefront\Actions\Catalog\GetCollectionBreadcrumbs;
@@ -20,7 +20,7 @@ test('it returns empty collection for null input', function () {
 test('it returns single breadcrumb for root collection', function () {
     $language = Language::getDefault();
 
-    $collection = Collection::factory()->create([
+    $collection = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect([
             'name' => new Text('Test Collection'),
         ]),
@@ -46,7 +46,7 @@ test('it returns single breadcrumb for root collection', function () {
 test('it includes ancestors in breadcrumbs', function () {
     $language = Language::getDefault();
 
-    $grandparent = Collection::factory()->create([
+    $grandparent = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect([
             'name' => new Text('Grandparent'),
         ]),
@@ -57,7 +57,7 @@ test('it includes ancestors in breadcrumbs', function () {
         'language_id' => $language->id,
     ]);
 
-    $parent = Collection::factory()->create([
+    $parent = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $grandparent->collection_group_id,
         'attribute_data' => collect([
             'name' => new Text('Parent'),
@@ -70,7 +70,7 @@ test('it includes ancestors in breadcrumbs', function () {
     ]);
     $parent->appendToNode($grandparent)->save();
 
-    $child = Collection::factory()->create([
+    $child = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $grandparent->collection_group_id,
         'attribute_data' => collect([
             'name' => new Text('Child'),
@@ -97,7 +97,7 @@ test('it includes ancestors in breadcrumbs', function () {
 test('breadcrumbs are in correct order from root to current', function () {
     $language = Language::getDefault();
 
-    $root = Collection::factory()->create([
+    $root = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect(['name' => new Text('Root')]),
     ]);
     $root->urls()->create([
@@ -106,7 +106,7 @@ test('breadcrumbs are in correct order from root to current', function () {
         'language_id' => $language->id,
     ]);
 
-    $level1 = Collection::factory()->create([
+    $level1 = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $root->collection_group_id,
         'attribute_data' => collect(['name' => new Text('Level 1')]),
     ]);
@@ -117,7 +117,7 @@ test('breadcrumbs are in correct order from root to current', function () {
     ]);
     $level1->appendToNode($root)->save();
 
-    $level2 = Collection::factory()->create([
+    $level2 = Collection::factory()->create(['status' => 'published', 
         'collection_group_id' => $root->collection_group_id,
         'attribute_data' => collect(['name' => new Text('Level 2')]),
     ]);
@@ -145,7 +145,7 @@ test('it preserves existing breadcrumbs when constructed with collection', funct
         Breadcrumb::from(['label' => 'Home', 'model' => 'page', 'slug' => '/']),
     ]);
 
-    $collection = Collection::factory()->create([
+    $collection = Collection::factory()->create(['status' => 'published', 
         'attribute_data' => collect(['name' => new Text('Products')]),
     ]);
     $collection->urls()->create([

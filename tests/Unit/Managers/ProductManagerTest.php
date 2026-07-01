@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductOption;
-use Lunar\Catalog\Models\ProductOptionValue;
-use Lunar\Catalog\Models\ProductType;
-use Lunar\Catalog\Models\ProductVariant;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -205,7 +205,7 @@ test('it can get product model by slug', function () {
 
     $product = Product::factory()
         ->for($productType)
-        ->create(['status' => 'active']);
+        ->create(['status' => 'published']);
 
     $product->urls()->create([
         'slug' => 'test-product',

@@ -85,13 +85,13 @@ test('it can get variant by sku', function () {
     $language = \Lunar\Core\Models\Language::factory()->create(['default' => true]);
     $customerGroup = \Lunar\Core\Models\CustomerGroup::factory()->create(['default' => true]);
     $taxClass = \Lunar\Core\Models\TaxClass::factory()->create(['default' => true]);
-    $productType = \Lunar\Catalog\Models\ProductType::factory()->create();
+    $productType = \Lunar\Core\Models\ProductType::factory()->create();
 
-    $product = \Lunar\Catalog\Models\Product::factory()
+    $product = \Lunar\Core\Models\Product::factory()
         ->for($productType)
         ->create();
 
-    $variant = \Lunar\Catalog\Models\ProductVariant::factory()
+    $variant = \Lunar\Core\Models\ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
         ->create(['sku' => 'TEST-SKU-123']);

@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Tests;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Artisan;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
 use Lunar\Core\LunarServiceProvider;
 use Lunar\Search\SearchServiceProvider;
@@ -22,6 +23,12 @@ abstract class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Build a clean schema per test from the migrator's registered paths
+        // (core + Laravel defaults). RefreshDatabase's setup-time migrate
+        // collides with Lunar core's consolidated schema under Testbench, so we
+        // migrate explicitly here where the migrator paths are fully resolved.
+        Artisan::call('migrate:fresh', ['--database' => 'testing']);
 
         activity()->disableLogging();
         $this->freezeTime();
@@ -56,6 +63,7 @@ abstract class TestCase extends Orchestra
 
         $app['config']->set('database.connections.testing.database', $dbPath);
         $app['config']->set('lunar.urls.generator', null);
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
     }
 
     // Register Laravel's default migrations on the migrator instead of running

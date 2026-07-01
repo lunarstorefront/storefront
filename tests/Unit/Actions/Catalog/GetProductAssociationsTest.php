@@ -1,9 +1,9 @@
 <?php
 
-use Lunar\Catalog\Enums\ProductAssociationType;
-use Lunar\Catalog\Models\Product;
-use Lunar\Catalog\Models\ProductAssociation;
-use Lunar\Catalog\Models\ProductType;
+use Lunar\Core\Enums\ProductAssociation as ProductAssociationType;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductAssociation;
+use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -100,7 +100,7 @@ test('it can filter by association type', function () {
     expect($all)->toHaveCount(2);
 
     // Filter by cross-sell type
-    $crossSells = $action->get($product, ProductAssociationType::CrossSell);
+    $crossSells = $action->get($product, ProductAssociationType::CROSS_SELL);
     expect($crossSells)->toHaveCount(1)
         ->and($crossSells->first()->target->id)->toBe($crossSellProduct->id);
 });
