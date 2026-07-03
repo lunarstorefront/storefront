@@ -37,8 +37,9 @@ trait HasAttributeData
             );
         }
 
-        return $attributeValues->mapWithKeys(
-            fn (AttributeDataValue $value) => [$value->handle => $value]
-        );
+        // Keep this a sequential list — keying by handle makes the collection
+        // serialize as a JSON object when non-empty but an array when empty,
+        // breaking the AttributeDataValue[] contract on the frontend.
+        return $attributeValues->values();
     }
 }

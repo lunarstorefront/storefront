@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Lunar\Core\Models\Product as ProductModel;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Spatie\LaravelData\Data;
@@ -22,6 +23,7 @@ class Product extends Data
         public Lazy|Media $thumbnail,
         /** @var Media[] */
         public Lazy|Collection $images,
+        public Lazy|Collection $media,
         public ?Url $url = null,
     ) {}
 
@@ -32,7 +34,14 @@ class Product extends Data
             description: $product->translate('description'),
             attributeData: static::mapAttributes($product),
             thumbnail: Lazy::whenLoaded('thumbnail', $product, fn () => Media::from($product->thumbnail)),
-            images: Lazy::whenLoaded('media', $product, fn () => Media::collect($product->media)),
+            images: Lazy::whenLoaded('media', $product, fn () => Media::collect($product->images)),
+            media: Lazy::whenLoaded('media', $product, fn () => $product->media->groupBy('collection_name')->map(
+                fn ($media, $collection) => new MediaCollection(
+                    name: Str::title($collection),
+                    handle: $collection,
+                    files: Media::collect($media)
+                )
+            )->values()),
             url: Url::from($product->defaultUrl)
         );
     }

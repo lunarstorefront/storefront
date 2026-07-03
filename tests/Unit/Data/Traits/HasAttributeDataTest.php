@@ -38,9 +38,32 @@ test('it maps model attributes to AttributeDataValue collection', function () {
     $result = $testClass::mapAttributes($product);
 
     expect($result)->toHaveCount(1)
-        ->and($result->has('material'))->toBeTrue()
-        ->and($result->get('material'))->toBeInstanceOf(AttributeDataValue::class)
-        ->and($result->get('material')->value)->toBe('Cotton');
+        ->and($result->first())->toBeInstanceOf(AttributeDataValue::class)
+        ->and($result->firstWhere('handle', 'material')->value)->toBe('Cotton');
+});
+
+test('it serializes to a JSON array regardless of contents', function () {
+    $productType = ProductType::factory()->create();
+
+    $product = Product::factory()
+        ->for($productType)
+        ->create([
+            'attribute_data' => collect([
+                'name' => new Text('Test Product'),
+                'material' => new Text('Cotton'),
+                'colour' => new Text('Blue'),
+            ]),
+        ]);
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    $result = $testClass::mapAttributes($product);
+
+    expect(array_is_list($result->all()))->toBeTrue()
+        ->and(json_encode($result))->toStartWith('[');
 });
 
 test('it excludes name and description attributes', function () {

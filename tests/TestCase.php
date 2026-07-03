@@ -4,8 +4,8 @@ namespace Lunar\Storefront\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
-use Kalnoy\Nestedset\NestedSetServiceProvider;
 use Lunar\Core\LunarServiceProvider;
+use Lunar\Nestedset\NestedSetServiceProvider;
 use Lunar\Search\SearchServiceProvider;
 use Lunar\Storefront\StorefrontServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
