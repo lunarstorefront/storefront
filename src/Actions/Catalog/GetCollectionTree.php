@@ -9,14 +9,15 @@ use Lunar\Storefront\Data\Collection;
 class GetCollectionTree
 {
     /**
+     * @param  array<int, string>  $eager  Relations to eager load onto each collection.
      * @return LaravelCollection<int, Collection>
      */
-    public function get(string $group = 'main', int $maxDepth = 3): LaravelCollection
+    public function get(string $group = 'main', int $maxDepth = 3, array $eager = ['defaultUrl']): LaravelCollection
     {
         $collections = \Lunar\Core\Models\Collection::whereHas(
             'group',
             fn (Builder $builder) => $builder->where('handle', $group)
-        )->with(['defaultUrl'])
+        )->with($eager)
             ->withDepth()
             ->defaultOrder()
             ->get()
