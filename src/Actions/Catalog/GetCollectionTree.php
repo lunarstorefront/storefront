@@ -16,7 +16,7 @@ class GetCollectionTree
         $collections = \Lunar\Core\Models\Collection::whereHas(
             'group',
             fn (Builder $builder) => $builder->where('handle', $group)
-        )->with(['defaultUrl'])
+        )->with(['defaultUrl', 'thumbnail'])
             ->withDepth()
             ->defaultOrder()
             ->get()
