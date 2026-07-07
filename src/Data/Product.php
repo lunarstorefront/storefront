@@ -23,6 +23,7 @@ class Product extends Data
         public Lazy|Media $thumbnail,
         /** @var Media[] */
         public Lazy|Collection $images,
+        /** @var MediaCollection[] */
         public Lazy|Collection $media,
         public ?Url $url = null,
     ) {}
