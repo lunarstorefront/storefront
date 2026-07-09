@@ -39,7 +39,7 @@ $product = Storefront::products()->getModelBySlug('acme-widget'); // Lunar\Core\
 // Options available for this product (only values that have variants)
 $options = Storefront::products()->getOptions($product); // Collection<ProductOption>
 
-// Every option-value combination, with stock, purchasability, and an encrypted hash
+// Every option-value combination, with stock, purchasability, and a signed hash
 $permutations = Storefront::products()->getPermutations($product, $options);
 // Collection<Lunar\Storefront\Data\ProductOptionPermutation>
 // each: hash, hasVariant, stock, backorder, purchasable, values, valueNames

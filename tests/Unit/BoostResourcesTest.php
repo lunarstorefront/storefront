@@ -1,5 +1,7 @@
 <?php
 
+use Symfony\Component\Yaml\Yaml;
+
 $boostSkills = [
     'storefront-catalog',
     'storefront-pages',
@@ -16,10 +18,10 @@ it('ships a valid boost skill', function (string $skill) {
 
     expect(preg_match('/\A---\R(.*?)\R---\R/s', $content, $frontmatter))->toBe(1);
 
-    expect(preg_match('/^name:\s*(\S+)\s*$/m', $frontmatter[1], $name))->toBe(1);
-    expect($name[1])->toBe($skill);
+    $parsed = Yaml::parse($frontmatter[1]);
 
-    expect(preg_match('/^description:\s*(\S.*)$/m', $frontmatter[1], $description))->toBe(1);
+    expect($parsed['name'])->toBe($skill);
+    expect($parsed['description'])->toBeString()->not->toBeEmpty();
 })->with($boostSkills);
 
 it('ships the boost core guideline', function () {
@@ -30,10 +32,19 @@ it('ships the boost core guideline', function () {
 });
 
 it('does not mention deferred integrations in boost resources', function () {
-    $files = array_merge(
-        glob(dirname(__DIR__, 2).'/resources/boost/skills/*/SKILL.md'),
-        glob(dirname(__DIR__, 2).'/resources/boost/guidelines/*.blade.php'),
+    $directory = dirname(__DIR__, 2).'/resources/boost';
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)
     );
+
+    $files = [];
+
+    foreach ($iterator as $fileInfo) {
+        if ($fileInfo->isFile()) {
+            $files[] = $fileInfo->getPathname();
+        }
+    }
 
     expect($files)->not->toBeEmpty();
 

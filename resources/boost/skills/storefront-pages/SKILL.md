@@ -31,7 +31,7 @@ Groups: `cart`, `account`, `checkout`, `currency`, `suggestions`, `auth`. Unknow
 | suggestions | `storefront.query-suggestions` GET `api/query-suggestions` |
 | auth | `auth.codes` GET `/api/auth/codes` (auth) |
 
-`routes/catalog.php` is a separate opt-in file with one route — `storefront.api.products-hash` POST `products/variants/hash`, which turns an `options` array into an encrypted variant hash (`{"hash": "..."}`):
+`routes/catalog.php` is a separate opt-in file with one route — `storefront.api.products-hash` POST `products/variants/hash`, which turns an `options` array into a signed variant hash (`{"hash": "..."}`):
 
 ```php
 // routes/web.php

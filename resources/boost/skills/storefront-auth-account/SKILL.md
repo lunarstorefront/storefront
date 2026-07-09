@@ -89,4 +89,4 @@ DTO shapes:
 
 - `Customer`: firstName, lastName, companyName?, taxIdentifier?
 - `Address`: id, title, firstName, lastName, companyName, lineOne/Two/Three, city, state, postcode, countryId, contactEmail, contactPhone, countryIso, countryName (all nullable strings)
-- `Order`: id, status, reference, integer totals (subTotal, discountTotal, shippingTotal, taxTotal, total), currencyCode, placedAt, plus Lazy billingAddress, shippingAddress, transactions, physicalLines
+- `Order`: id, status, reference, integer totals (subTotal, discountTotal, shippingTotal, taxTotal, total), notes?, currencyCode, placedAt, plus Lazy billingAddress, shippingAddress, transactions, physicalLines
