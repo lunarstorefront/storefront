@@ -3,6 +3,7 @@
 $boostSkills = [
     'storefront-catalog',
     'storefront-pages',
+    'storefront-auth-account',
 ];
 
 it('ships a valid boost skill', function (string $skill) {
