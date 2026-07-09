@@ -25,9 +25,9 @@ class Order extends Data
         public ?\DateTime $placedAt,
         public Lazy|OrderAddress $billingAddress,
         public Lazy|OrderAddress $shippingAddress,
-        /** @var Transaction[] */
+        /** @var Lazy|Transaction[] */
         public Lazy|Collection $transactions,
-        /** @var OrderLine[] */
+        /** @var Lazy|OrderLine[]|null */
         public Lazy|Collection|null $physicalLines = null,
     ) {}
 

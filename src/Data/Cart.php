@@ -25,7 +25,7 @@ class Cart extends Data
         public ?string $totalFormatted,
         public Currency $currency,
         public ?int $linesCount,
-        /** @var CartLine[] */
+        /** @var Lazy|CartLine[] */
         public Lazy|Collection $lines,
         public Lazy|CartAddress|null $shippingAddress,
         public Lazy|CartAddress|null $billingAddress,

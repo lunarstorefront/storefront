@@ -15,7 +15,7 @@ class ProductVariant extends Data
         public string $id,
         public string $sku,
         public int $stock,
-        /** @var ProductOptionValue[] */
+        /** @var Lazy|ProductOptionValue[] */
         public Lazy|Collection $values,
     ) {}
 

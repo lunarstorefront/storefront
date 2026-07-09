@@ -15,7 +15,7 @@ class ProductOption extends Data
         public string $id,
         public string $name,
         public string $handle,
-        /** @var ProductOptionValue[] */
+        /** @var Lazy|ProductOptionValue[] */
         public Lazy|Collection $values
     ) {}
 
