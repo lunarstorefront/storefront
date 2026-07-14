@@ -18,6 +18,7 @@ class Brand extends Data
         public string $name,
         /** @var Collection<AttributeDataValue> */
         public Collection $attributeData,
+        public int $productsCount,
         public Lazy|Media $logo,
         public Lazy|Url $url,
     ) {}
@@ -27,6 +28,7 @@ class Brand extends Data
         return new self(
             name: $brand->name,
             attributeData: static::mapAttributes($brand),
+            productsCount: $brand->products_count ?: 0,
             logo: Lazy::whenLoaded('thumbnail', $brand, fn () => Media::from($brand->thumbnail)),
             url: Lazy::whenLoaded('defaultUrl', $brand, fn () => Url::from($brand->defaultUrl)),
         );
