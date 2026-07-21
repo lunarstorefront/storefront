@@ -37,7 +37,7 @@ class Media extends Data
                         'name' => $conversion,
                         'url' => $media->getUrl($conversion),
                     ]
-                )
+                )->values() // keyed by name it would serialize as an object, not the array the TS type declares
             )
         );
     }

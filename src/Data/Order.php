@@ -14,7 +14,7 @@ class Order extends Data
     public function __construct(
         public string $id,
         public string $status,
-        public string $reference,
+        public ?string $reference,
         public int $subTotal,
         public int $discountTotal,
         public int $shippingTotal,
