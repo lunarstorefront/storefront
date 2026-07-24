@@ -4,6 +4,7 @@ namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Lunar\Core\Enums\SellingPolicy;
 use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductOption;
 use Lunar\Core\Models\ProductOptionValue;
@@ -53,7 +54,18 @@ class GetProductOptionPermutations
                 stock: (int) $variantQuery->clone()->get()->sum(
                     fn (ProductVariant $variant) => $variant->getTotalInventory()
                 ),
-                backorder: $variantQuery->clone()->where('purchasable', 'always')->exists(),
+                // Purchasable beyond stock: unconstrained (Always) or with
+                // backorder allowance. The legacy `purchasable` column this
+                // used to read was replaced by `selling_policy` + `backorder`.
+                backorder: $variantQuery->clone()->where(
+                    fn (Builder $query) => $query
+                        ->where('selling_policy', SellingPolicy::Always)
+                        ->orWhere(
+                            fn (Builder $query) => $query
+                                ->where('selling_policy', SellingPolicy::InStockOrOnBackorder)
+                                ->where('backorder', '>', 0)
+                        )
+                )->exists(),
                 values: $values->mapWithKeys(
                     fn (ProductOptionValue $value) => [(string) $value->product_option_id => $value->id]
                 )->toArray(),

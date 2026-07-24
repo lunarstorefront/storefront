@@ -1,5 +1,6 @@
 <?php
 
+use Lunar\Core\Enums\SellingPolicy;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -270,18 +271,18 @@ test('it detects backorder availability', function () {
         ->for($colorOption, 'option')
         ->create(['name' => collect(['en' => new Text('Blue')])]);
 
-    // Red variant: normal purchasable
+    // Red variant: only sellable from stock
     $variantRed = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['purchasable' => 'in-stock']);
+        ->create(['selling_policy' => SellingPolicy::InStock]);
     $variantRed->values()->attach($red);
 
     // Blue variant: always purchasable (backorder)
     $variantBlue = ProductVariant::factory()
         ->for($product)
         ->for($taxClass)
-        ->create(['purchasable' => 'always']);
+        ->create(['selling_policy' => SellingPolicy::Always]);
     $variantBlue->values()->attach($blue);
 
     $product->productOptions()->attach($colorOption, ['position' => 1]);
