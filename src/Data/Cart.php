@@ -25,6 +25,7 @@ class Cart extends Data
         public ?string $totalFormatted,
         public Currency $currency,
         public ?int $linesCount,
+        public ?int $totalQuantity,
         /** @var Lazy|CartLine[] */
         public Lazy|Collection $lines,
         public Lazy|CartAddress|null $shippingAddress,
@@ -48,6 +49,9 @@ class Cart extends Data
             totalFormatted: $cart->total->format(),
             currency: Currency::from($cart->currency),
             linesCount: $cart->lines_count,
+            totalQuantity: $cart->lines_sum_quantity !== null
+                ? (int) $cart->lines_sum_quantity
+                : ($cart->relationLoaded('lines') ? $cart->lines->sum('quantity') : null),
             lines: Lazy::whenLoaded('lines', $cart, fn () => CartLine::collect($cart->lines)),
             shippingAddress: Lazy::whenLoaded('shippingAddress', $cart, fn () => CartAddress::from($cart->shippingAddress)),
             billingAddress: Lazy::whenLoaded('billingAddress', $cart, fn () => CartAddress::from($cart->billingAddress)),
