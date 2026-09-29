@@ -5,7 +5,6 @@ namespace Lunar\Storefront\Rules;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Lunar\Core\Models\Cart;
-use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\ProductVariant;
 
 class InStock implements DataAwareRule, ValidationRule
@@ -37,7 +36,11 @@ class InStock implements DataAwareRule, ValidationRule
         $variant = null;
 
         if ($this->cartLineId) {
-            $cartLine = CartLine::find($this->cartLineId);
+            /**
+             * Only the shopper's own cart: a line id from another cart is
+             * treated as not found, so the rule never confirms it exists.
+             */
+            $cartLine = $this->cart?->lines->firstWhere('id', $this->cartLineId);
 
             if (! $cartLine) {
                 $fail('Cart line not found.');
@@ -58,16 +61,22 @@ class InStock implements DataAwareRule, ValidationRule
             return;
         }
 
-        $existingLine = $this->cart?->lines->first(
-            fn ($line) => $line->purchasable_id == $variant->id
-        );
+        /**
+         * What the cart already holds of this variant besides the value under
+         * validation. An add is on top of every line of it; an update sets
+         * its own line's quantity, so that line's current quantity is not
+         * counted again.
+         */
+        $alreadyInCart = (int) $this->cart?->lines
+            ->filter(fn ($line) => $line->purchasable_id == $variant->id && $line->id != $this->cartLineId)
+            ->sum('quantity');
 
-        $value = $value + ($existingLine?->quantity ?: 0);
+        $value = $value + $alreadyInCart;
 
         if (! $variant->canBeFulfilledAtQuantity($value)) {
             $fail(
                 (
-                    $existingLine ?
+                    $alreadyInCart ?
                         'Insufficient stock for total quantity '.$value :
                         'Insufficient stock.'
                 )
