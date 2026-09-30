@@ -4,6 +4,7 @@ namespace Lunar\Storefront;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 use Lunar\Core\Facades\CartSession;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\ProductVariant;
@@ -56,7 +57,8 @@ class RouteRegistrar
             $request->validate([
                 'quantity' => [
                     'required',
-                    'numeric',
+                    'integer',
+                    'min:1',
                     new InStock($cart, cartLineId: $id),
                 ],
             ]);
@@ -70,7 +72,10 @@ class RouteRegistrar
             $cart = CartSession::current();
 
             $request->validate([
-                'id' => 'required|exists:'.CartLine::class.',id',
+                'id' => [
+                    'required',
+                    Rule::exists(CartLine::class, 'id')->where('cart_id', $cart?->id),
+                ],
             ]);
 
             $cart?->lines()->where('id', $request->input('id'))->delete();
@@ -88,7 +93,8 @@ class RouteRegistrar
             $request->validate([
                 'quantity' => [
                     'required',
-                    'numeric',
+                    'integer',
+                    'min:1',
                     new InStock($cart),
                 ],
             ]);
