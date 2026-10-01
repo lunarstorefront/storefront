@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\Order;
 use Lunar\Core\Models\OrderAddress as OrderAddressModel;
 use Lunar\Core\Models\OrderLine;
@@ -11,6 +12,7 @@ use Lunar\Storefront\Data\Order as OrderData;
 use Lunar\Storefront\Data\OrderAddress;
 
 beforeEach(function () {
+    Currency::factory()->create(['code' => 'GBP', 'default' => true, 'decimal_places' => 2]);
     $this->order = Order::factory()->create([
         'reference' => '00000001',
         'customer_reference' => 'PO-4471',
@@ -81,4 +83,34 @@ test('it leaves relations out unless they are loaded', function () {
     $data = OrderData::from($this->order->fresh())->toArray();
 
     expect($data)->not->toHaveKeys(['billingAddress', 'shippingAddress', 'shippingLines', 'physicalLines']);
+});
+
+test('it formats the totals in the order currency, as the cart does', function () {
+    $this->order->update([
+        'sub_total' => 1250,
+        'discount_total' => 0,
+        'shipping_total' => 495,
+        'tax_total' => 349,
+        'total' => 2094,
+        'currency_code' => 'GBP',
+    ]);
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'unit_price' => 625,
+        'quantity' => 2,
+        'sub_total' => 1250,
+        'total' => 1500,
+    ]);
+
+    $data = OrderData::from($this->order->fresh()->load('physicalLines'))->toArray();
+
+    expect($data)
+        ->subTotalFormatted->toBe('£12.50')
+        ->shippingTotalFormatted->toBe('£4.95')
+        ->taxTotalFormatted->toBe('£3.49')
+        ->totalFormatted->toBe('£20.94')
+        ->and($data['physicalLines'][0])
+        ->unitPriceFormatted->toBe('£6.25')
+        ->subTotalFormatted->toBe('£12.50')
+        ->totalFormatted->toBe('£15.00');
 });
