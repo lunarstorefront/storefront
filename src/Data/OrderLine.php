@@ -4,7 +4,9 @@ namespace Lunar\Storefront\Data;
 
 use Lunar\Core\DataObjects\PriceValue;
 use Lunar\Core\Models\OrderLine as OrderLineModel;
+use Lunar\Core\Models\ProductVariant;
 use Spatie\LaravelData\Data;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
@@ -37,7 +39,7 @@ class OrderLine extends Data
         return new self(
             id: (string) $orderLine->id,
             type: $orderLine->type,
-            thumbnail: $orderLine->purchasable?->thumbnail?->getUrl('thumbnail'),
+            thumbnail: static::thumbnailOf($orderLine),
             description: $orderLine->description,
             option: $orderLine->option,
             identifier: $orderLine->identifier,
@@ -52,5 +54,24 @@ class OrderLine extends Data
             total: $orderLine->total,
             totalFormatted: $format($orderLine->total),
         );
+    }
+
+    /**
+     * The line's image, as the cart line shows it: the variant's own primary
+     * image, else its product's. Variants expose that through
+     * getThumbnail(), not a `thumbnail` relation, and the media library has
+     * no `thumbnail` conversion, so `small` matches the cart.
+     */
+    protected static function thumbnailOf(OrderLineModel $orderLine): ?string
+    {
+        $purchasable = $orderLine->purchasable;
+
+        $media = match (true) {
+            $purchasable instanceof ProductVariant => $purchasable->getThumbnail(),
+            $purchasable !== null && method_exists($purchasable, 'thumbnail') => $purchasable->thumbnail,
+            default => null,
+        };
+
+        return $media instanceof Media ? $media->getUrl('small') : null;
     }
 }

@@ -2,11 +2,15 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Storage;
 use Lunar\Core\Models\Country;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\Order;
 use Lunar\Core\Models\OrderAddress as OrderAddressModel;
 use Lunar\Core\Models\OrderLine;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\States\Order\Payment\Paid;
 use Lunar\Storefront\Data\Order as OrderData;
 use Lunar\Storefront\Data\OrderAddress;
@@ -113,4 +117,24 @@ test('it formats the totals in the order currency, as the cart does', function (
         ->unitPriceFormatted->toBe('£6.25')
         ->subTotalFormatted->toBe('£12.50')
         ->totalFormatted->toBe('£15.00');
+});
+
+test('it shows the product image on each line, as the cart does', function () {
+    Storage::fake(config('media-library.disk_name'));
+    $product = Product::factory()->for(ProductType::factory())->create();
+    $product->addMediaFromString(onePixelPng())
+        ->usingFileName('alpha2.png')
+        ->withCustomProperties(['primary' => true])
+        ->toMediaCollection(config('lunar.media.collection'));
+    $variant = ProductVariant::factory()->for($product)->create();
+
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $variant->getMorphClass(),
+        'purchasable_id' => $variant->id,
+    ]);
+
+    $data = OrderData::from($this->order->fresh()->load('physicalLines'))->toArray();
+
+    expect($data['physicalLines'][0]['thumbnail'])->toContain('alpha2');
 });
