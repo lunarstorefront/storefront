@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Lunar\Core\Models\Order as OrderModel;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
@@ -26,6 +27,8 @@ class Order extends Data
         public int $total,
         public ?string $notes,
         public string $currencyCode,
+        /** Serialised as an ISO 8601 string. */
+        #[LiteralTypeScriptType('string | null')]
         public ?\DateTimeInterface $placedAt,
         public Lazy|OrderAddress|null $billingAddress,
         public Lazy|OrderAddress|null $shippingAddress,
