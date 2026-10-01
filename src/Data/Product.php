@@ -5,6 +5,7 @@ namespace Lunar\Storefront\Data;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Lunar\Core\Models\Product as ProductModel;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Storefront\Data\Traits\HasAttributeData;
 use Lunar\Storefront\Facades\Storefront;
 use Spatie\LaravelData\Data;
@@ -42,6 +43,19 @@ class Product extends Data
          * Request via ->include('price').
          */
         public Lazy|Price|null $price = null,
+        /**
+         * Opt-in lazy: whether the default variant can be bought now, on the
+         * same rule the cart applies (`canBeFulfilledAtQuantity`), so a card
+         * never offers an add the cart will reject. Request via
+         * ->include('availability'). One of in_stock, backorder, out_of_stock.
+         */
+        public Lazy|string|null $availability = null,
+        /**
+         * Opt-in lazy: number of variants, so a card can send the shopper to
+         * choose options rather than add the default one. Request via
+         * ->include('variantCount').
+         */
+        public Lazy|int|null $variantCount = null,
     ) {}
 
     public static function fromModel(ProductModel $product): self
@@ -68,6 +82,26 @@ class Product extends Data
 
                 return $pricing ? Storefront::pricing()->getQuantifiedPrice($pricing, 1) : null;
             }),
+            availability: Lazy::create(fn (): string => static::availabilityOf($product)),
+            variantCount: Lazy::create(fn (): int => $product->variants->count()),
         );
+    }
+
+    /**
+     * Stock state of the default variant for display: in stock when there is
+     * stock on hand, backorder when the cart would still accept one without
+     * it, and out of stock otherwise (including no variant at all).
+     *
+     * @return 'in_stock'|'backorder'|'out_of_stock'
+     */
+    protected static function availabilityOf(ProductModel $product): string
+    {
+        $variant = $product->variants->first();
+
+        if (! $variant instanceof ProductVariant || ! $variant->canBeFulfilledAtQuantity(1)) {
+            return 'out_of_stock';
+        }
+
+        return $variant->stock_available > 0 ? 'in_stock' : 'backorder';
     }
 }
