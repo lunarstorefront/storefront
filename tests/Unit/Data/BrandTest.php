@@ -8,20 +8,6 @@ beforeEach(function () {
     Storage::fake(config('media-library.disk_name'));
 });
 
-/** A valid 1x1 PNG — the media collections enforce image mime types and
- *  generate conversions, so the bytes must be a real, loadable image. */
-function onePixelPng(): string
-{
-    $image = imagecreatetruecolor(1, 1);
-
-    ob_start();
-    imagepng($image);
-    $bytes = ob_get_clean();
-    imagedestroy($image);
-
-    return $bytes;
-}
-
 test('it resolves the logo from the dedicated logo media collection', function () {
     $brand = Brand::factory()->create(['name' => 'Acme']);
     $brand->addMediaFromString(onePixelPng())->usingFileName('logo.png')->toMediaCollection('logo');
