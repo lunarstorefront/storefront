@@ -13,8 +13,12 @@ class Order extends Data
 {
     public function __construct(
         public string $id,
+        /** The fulfilment status, kept under its pre-2.x name for existing consumers. */
         public string $status,
+        public string $paymentStatus,
+        public string $fulfilmentStatus,
         public ?string $reference,
+        public ?string $customerReference,
         public int $subTotal,
         public int $discountTotal,
         public int $shippingTotal,
@@ -22,21 +26,28 @@ class Order extends Data
         public int $total,
         public ?string $notes,
         public string $currencyCode,
-        public ?\DateTime $placedAt,
-        public Lazy|OrderAddress $billingAddress,
-        public Lazy|OrderAddress $shippingAddress,
+        public ?\DateTimeInterface $placedAt,
+        public Lazy|OrderAddress|null $billingAddress,
+        public Lazy|OrderAddress|null $shippingAddress,
         /** @var Lazy|Transaction[] */
         public Lazy|Collection $transactions,
         /** @var Lazy|OrderLine[]|null */
         public Lazy|Collection|null $physicalLines = null,
+        /** @var Lazy|OrderLine[]|null */
+        public Lazy|Collection|null $shippingLines = null,
     ) {}
 
     public static function fromModel(OrderModel $order): self
     {
+        $fulfilmentStatus = (string) $order->fulfilment_status?->getValue();
+
         return new self(
-            id: $order->id,
-            status: $order->status,
+            id: (string) $order->id,
+            status: $fulfilmentStatus,
+            paymentStatus: (string) $order->payment_status?->getValue(),
+            fulfilmentStatus: $fulfilmentStatus,
             reference: $order->reference,
+            customerReference: $order->customer_reference,
             subTotal: $order->sub_total,
             discountTotal: $order->discount_total,
             shippingTotal: $order->shipping_total,
@@ -45,10 +56,11 @@ class Order extends Data
             notes: $order->notes,
             currencyCode: $order->currency_code,
             placedAt: $order->placed_at,
-            billingAddress: Lazy::whenLoaded('billingAddress', $order, fn () => OrderAddress::from($order->billingAddress)),
-            shippingAddress: Lazy::whenLoaded('shippingAddress', $order, fn () => OrderAddress::from($order->shippingAddress)),
+            billingAddress: Lazy::whenLoaded('billingAddress', $order, fn () => $order->billingAddress ? OrderAddress::fromModel($order->billingAddress) : null),
+            shippingAddress: Lazy::whenLoaded('shippingAddress', $order, fn () => $order->shippingAddress ? OrderAddress::fromModel($order->shippingAddress) : null),
             transactions: Lazy::whenLoaded('transactions', $order, fn () => Transaction::collect($order->transactions)),
-            physicalLines: Lazy::whenLoaded('physicalLines', $order, fn () => OrderLine::collect($order->physicalLines))
+            physicalLines: Lazy::whenLoaded('physicalLines', $order, fn () => OrderLine::collect($order->physicalLines)),
+            shippingLines: Lazy::whenLoaded('shippingLines', $order, fn () => OrderLine::collect($order->shippingLines)),
         );
     }
 }

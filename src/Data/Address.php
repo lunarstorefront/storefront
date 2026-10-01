@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 #[TypeScript]
 class Address extends Data
 {
@@ -28,10 +31,10 @@ class Address extends Data
         public ?string $countryName,
     ) {}
 
-    public static function fromModel(Model $address): self
+    public static function fromModel(Model $address): static
     {
-        return new self(
-            id: $address->id,
+        return new static(
+            id: $address->id === null ? null : (string) $address->id,
             title: $address->title,
             firstName: $address->first_name,
             lastName: $address->last_name,
@@ -42,7 +45,7 @@ class Address extends Data
             city: $address->city,
             state: $address->state,
             postcode: $address->postcode,
-            countryId: $address->country_id,
+            countryId: $address->country_id === null ? null : (string) $address->country_id,
             contactEmail: $address->contact_email,
             contactPhone: $address->contact_phone,
             countryIso: $address->country?->iso2,
