@@ -134,3 +134,14 @@ test('it exposes the owned placed orders as a query for counts', function () {
 
     expect((new GetCustomerOrders)->query($this->user)->count())->toBe(1);
 });
+
+test('it lets the caller shape each order, with the model in hand', function () {
+    placedOrderFor($this->user, ['reference' => '00000042']);
+
+    $page = (new GetCustomerOrders)->get(
+        $this->user,
+        transform: fn (Order $order): array => ['reference' => $order->reference, 'lines' => $order->physicalLines->count()],
+    );
+
+    expect($page->items())->toBe([['reference' => '00000042', 'lines' => 1]]);
+});

@@ -32,12 +32,17 @@ class GetCustomerOrders
      * `sort` is `newest` (default), `oldest` or `total` (highest first).
      * `$scope` lets the caller narrow further, such as a status tab, since
      * how statuses are grouped and worded belongs to the storefront.
+     * `$transform` shapes each order with the model in hand (the default is
+     * the Order DTO), for cards that need more than the DTO carries.
+     *
+     * @template TItem
      *
      * @param  array{search?: string|null, from?: string|null, to?: string|null, sort?: string|null}  $filters
      * @param  (Closure(Builder<Order>): mixed)|null  $scope
-     * @return LengthAwarePaginator<int, OrderData>
+     * @param  (Closure(Order): TItem)|null  $transform
+     * @return LengthAwarePaginator<int, TItem|OrderData>
      */
-    public function get(Model&LunarUser $user, array $filters = [], int $perPage = 10, ?Closure $scope = null): LengthAwarePaginator
+    public function get(Model&LunarUser $user, array $filters = [], int $perPage = 10, ?Closure $scope = null, ?Closure $transform = null): LengthAwarePaginator
     {
         $search = trim((string) ($filters['search'] ?? ''));
 
@@ -62,7 +67,7 @@ class GetCustomerOrders
             })
             ->paginate($perPage)
             ->withQueryString()
-            ->through(fn (Order $order): OrderData => OrderData::fromModel($order));
+            ->through($transform ?? fn (Order $order): OrderData => OrderData::fromModel($order));
     }
 
     /**
