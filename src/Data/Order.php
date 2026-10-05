@@ -44,6 +44,12 @@ class Order extends Data
         public Lazy|Collection|null $physicalLines = null,
         /** @var Lazy|OrderLine[]|null */
         public Lazy|Collection|null $shippingLines = null,
+        /**
+         * How the order was paid, e.g. `card` or `on-account`: the payment
+         * method handle the checkout stamps on `orders.meta` as it places the
+         * order. Null for an order placed some other way.
+         */
+        public ?string $paymentMethod = null,
     ) {}
 
     public static function fromModel(OrderModel $order): self
@@ -77,6 +83,18 @@ class Order extends Data
             transactions: Lazy::whenLoaded('transactions', $order, fn () => Transaction::collect($order->transactions)),
             physicalLines: Lazy::whenLoaded('physicalLines', $order, fn () => OrderLine::collect($order->physicalLines->each->setRelation('order', $order))),
             shippingLines: Lazy::whenLoaded('shippingLines', $order, fn () => OrderLine::collect($order->shippingLines->each->setRelation('order', $order))),
+            paymentMethod: self::paymentMethod($order),
         );
+    }
+
+    /**
+     * The checkout records the method on the order's meta, not a column, so a
+     * blank or non-string value reads as unknown.
+     */
+    private static function paymentMethod(OrderModel $order): ?string
+    {
+        $method = $order->meta['payment_method'] ?? null;
+
+        return is_string($method) && $method !== '' ? $method : null;
     }
 }

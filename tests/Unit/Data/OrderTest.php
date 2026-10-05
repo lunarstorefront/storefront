@@ -40,6 +40,22 @@ test('it maps a placed order', function () {
         ->placedAt->toBeString();
 });
 
+test('it carries the payment method the checkout stamped on the order', function () {
+    $this->order->update(['meta' => ['payment_method' => 'on-account']]);
+
+    expect(OrderData::from($this->order->fresh())->paymentMethod)->toBe('on-account');
+});
+
+test('it leaves the payment method unknown when none was stamped', function (?array $meta) {
+    $this->order->update(['meta' => $meta]);
+
+    expect(OrderData::from($this->order->fresh())->paymentMethod)->toBeNull();
+})->with([
+    'no meta' => [null],
+    'no method' => [['source' => 'import']],
+    'blank method' => [['payment_method' => '']],
+]);
+
 test('it accepts the immutable dates an app can opt into', function () {
     Date::use(CarbonImmutable::class);
 
