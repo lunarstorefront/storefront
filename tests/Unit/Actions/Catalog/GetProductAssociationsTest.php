@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Lunar\Core\Enums\ProductAssociation as ProductAssociationType;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -163,4 +164,48 @@ test('it eager loads target product relations', function () {
 
     expect($association->relationLoaded('target'))->toBeTrue()
         ->and($association->target->relationLoaded('defaultUrl'))->toBeTrue();
+});
+
+test('it gets the associations of several products in one query, in product order', function () {
+    $productType = ProductType::factory()->create();
+
+    [$first, $second, $unrelated] = Product::factory()->for($productType)->count(3)->create();
+    [$a, $b, $c, $d] = Product::factory()->for($productType)->count(4)->create();
+
+    ProductAssociation::create(['product_parent_id' => $second->id, 'product_target_id' => $c->id, 'type' => 'cross-sell', 'sort' => 1]);
+    ProductAssociation::create(['product_parent_id' => $first->id, 'product_target_id' => $b->id, 'type' => 'cross-sell', 'sort' => 2]);
+    ProductAssociation::create(['product_parent_id' => $first->id, 'product_target_id' => $a->id, 'type' => 'cross-sell', 'sort' => 1]);
+    ProductAssociation::create(['product_parent_id' => $unrelated->id, 'product_target_id' => $d->id, 'type' => 'cross-sell']);
+
+    DB::enableQueryLog();
+    $result = (new GetProductAssociations)->getForProducts([$first, $second]);
+    $associationQueries = collect(DB::getQueryLog())
+        ->filter(fn (array $query): bool => str_contains($query['query'], 'product_associations'))
+        ->count();
+    DB::disableQueryLog();
+
+    expect($result->map(fn ($association) => $association->target->id)->all())
+        ->toBe([$a->id, $b->id, $c->id])
+        ->and($associationQueries)->toBe(1)
+        ->and($result->first()->target->relationLoaded('defaultUrl'))->toBeTrue();
+});
+
+test('it filters several products\' associations by type and direction', function () {
+    $productType = ProductType::factory()->create();
+
+    [$parent, $crossSell, $upSell] = Product::factory()->for($productType)->count(3)->create();
+
+    ProductAssociation::create(['product_parent_id' => $parent->id, 'product_target_id' => $crossSell->id, 'type' => 'cross-sell']);
+    ProductAssociation::create(['product_parent_id' => $parent->id, 'product_target_id' => $upSell->id, 'type' => 'up-sell']);
+
+    $action = new GetProductAssociations;
+
+    expect($action->getForProducts([$parent], ProductAssociationType::CROSS_SELL)->pluck('product_target_id')->all())
+        ->toBe([$crossSell->id])
+        ->and($action->getForProducts([$crossSell], inverse: true)->first()->parent->id)
+        ->toBe($parent->id);
+});
+
+test('it returns no associations for no products', function () {
+    expect((new GetProductAssociations)->getForProducts([]))->toBeEmpty();
 });
