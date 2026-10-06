@@ -11,6 +11,9 @@ use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\Models\TaxZone;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
 use Lunar\Storefront\Data\PriceBreak;
 
@@ -321,3 +324,47 @@ test('it handles non-sequential keys after sorting', function () {
     expect($result[2]->lowerLimit)->toBe(100)
         ->and($result[2]->upperLimit)->toBeNull();
 });
+
+test('it resolves each tier inclusive of the tax rate of the variant', function (int $percentage, array $inclTax) {
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    TaxRateAmount::factory()->create([
+        'tax_rate_id' => TaxRate::factory()->create([
+            'tax_zone_id' => TaxZone::factory()->create(['default' => true])->id,
+        ])->id,
+        'tax_class_id' => $taxClass->id,
+        'percentage' => $percentage,
+    ]);
+
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for($taxClass)
+        ->create();
+
+    $price = fn (int $amount, int $minQuantity, ?int $listPrice = null) => Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => $amount,
+        'list_price' => $listPrice,
+        'min_quantity' => $minQuantity,
+    ]);
+
+    $basePrice = $price(1000, 1, 1500);
+
+    $breaks = (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $basePrice,
+        base: $basePrice,
+        priceBreaks: collect([$price(900, 10), $price(800, 50)]),
+        customerGroupPrices: collect([]),
+    ));
+
+    expect($breaks->map(fn (PriceBreak $break) => $break->price->exclTax)->all())->toBe([1000, 900, 800])
+        ->and($breaks->map(fn (PriceBreak $break) => $break->price->inclTax)->all())->toBe($inclTax)
+        ->and($breaks->first()->price->comparePriceExcTax)->toBe(1500)
+        ->and($breaks->first()->price->comparePriceIncTax)->toBe((int) round(1500 * (1 + $percentage / 100)))
+        ->and($breaks->first()->price->formattedComparePriceExcTax)->not->toBeNull();
+})->with([
+    'standard rate' => [20, [1200, 1080, 960]],
+    'reduced rate' => [5, [1050, 945, 840]],
+    'zero rate' => [0, [1000, 900, 800]],
+]);
