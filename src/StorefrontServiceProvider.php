@@ -2,7 +2,14 @@
 
 namespace Lunar\Storefront;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Lunar\Core\Contracts\Actions\Customers\CreatesCustomer;
+use Lunar\Core\Contracts\Actions\Customers\UpdatesCustomer;
+use Lunar\Core\Models\Customer;
+use Lunar\Storefront\Actions\Account\CreateCustomerWithGroups;
+use Lunar\Storefront\Actions\Account\SyncCustomerGroups;
+use Lunar\Storefront\Actions\Account\UpdateCustomerWithGroups;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
@@ -25,11 +32,20 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->bind(CollectionManager::class, fn () => new Managers\CollectionManager);
         $this->app->bind(SearchManager::class, fn () => new Managers\SearchManager);
         $this->app->bind(PricingManager::class, fn () => new Managers\PricingManager);
+
+        // Customer group rules (Contracts\CustomerGroupResolver). Lunar's
+        // customer actions sync the groups they are given after saving, so
+        // they are wrapped to re-derive groups afterwards. Both wrappers and
+        // the save hook in boot() do nothing until a resolver is bound.
+        $this->app->extend(CreatesCustomer::class, fn (CreatesCustomer $action, Application $app) => new CreateCustomerWithGroups($action, $app->make(SyncCustomerGroups::class)));
+        $this->app->extend(UpdatesCustomer::class, fn (UpdatesCustomer $action, Application $app) => new UpdateCustomerWithGroups($action, $app->make(SyncCustomerGroups::class)));
     }
 
     public function boot(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/storefront.php', 'storefront');
+
+        Customer::saved(fn (Customer $customer) => $this->app->make(SyncCustomerGroups::class)->sync($customer));
 
         if ($this->app->runningInConsole()) {
             $this->commands([
