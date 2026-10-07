@@ -4,12 +4,14 @@ namespace Lunar\Storefront;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Lunar\Core\Contracts\Actions\Carts\AssociatesUser;
 use Lunar\Core\Contracts\Actions\Customers\CreatesCustomer;
 use Lunar\Core\Contracts\Actions\Customers\UpdatesCustomer;
 use Lunar\Core\Models\Customer;
 use Lunar\Storefront\Actions\Account\CreateCustomerWithGroups;
 use Lunar\Storefront\Actions\Account\SyncCustomerGroups;
 use Lunar\Storefront\Actions\Account\UpdateCustomerWithGroups;
+use Lunar\Storefront\Actions\Cart\AssociateUserKeepingBuyNowApart;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\CollectionManager;
@@ -39,6 +41,11 @@ class StorefrontServiceProvider extends ServiceProvider
         // the save hook in boot() do nothing until a resolver is bound.
         $this->app->extend(CreatesCustomer::class, fn (CreatesCustomer $action, Application $app) => new CreateCustomerWithGroups($action, $app->make(SyncCustomerGroups::class)));
         $this->app->extend(UpdatesCustomer::class, fn (UpdatesCustomer $action, Application $app) => new UpdateCustomerWithGroups($action, $app->make(SyncCustomerGroups::class)));
+
+        // Buy Now (Actions\Cart\BuyNow): signing in mid-checkout must not
+        // merge the user's saved cart into a Buy Now cart. Passes every other
+        // cart straight through, so it is inert until a Buy Now starts.
+        $this->app->extend(AssociatesUser::class, fn (AssociatesUser $action) => new AssociateUserKeepingBuyNowApart($action));
     }
 
     public function boot(): void
