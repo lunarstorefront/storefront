@@ -154,3 +154,25 @@ test('it shows the product image on each line, as the cart does', function () {
 
     expect($data['physicalLines'][0]['thumbnail'])->toContain('alpha2');
 });
+
+test('it gives each line its part number and VAT, for the order detail', function () {
+    $variant = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->create(['mpn' => '11100100']);
+
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $variant->getMorphClass(),
+        'purchasable_id' => $variant->id,
+        'tax_total' => 250,
+    ]);
+    $noPartNumber = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->create(['mpn' => null]);
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $noPartNumber->getMorphClass(),
+        'purchasable_id' => $noPartNumber->id,
+    ]);
+
+    $lines = collect(OrderData::from($this->order->fresh()->load('physicalLines.purchasable'))->toArray()['physicalLines']);
+
+    expect($lines->firstWhere('mpn', '11100100'))->taxTotalFormatted->toBe('£2.50')
+        ->and($lines->pluck('mpn')->all())->toContain(null);
+});

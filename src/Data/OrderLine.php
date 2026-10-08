@@ -19,6 +19,8 @@ class OrderLine extends Data
         public ?string $description,
         public ?string $option,
         public string $identifier,
+        /** The manufacturer part number, when the line is a product variant that has one. */
+        public ?string $mpn,
         public int $unitPrice,
         public ?string $unitPriceFormatted,
         public int $unitQuantity,
@@ -27,6 +29,7 @@ class OrderLine extends Data
         public ?string $subTotalFormatted,
         public int $discountTotal,
         public int $taxTotal,
+        public ?string $taxTotalFormatted,
         public int $total,
         public ?string $totalFormatted,
     ) {}
@@ -43,6 +46,7 @@ class OrderLine extends Data
             description: $orderLine->description,
             option: $orderLine->option,
             identifier: $orderLine->identifier,
+            mpn: $orderLine->purchasable instanceof ProductVariant ? $orderLine->purchasable->mpn : null,
             unitPrice: $orderLine->unit_price,
             unitPriceFormatted: $format($orderLine->unit_price),
             unitQuantity: $orderLine->unit_quantity,
@@ -51,6 +55,7 @@ class OrderLine extends Data
             subTotalFormatted: $format($orderLine->sub_total),
             discountTotal: $orderLine->discount_total,
             taxTotal: $orderLine->tax_total,
+            taxTotalFormatted: $format($orderLine->tax_total),
             total: $orderLine->total,
             totalFormatted: $format($orderLine->total),
         );
