@@ -1,5 +1,6 @@
 <?php
 
+use Lunar\Core\DataObjects\PriceValue;
 use Lunar\Core\DataObjects\PricingResponse;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -11,6 +12,9 @@ use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\Models\TaxZone;
 use Lunar\Storefront\Actions\Catalog\GetQuantifiedPrice;
 use Lunar\Storefront\Data\Price as PriceData;
 
@@ -193,4 +197,71 @@ test('it handles decimal quantities correctly', function () {
 
     // $10.00 * 3 = $30.00 = 3000 cents
     expect($result->inclTax)->toBe(3000);
+});
+
+test('it strips tax from the compare price when prices are stored inclusive of tax', function () {
+    config(['lunar.pricing.stored_inclusive_of_tax' => true]);
+
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    TaxRateAmount::factory()->create([
+        'tax_rate_id' => TaxRate::factory()->create([
+            'tax_zone_id' => TaxZone::factory()->create(['default' => true])->id,
+        ])->id,
+        'tax_class_id' => $taxClass->id,
+        'percentage' => 20,
+    ]);
+
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for($taxClass)
+        ->create();
+
+    $price = Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => 1200,
+        'list_price' => 1800,
+        'min_quantity' => 1,
+    ]);
+
+    $result = (new GetQuantifiedPrice)->get(new PricingResponse(
+        matched: $price,
+        base: $price,
+        priceBreaks: collect([]),
+        customerGroupPrices: collect([]),
+    ), 2);
+
+    expect($result->exclTax)->toBe(2000)
+        ->and($result->inclTax)->toBe(2400)
+        ->and($result->comparePriceExcTax)->toBe(3000)
+        ->and($result->comparePriceIncTax)->toBe(3600)
+        ->and($result->formattedComparePriceExcTax)->toBe((new PriceValue(3000, $this->currency))->format());
+});
+
+test('it treats a list price of zero as no compare price', function () {
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for(TaxClass::factory()->create(['default' => true]))
+        ->create();
+
+    $price = Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => 1000,
+        'list_price' => 0,
+        'min_quantity' => 1,
+    ]);
+
+    $result = (new GetQuantifiedPrice)->get(new PricingResponse(
+        matched: $price,
+        base: $price,
+        priceBreaks: collect([]),
+        customerGroupPrices: collect([]),
+    ), 1);
+
+    expect($result->hasComparePrice)->toBeFalse()
+        ->and($result->comparePriceExcTax)->toBeNull()
+        ->and($result->comparePriceIncTax)->toBeNull();
 });

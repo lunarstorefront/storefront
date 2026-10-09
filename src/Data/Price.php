@@ -26,18 +26,20 @@ class Price extends Data
     ) {}
 
     /**
-     * A single unit price, with the inclusive figure resolved from the
-     * priceable's own tax class (as GetQuantifiedPrice does), not copied
-     * from the stored exclusive one.
+     * The price for the given quantity, with every figure resolved through
+     * the priceable's own tax class rather than copied from the stored one.
      */
-    public static function fromModel(PriceModel $price): self
+    public static function fromModel(PriceModel $price, int $quantity = 1): self
     {
-        $exclTax = $price->priceExTax();
-        $inclTax = $price->priceIncTax();
+        $currency = $price->resolveCurrency();
+        $times = fn (PriceValue $value) => new PriceValue((int) round($value->value * $quantity), $currency);
+
+        $exclTax = $times($price->priceExTax());
+        $inclTax = $times($price->priceIncTax());
 
         $hasComparePrice = (bool) $price->list_price;
-        $compareExclTax = $hasComparePrice ? new PriceValue((int) $price->list_price, $price->resolveCurrency()) : null;
-        $compareInclTax = $hasComparePrice ? $price->listPriceIncTax() : null;
+        $compareExclTax = $hasComparePrice ? $times(self::listPriceExTax($price)) : null;
+        $compareInclTax = $hasComparePrice ? $times($price->listPriceIncTax()) : null;
 
         return new self(
             exclTax: $exclTax->value,
@@ -49,8 +51,23 @@ class Price extends Data
             formattedComparePriceExcTax: $compareExclTax?->format(),
             formattedComparePriceIncTax: $compareInclTax?->format(),
             minQuantity: $price->min_quantity,
-            currency: Lazy::whenLoaded('currency', $price, fn () => Currency::from($price->currency)),
+            currency: Currency::from($currency),
             hasComparePrice: $hasComparePrice,
         );
+    }
+
+    /**
+     * Core has no listPriceExTax() yet, so run the list price through
+     * priceExTax() on a clone. That keeps the tax rate lookup and the
+     * stored-inclusive check in core. The clone gets its own attributes and
+     * shares the loaded relations, so the original is untouched.
+     */
+    protected static function listPriceExTax(PriceModel $price): PriceValue
+    {
+        if (method_exists($price, 'listPriceExTax')) {
+            return $price->listPriceExTax();
+        }
+
+        return (clone $price)->forceFill(['price' => $price->list_price])->priceExTax();
     }
 }
