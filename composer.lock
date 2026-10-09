@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9d46139ee203df2521592c34cdd33f72",
+    "content-hash": "e22787e3b392badee6d348e0c1e67b6a",
     "packages": [
         {
             "name": "brick/math",
@@ -2508,16 +2508,16 @@
         },
         {
             "name": "lunarphp/core",
-            "version": "2.x-dev",
+            "version": "2.0.0-alpha.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lunarphp/core.git",
-                "reference": "c0c6a81f4c9cc429fb99a8b9c4030828e1f29c18"
+                "reference": "4447e91ab35969ba3707d15ff32bdfbb340736d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lunarphp/core/zipball/c0c6a81f4c9cc429fb99a8b9c4030828e1f29c18",
-                "reference": "c0c6a81f4c9cc429fb99a8b9c4030828e1f29c18",
+                "url": "https://api.github.com/repos/lunarphp/core/zipball/4447e91ab35969ba3707d15ff32bdfbb340736d3",
+                "reference": "4447e91ab35969ba3707d15ff32bdfbb340736d3",
                 "shasum": ""
             },
             "require": {
@@ -2577,9 +2577,9 @@
                 "store"
             ],
             "support": {
-                "source": "https://github.com/lunarphp/core/tree/2.0.0-alpha.2"
+                "source": "https://github.com/lunarphp/core/tree/2.0.0-alpha.6"
             },
-            "time": "2026-07-01T17:48:25+00:00"
+            "time": "2026-09-01T19:28:53+00:00"
         },
         {
             "name": "lunarphp/nestedset",
@@ -2651,16 +2651,16 @@
         },
         {
             "name": "lunarphp/search",
-            "version": "2.x-dev",
+            "version": "2.0.0-alpha.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lunarphp/search.git",
-                "reference": "5041bac36072e020c3b1d02b04c4b06bd3c3a968"
+                "reference": "1d7127b72e46718ef79eedc194aebfd88c1a8204"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lunarphp/search/zipball/5041bac36072e020c3b1d02b04c4b06bd3c3a968",
-                "reference": "5041bac36072e020c3b1d02b04c4b06bd3c3a968",
+                "url": "https://api.github.com/repos/lunarphp/search/zipball/1d7127b72e46718ef79eedc194aebfd88c1a8204",
+                "reference": "1d7127b72e46718ef79eedc194aebfd88c1a8204",
                 "shasum": ""
             },
             "require": {
@@ -2668,7 +2668,8 @@
                 "lunarphp/core": "self.version",
                 "meilisearch/meilisearch-php": "^1.10",
                 "php": "^8.4",
-                "spatie/laravel-data": "^4.13.1",
+                "spatie/laravel-data": "^4.23",
+                "spatie/typescript-transformer": "^3.3",
                 "typesense/typesense-php": "^4.9"
             },
             "type": "project",
@@ -2712,10 +2713,9 @@
                 "store"
             ],
             "support": {
-                "issues": "https://github.com/lunarphp/search/issues",
-                "source": "https://github.com/lunarphp/search/tree/2.0.0-alpha.1"
+                "source": "https://github.com/lunarphp/search/tree/2.0.0-alpha.6"
             },
-            "time": "2026-07-01T17:23:01+00:00"
+            "time": "2026-08-29T14:08:44+00:00"
         },
         {
             "name": "maennchen/zipstream-php",
@@ -12890,20 +12890,7 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "lunarphp/core",
-            "version": "2.9999999.9999999.9999999-dev",
-            "alias": "2.0.0",
-            "alias_normalized": "2.0.0.0"
-        },
-        {
-            "package": "lunarphp/search",
-            "version": "2.9999999.9999999.9999999-dev",
-            "alias": "2.0.0",
-            "alias_normalized": "2.0.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
         "lunarphp/core": 20,
