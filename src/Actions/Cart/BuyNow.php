@@ -138,27 +138,29 @@ class BuyNow
     }
 
     /**
-     * Retire a signed-in user's Buy Now carts left unfinished in an earlier
+     * Discard a signed-in user's Buy Now carts left unfinished in an earlier
      * session: left behind, Lunar would pick one up as their latest cart. The
-     * cart of a Buy Now in progress in this session is kept, and if the
-     * session's cart was one of them it is replaced by the user's basket.
+     * cart of a Buy Now in progress in this session is left alone. A Buy Now
+     * cart Lunar put in the session as the user's cart is replaced by their
+     * basket.
      */
     public function forgetAbandoned(LunarUser $user): void
     {
-        $sessionCartId = $this->session->get(CartSession::getSessionKey());
+        $sessionCart = $this->sessionCart();
+        $sessionCartId = $sessionCart?->id;
 
-        $abandoned = Cart::query()
+        Cart::query()
             // The user's key, through the contract (LunarUser has no getKey()).
             ->where('user_id', $user->carts()->getParentKey())
             ->where('meta->'.self::META_KEY, true)
-            ->whereDoesntHave('orders')
+            ->unmerged()
+            ->active()
             ->when($this->active() && $sessionCartId, fn ($query) => $query->whereKeyNot($sessionCartId))
             ->get()
-            ->reject(fn (Cart $cart) => $this->guard->inUse($cart));
+            ->each(fn (Cart $cart) => $this->discard($cart));
 
-        $abandoned->each(fn (Cart $cart) => $cart->delete());
-
-        if ($abandoned->contains('id', $sessionCartId)) {
+        // Lunar's sign-in falls back to any of the user's active carts, retired or not.
+        if (! $this->active() && self::isBuyNowCart($sessionCart)) {
             CartSession::forget(delete: false);
             CartSession::current(calculate: false);
         }
@@ -173,15 +175,32 @@ class BuyNow
      * Delete a Buy Now cart that will not become an order: left behind, a
      * signed-in user's next session would pick it up as their latest cart.
      * A cart with any order (a draft may still be completed) or one the
-     * guard reports in use, such as a payment still processing, is kept.
+     * guard reports in use, such as a payment still processing, is kept but
+     * retired instead.
      */
     protected function discard(Cart $cart): void
     {
         if ($cart->orders()->exists() || $this->guard->inUse($cart)) {
+            $this->retire($cart);
+
             return;
         }
 
         $cart->delete();
+    }
+
+    /**
+     * Retire a Buy Now cart that has to be kept, as Lunar's `override` auth
+     * policy retires a user's cart: merged into itself. Lunar then no longer
+     * takes it for the user's cart (to put in the session, or to merge a
+     * basket with), while it keeps the user and customer its order is
+     * created for.
+     */
+    protected function retire(Cart $cart): void
+    {
+        if ($cart->merged_id === null) {
+            $cart->update(['merged_id' => $cart->id]);
+        }
     }
 
     protected function sessionCart(): ?Cart

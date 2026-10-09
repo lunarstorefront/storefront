@@ -96,6 +96,18 @@ function sessionCartId(): ?int
     return session(CartSession::getSessionKey());
 }
 
+/** Every Buy Now cart reported in use, as while its payment is processing. */
+function paymentInFlight(): void
+{
+    app()->bind(BuyNowCartGuard::class, fn () => new class implements BuyNowCartGuard
+    {
+        public function inUse(Cart $cart): bool
+        {
+            return true;
+        }
+    });
+}
+
 /** A user with a customer, as signing up in the storefront makes them. */
 function shopper(): User
 {
@@ -277,13 +289,7 @@ test('it keeps a buy now cart with a draft order', function () {
 });
 
 test('it keeps a buy now cart whose payment is in flight', function () {
-    app()->bind(BuyNowCartGuard::class, fn () => new class implements BuyNowCartGuard
-    {
-        public function inUse(Cart $cart): bool
-        {
-            return true;
-        }
-    });
+    paymentInFlight();
     $basket = basket();
     $cart = buyNow()->start(buyNowVariant(), 1);
 
@@ -292,6 +298,58 @@ test('it keeps a buy now cart whose payment is in flight', function () {
     expect(Cart::query()->find($cart->id))->not->toBeNull()
         ->and(sessionCartId())->toBe($basket->id);
 });
+
+test('a buy now cart kept for its payment is not a signed-in shopper’s basket once they leave', function () {
+    paymentInFlight();
+    $user = shopper();
+    Auth::login($user);
+    $cart = buyNow()->start(buyNowVariant(), 1);
+
+    buyNow()->restore();
+
+    expect(CartSession::current(calculate: false))->toBeNull();
+
+    // Adding to the basket starts a new cart, leaving the one being paid for as it is.
+    CartSession::add(buyNowVariant(), 1);
+
+    expect(sessionCartId())->not->toBe($cart->id)
+        ->and($cart->fresh()->lines)->toHaveCount(1)
+        ->and(Cart::query()->find($cart->id))->not->toBeNull();
+});
+
+test('a buy now cart kept for its payment is not merged into the basket of a shopper who signed in mid-checkout', function () {
+    paymentInFlight();
+    $user = shopper();
+    $guestBasket = basket();
+    $cart = buyNow()->start(buyNowVariant(), 1);
+
+    Auth::login($user);
+    buyNow()->restore();
+
+    expect(sessionCartId())->toBe($guestBasket->id)
+        ->and($guestBasket->fresh()->lines)->toHaveCount(2)
+        ->and($cart->fresh()->lines)->toHaveCount(1)
+        ->and($cart->fresh()->user_id)->toBe($user->id);
+});
+
+test('a buy now cart left with a draft order does not become the shopper’s basket at their next sign-in', function (bool $withBasket) {
+    $user = shopper();
+    Auth::login($user);
+    $basket = $withBasket ? basket(['user_id' => $user->id, 'customer_id' => $user->latestCustomer()->id]) : null;
+    $cart = buyNow()->start(buyNowVariant(), 1);
+    Order::factory()->create(['cart_id' => $cart->id, 'placed_at' => null, 'channel_id' => test()->channel->id]);
+
+    // The session ends without the shopper leaving the checkout.
+    session()->flush();
+    CartSession::forget(delete: false);
+    Auth::forgetGuards();
+
+    Auth::login($user);
+
+    expect(sessionCartId())->toBe($basket?->id)
+        ->and(Cart::query()->find($cart->id))->not->toBeNull()
+        ->and($cart->fresh()->user_id)->toBe($user->id);
+})->with(['with a basket' => true, 'without a basket' => false]);
 
 test('a buy now left unfinished does not become the shopper’s basket at their next sign-in', function () {
     $user = shopper();
