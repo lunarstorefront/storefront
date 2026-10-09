@@ -19,7 +19,11 @@ class OrderLine extends Data
         public ?string $description,
         public ?string $option,
         public string $identifier,
-        /** The manufacturer part number, when the line is a product variant that has one. */
+        /**
+         * The manufacturer part number at the time the order was placed (see
+         * mpnOf()). Null when the variant had none, or the line is not a
+         * product variant.
+         */
         public ?string $mpn,
         public int $unitPrice,
         public ?string $unitPriceFormatted,
@@ -28,6 +32,7 @@ class OrderLine extends Data
         public int $subTotal,
         public ?string $subTotalFormatted,
         public int $discountTotal,
+        public ?string $discountTotalFormatted,
         public int $taxTotal,
         public ?string $taxTotalFormatted,
         public int $total,
@@ -46,7 +51,7 @@ class OrderLine extends Data
             description: $orderLine->description,
             option: $orderLine->option,
             identifier: $orderLine->identifier,
-            mpn: $orderLine->purchasable instanceof ProductVariant ? $orderLine->purchasable->mpn : null,
+            mpn: static::mpnOf($orderLine),
             unitPrice: $orderLine->unit_price,
             unitPriceFormatted: $format($orderLine->unit_price),
             unitQuantity: $orderLine->unit_quantity,
@@ -54,11 +59,30 @@ class OrderLine extends Data
             subTotal: $orderLine->sub_total,
             subTotalFormatted: $format($orderLine->sub_total),
             discountTotal: $orderLine->discount_total,
+            discountTotalFormatted: $format($orderLine->discount_total),
             taxTotal: $orderLine->tax_total,
             taxTotalFormatted: $format($orderLine->tax_total),
             total: $orderLine->total,
             totalFormatted: $format($orderLine->total),
         );
+    }
+
+    /**
+     * The part number StampOrderLinePartNumbers recorded on the line's meta
+     * when the order was placed, even if that was null. Lines without one
+     * (orders placed before it was recorded) read the variant's current one.
+     */
+    protected static function mpnOf(OrderLineModel $orderLine): ?string
+    {
+        $meta = (array) $orderLine->meta;
+
+        if (array_key_exists('mpn', $meta)) {
+            return is_string($meta['mpn']) && $meta['mpn'] !== '' ? $meta['mpn'] : null;
+        }
+
+        $purchasable = $orderLine->purchasable;
+
+        return $purchasable instanceof ProductVariant ? $purchasable->mpn : null;
     }
 
     /**
