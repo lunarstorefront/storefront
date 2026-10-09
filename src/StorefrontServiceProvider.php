@@ -2,18 +2,27 @@
 
 namespace Lunar\Storefront;
 
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Lunar\Checkout\Models\CheckoutSession;
 use Lunar\Core\Contracts\Actions\Carts\AssociatesUser;
 use Lunar\Core\Contracts\Actions\Customers\CreatesCustomer;
 use Lunar\Core\Contracts\Actions\Customers\UpdatesCustomer;
+use Lunar\Core\Contracts\LunarUser;
 use Lunar\Core\Models\Customer;
 use Lunar\Storefront\Actions\Account\CreateCustomerWithGroups;
 use Lunar\Storefront\Actions\Account\SyncCustomerGroups;
 use Lunar\Storefront\Actions\Account\UpdateCustomerWithGroups;
 use Lunar\Storefront\Actions\Cart\AssociateUserKeepingBuyNowApart;
+use Lunar\Storefront\Actions\Cart\BuyNow;
+use Lunar\Storefront\Actions\Cart\BuyNowCartInCheckoutPayment;
+use Lunar\Storefront\Actions\Cart\BuyNowCartNotInUse;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
 use Lunar\Storefront\Contracts\BrandManager;
+use Lunar\Storefront\Contracts\BuyNowCartGuard;
 use Lunar\Storefront\Contracts\CollectionManager;
 use Lunar\Storefront\Contracts\PricingManager;
 use Lunar\Storefront\Contracts\ProductManager;
@@ -43,9 +52,17 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->extend(UpdatesCustomer::class, fn (UpdatesCustomer $action, Application $app) => new UpdateCustomerWithGroups($action, $app->make(SyncCustomerGroups::class)));
 
         // Buy Now (Actions\Cart\BuyNow): signing in mid-checkout must not
-        // merge the user's saved cart into a Buy Now cart. Passes every other
-        // cart straight through, so it is inert until a Buy Now starts.
-        $this->app->extend(AssociatesUser::class, fn (AssociatesUser $action) => new AssociateUserKeepingBuyNowApart($action));
+        // merge the user's saved cart into a Buy Now cart, and signing in
+        // later must not merge an unfinished Buy Now cart into the basket.
+        // Inert until a Buy Now starts.
+        $this->app->extend(AssociatesUser::class, fn (AssociatesUser $action, Application $app) => new AssociateUserKeepingBuyNowApart($action, $app->make(BuyNow::class)));
+
+        // Which Buy Now carts may still become an order once the shopper has
+        // left the checkout: with lunarphp/checkout, those whose payment is
+        // still processing (the order is created when it settles).
+        $this->app->bind(BuyNowCartGuard::class, fn () => class_exists(CheckoutSession::class)
+            ? new BuyNowCartInCheckoutPayment
+            : new BuyNowCartNotInUse);
     }
 
     public function boot(): void
@@ -53,6 +70,17 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/storefront.php', 'storefront');
 
         Customer::saved(fn (Customer $customer) => $this->app->make(SyncCustomerGroups::class)->sync($customer));
+
+        // Buy Now: a signed-in user's Buy Now carts left unfinished in an
+        // earlier session would otherwise be Lunar's pick for their cart at
+        // sign-in. On sign-out the parked basket goes the way Lunar sends the
+        // session's cart, so it is not handed to whoever browses next.
+        Event::listen(Login::class, function (Login $event) {
+            if ($event->user instanceof LunarUser) {
+                $this->app->make(BuyNow::class)->forgetAbandoned($event->user);
+            }
+        });
+        Event::listen(Logout::class, fn () => $this->app->make('session.store')->forget(BuyNow::PARKED_KEY));
 
         if ($this->app->runningInConsole()) {
             $this->commands([
