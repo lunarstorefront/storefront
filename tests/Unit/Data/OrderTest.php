@@ -119,6 +119,7 @@ test('it formats the totals in the order currency, as the cart does', function (
         'unit_price' => 625,
         'quantity' => 2,
         'sub_total' => 1250,
+        'discount_total' => 125,
         'total' => 1500,
     ]);
 
@@ -132,6 +133,7 @@ test('it formats the totals in the order currency, as the cart does', function (
         ->and($data['physicalLines'][0])
         ->unitPriceFormatted->toBe('£6.25')
         ->subTotalFormatted->toBe('£12.50')
+        ->discountTotalFormatted->toBe('£1.25')
         ->totalFormatted->toBe('£15.00');
 });
 
@@ -153,4 +155,55 @@ test('it shows the product image on each line, as the cart does', function () {
     $data = OrderData::from($this->order->fresh()->load('physicalLines'))->toArray();
 
     expect($data['physicalLines'][0]['thumbnail'])->toContain('alpha2');
+});
+
+test('it gives each line its part number and VAT, for the order detail', function () {
+    $variant = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->create(['mpn' => '11100100']);
+    $withMpn = OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $variant->getMorphClass(),
+        'purchasable_id' => $variant->id,
+        'tax_total' => 250,
+    ]);
+    $noPartNumber = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->create(['mpn' => null]);
+    $withoutMpn = OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $noPartNumber->getMorphClass(),
+        'purchasable_id' => $noPartNumber->id,
+    ]);
+
+    $lines = collect(OrderData::from($this->order->fresh()->load('physicalLines.purchasable'))->toArray()['physicalLines'])->keyBy('id');
+
+    expect($lines[(string) $withMpn->id])->mpn->toBe('11100100')->taxTotalFormatted->toBe('£2.50')
+        ->and($lines[(string) $withoutMpn->id]['mpn'])->toBeNull();
+});
+
+test('a line gives the part number stamped when the order was placed, not the variant\'s current one', function (?string $stamped) {
+    $variant = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->create(['mpn' => '11100200']);
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'physical',
+        'purchasable_type' => $variant->getMorphClass(),
+        'purchasable_id' => $variant->id,
+        'meta' => ['mpn' => $stamped],
+    ]);
+
+    $line = OrderData::from($this->order->fresh()->load('physicalLines.purchasable'))->toArray()['physicalLines'][0];
+
+    expect($line['mpn'])->toBe($stamped);
+})->with([
+    'a part number' => ['11100100'],
+    'none' => [null],
+]);
+
+test('a line with no purchasable has no part number', function () {
+    OrderLine::factory()->for($this->order)->create([
+        'type' => 'shipping',
+        'purchasable_type' => null,
+        'purchasable_id' => null,
+        'tax_total' => 99,
+    ]);
+
+    $line = OrderData::from($this->order->fresh()->load('shippingLines'))->toArray()['shippingLines'][0];
+
+    expect($line)->mpn->toBeNull()->taxTotalFormatted->toBe('£0.99');
 });

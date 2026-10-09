@@ -1,5 +1,6 @@
 <?php
 
+use Lunar\Core\DataObjects\PriceValue;
 use Lunar\Core\DataObjects\PricingResponse;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
@@ -11,7 +12,11 @@ use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\Models\TaxZone;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
+use Lunar\Storefront\Data\Price as PriceData;
 use Lunar\Storefront\Data\PriceBreak;
 
 beforeEach(function () {
@@ -320,4 +325,115 @@ test('it handles non-sequential keys after sorting', function () {
     // Tier 100: 100+
     expect($result[2]->lowerLimit)->toBe(100)
         ->and($result[2]->upperLimit)->toBeNull();
+});
+
+test('it resolves each tier inclusive of the tax rate of the variant', function (int $percentage, array $inclTax) {
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    TaxRateAmount::factory()->create([
+        'tax_rate_id' => TaxRate::factory()->create([
+            'tax_zone_id' => TaxZone::factory()->create(['default' => true])->id,
+        ])->id,
+        'tax_class_id' => $taxClass->id,
+        'percentage' => $percentage,
+    ]);
+
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for($taxClass)
+        ->create();
+
+    $price = fn (int $amount, int $minQuantity, ?int $listPrice = null) => Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => $amount,
+        'list_price' => $listPrice,
+        'min_quantity' => $minQuantity,
+    ]);
+
+    $basePrice = $price(1000, 1, 1500);
+
+    $breaks = (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $basePrice,
+        base: $basePrice,
+        priceBreaks: collect([$price(900, 10), $price(800, 50)]),
+        customerGroupPrices: collect([]),
+    ));
+
+    expect($breaks->map(fn (PriceBreak $break) => $break->price->exclTax)->all())->toBe([1000, 900, 800])
+        ->and($breaks->map(fn (PriceBreak $break) => $break->price->inclTax)->all())->toBe($inclTax)
+        ->and($breaks->first()->price->comparePriceExcTax)->toBe(1500)
+        ->and($breaks->first()->price->comparePriceIncTax)->toBe((int) round(1500 * (1 + $percentage / 100)))
+        ->and($breaks->first()->price->formattedComparePriceExcTax)->not->toBeNull();
+})->with([
+    'standard rate' => [20, [1200, 1080, 960]],
+    'reduced rate' => [5, [1050, 945, 840]],
+    'zero rate' => [0, [1000, 900, 800]],
+]);
+
+test('it strips tax from each tier when prices are stored inclusive of tax', function () {
+    config(['lunar.pricing.stored_inclusive_of_tax' => true]);
+
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    TaxRateAmount::factory()->create([
+        'tax_rate_id' => TaxRate::factory()->create([
+            'tax_zone_id' => TaxZone::factory()->create(['default' => true])->id,
+        ])->id,
+        'tax_class_id' => $taxClass->id,
+        'percentage' => 20,
+    ]);
+
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for($taxClass)
+        ->create();
+
+    $price = fn (int $amount, int $minQuantity, ?int $listPrice = null) => Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => $amount,
+        'list_price' => $listPrice,
+        'min_quantity' => $minQuantity,
+    ]);
+
+    $basePrice = $price(1200, 1, 1800);
+
+    $breaks = (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $basePrice,
+        base: $basePrice,
+        priceBreaks: collect([$price(1080, 10), $price(960, 50)]),
+        customerGroupPrices: collect([]),
+    ));
+
+    $base = $breaks->first()->price;
+
+    expect($breaks->map(fn (PriceBreak $break) => $break->price->exclTax)->all())->toBe([1000, 900, 800])
+        ->and($breaks->map(fn (PriceBreak $break) => $break->price->inclTax)->all())->toBe([1200, 1080, 960])
+        ->and($base->comparePriceExcTax)->toBe(1500)
+        ->and($base->comparePriceIncTax)->toBe(1800)
+        ->and($base->formattedComparePriceExcTax)->toBe((new PriceValue(1500, $this->currency))->format())
+        ->and($basePrice->price)->toBe(1200);
+});
+
+test('it treats a list price of zero as no compare price', function () {
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for(TaxClass::factory()->create(['default' => true]))
+        ->create();
+
+    $basePrice = Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => $this->currency->id,
+        'price' => 1000,
+        'list_price' => 0,
+        'min_quantity' => 1,
+    ]);
+
+    $price = PriceData::fromModel($basePrice);
+
+    expect($price->hasComparePrice)->toBeFalse()
+        ->and($price->comparePriceExcTax)->toBeNull()
+        ->and($price->comparePriceIncTax)->toBeNull();
 });

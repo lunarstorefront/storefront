@@ -12,6 +12,7 @@ use Lunar\Core\Contracts\Actions\Carts\AssociatesUser;
 use Lunar\Core\Contracts\Actions\Customers\CreatesCustomer;
 use Lunar\Core\Contracts\Actions\Customers\UpdatesCustomer;
 use Lunar\Core\Contracts\LunarUser;
+use Lunar\Core\Events\Orders\OrderPlaced;
 use Lunar\Core\Models\Customer;
 use Lunar\Storefront\Actions\Account\CreateCustomerWithGroups;
 use Lunar\Storefront\Actions\Account\SyncCustomerGroups;
@@ -30,6 +31,7 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Listeners\StampOrderLinePartNumbers;
 
 class StorefrontServiceProvider extends ServiceProvider
 {
@@ -81,6 +83,8 @@ class StorefrontServiceProvider extends ServiceProvider
             }
         });
         Event::listen(Logout::class, fn () => $this->app->make('session.store')->forget(BuyNow::PARKED_KEY));
+        // Order lines keep the part number they were sold under.
+        Event::listen(OrderPlaced::class, StampOrderLinePartNumbers::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
