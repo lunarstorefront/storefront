@@ -3,9 +3,11 @@
 namespace Lunar\Storefront;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Core\Contracts\Actions\Customers\CreatesCustomer;
 use Lunar\Core\Contracts\Actions\Customers\UpdatesCustomer;
+use Lunar\Core\Events\Orders\OrderPlaced;
 use Lunar\Core\Models\Customer;
 use Lunar\Storefront\Actions\Account\CreateCustomerWithGroups;
 use Lunar\Storefront\Actions\Account\SyncCustomerGroups;
@@ -19,6 +21,7 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Listeners\StampOrderLinePartNumbers;
 
 class StorefrontServiceProvider extends ServiceProvider
 {
@@ -46,6 +49,9 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/storefront.php', 'storefront');
 
         Customer::saved(fn (Customer $customer) => $this->app->make(SyncCustomerGroups::class)->sync($customer));
+
+        // Order lines keep the part number they were sold under.
+        Event::listen(OrderPlaced::class, StampOrderLinePartNumbers::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
