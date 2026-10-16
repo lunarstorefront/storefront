@@ -5,6 +5,8 @@ namespace Lunar\Storefront;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Lunar\Core\Exceptions\Carts\CartException;
 use Lunar\Core\Facades\CartSession;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\ProductVariant;
@@ -63,7 +65,17 @@ class RouteRegistrar
                 ],
             ]);
 
-            $cart?->lines()->where('id', $id)->update(['quantity' => $request->input('quantity')]);
+            /**
+             * Through the cart, not a direct write, so Lunar's update_cart_line
+             * validators run and the cart is recalculated.
+             */
+            try {
+                $cart?->updateLine($id, (int) $request->input('quantity'));
+            } catch (CartException $e) {
+                throw ValidationException::withMessages([
+                    'quantity' => $e->errors()->first(),
+                ]);
+            }
 
             return back();
         })->name('lunar.storefront.cart.lines.quantity')->middleware(['web']);

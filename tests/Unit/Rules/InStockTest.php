@@ -1,5 +1,8 @@
 <?php
 
+use Lunar\Core\Enums\SellingPolicy;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -147,4 +150,32 @@ test('it casts scientific notation quantity to integer', function () {
     });
 
     expect($failures)->toContain('Please enter a quantity less than 1,000,000');
+});
+
+test('it ignores a request sku when validating a cart line', function () {
+    $product = Product::factory()->for($this->productType)->create();
+
+    $lineVariant = ProductVariant::factory()->for($product)->for($this->taxClass)->inStock(2)
+        ->create(['sku' => 'LINE', 'selling_policy' => SellingPolicy::InStock]);
+
+    ProductVariant::factory()->for($product)->for($this->taxClass)->inStock(1000)
+        ->create(['sku' => 'DECOY', 'selling_policy' => SellingPolicy::InStock]);
+
+    $cart = Cart::factory()->create();
+    $line = CartLine::factory()->create([
+        'cart_id' => $cart->id,
+        'purchasable_type' => $lineVariant->getMorphClass(),
+        'purchasable_id' => $lineVariant->id,
+        'quantity' => 1,
+    ]);
+
+    $rule = new InStock($cart, cartLineId: $line->id);
+    $rule->setData(['sku' => 'DECOY']);
+
+    $failures = [];
+    $rule->validate('quantity', 500, function ($message) use (&$failures) {
+        $failures[] = $message;
+    });
+
+    expect($failures)->toContain('Insufficient stock.');
 });
