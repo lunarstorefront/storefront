@@ -49,9 +49,12 @@ class InStock implements DataAwareRule, ValidationRule
             }
 
             $variant = $cartLine->purchasable;
-        }
-
-        if ($sku = $this->data['sku'] ?? null) {
+        } elseif ($sku = $this->data['sku'] ?? null) {
+            /**
+             * A request sku only names the variant for an add. When updating a
+             * line, its own purchasable is checked; a sku sent alongside must
+             * not swap in a decoy variant's stock and quantity rules.
+             */
             $variant = ProductVariant::whereSku($sku)->first();
         }
 

@@ -16,6 +16,7 @@ use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Core\Models\TaxZone;
+use Lunar\Core\Validation\BaseValidator;
 use Lunar\Storefront\RouteRegistrar;
 
 beforeEach(function () {
@@ -114,6 +115,31 @@ test('it still refuses an update beyond stock', function () {
     expect($line->fresh()->quantity)->toBe(5);
 });
 
+test('it checks an update against its own line, not a sku in the request', function () {
+    $line = cartWithLine(quantity: 1, stock: 2);
+    $decoy = cartWithLine(quantity: 1, stock: 1000)->purchasable;
+
+    CartSession::use($line->cart);
+
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), [
+        'quantity' => 500,
+        'sku' => $decoy->sku,
+    ])->assertSessionHasErrors(['quantity' => 'Insufficient stock.']);
+
+    expect($line->fresh()->quantity)->toBe(1);
+});
+
+test('it runs the cart line validators on an update', function () {
+    $line = cartWithLine(quantity: 1, stock: 10);
+
+    config()->set('lunar.cart.validators.update_cart_line', [RefusesEveryUpdate::class]);
+
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 2])
+        ->assertSessionHasErrors(['quantity' => 'Refused.']);
+
+    expect($line->fresh()->quantity)->toBe(1);
+});
+
 test('it counts what the cart already holds when adding more', function () {
     $line = cartWithLine(quantity: 5, stock: 8);
 
@@ -184,3 +210,11 @@ test('it deletes a line from the current cart', function () {
 
     expect($line->fresh())->toBeNull();
 });
+
+class RefusesEveryUpdate extends BaseValidator
+{
+    public function validate(): bool
+    {
+        return $this->fail('cart', 'Refused.');
+    }
+}
