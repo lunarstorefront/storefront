@@ -59,9 +59,9 @@ class StoreController extends Controller
         ]);
 
         // last_name is optional on the form (a trade contact may give one name)
-        // but NOT NULL in Lunar's addresses table. Only a sent-but-blank value
-        // becomes ''; an update that leaves the field out keeps the stored one.
-        if (array_key_exists('last_name', $addressData)) {
+        // but NOT NULL in Lunar's addresses table, so a new address without one
+        // stores ''. An update that leaves the field out keeps the stored one.
+        if (! $id || array_key_exists('last_name', $addressData)) {
             $addressData['last_name'] ??= '';
         }
 

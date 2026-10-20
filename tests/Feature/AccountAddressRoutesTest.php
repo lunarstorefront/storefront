@@ -143,6 +143,19 @@ it('refuses a signed-in user model that is not a Lunar user', function () {
     $user = $plain->newQuery()->create(['name' => 'Plain', 'email' => 'plain@example.com', 'password' => 'secret']);
 
     $this->actingAs($user)
-        ->post(route('storefront.account.addresses'), addressPayload())
+        // Invalid on purpose: the 403 comes before validation, not a 302 with errors.
+        ->post(route('storefront.account.addresses'), addressPayload(['line_one' => '']))
         ->assertForbidden();
+});
+
+it('saves a new address sent without a last name at all', function () {
+    $payload = addressPayload();
+    unset($payload['last_name']);
+
+    $this->actingAs($this->user)
+        ->post(route('storefront.account.addresses'), $payload)
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($this->customer->addresses()->sole()->last_name)->toBe('');
 });
