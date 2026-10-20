@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -63,9 +64,19 @@ test('it reads configured facets from the request as flat lists of strings', fun
     ]);
 });
 
-test('it flattens nested facet arrays rather than passing them to the engine', function () {
-    expect(facetsFromQuery('brand[][]=Hager&brand[x][y][]=Wago&in_stock[]='))->toBe([
-        'brand' => ['Hager', 'Wago'],
+test('it rejects nested facet arrays with a validation error', function (string $query, string $parameter) {
+    expect(fn () => facetsFromQuery($query))->toThrow(
+        fn (ValidationException $e) => expect($e->errors())->toHaveKey($parameter)
+    );
+})->with([
+    'nested list' => ['brand[][]=Hager', 'brand'],
+    'keyed nesting' => ['brand[x][y][]=Wago', 'brand'],
+    'dotted facet' => ['category_level[][]=Cable', 'category_level'],
+]);
+
+test('it drops empty facet values', function () {
+    expect(facetsFromQuery('brand[]=&brand[]=Hager&in_stock[]='))->toBe([
+        'brand' => ['Hager'],
     ]);
 });
 

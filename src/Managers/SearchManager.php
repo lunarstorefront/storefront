@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Managers;
 
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Product;
 use Lunar\Search\Data\SearchResults;
@@ -50,26 +51,39 @@ class SearchManager implements \Lunar\Storefront\Contracts\SearchManager
      * strings.
      *
      * The values go straight into the engine's filter, so the request's shape
-     * is not trusted: `?brand[][]=x` arrives as a nested array, which used to
-     * reach the engine and fail with "Array to string conversion". Nested
-     * values are flattened, anything that is not a scalar is dropped, and the
-     * count and length are capped so one request cannot build an arbitrarily
-     * large filter.
+     * is not trusted. A facet is a single value or a flat list of them:
+     * `?brand[][]=x` arrives as a nested array, which used to reach the engine
+     * and fail with "Array to string conversion", and is now rejected with a
+     * validation error. Empty and overlong values are dropped and the count is
+     * capped, so one request cannot build an arbitrarily large filter.
      *
      * @return array<string, list<string>>
+     *
+     * @throws ValidationException
      */
     protected function requestedFacets(): array
     {
         return collect(array_keys(config('lunar.search.facets.'.Product::class, [])))
-            ->mapWithKeys(fn (string $facet) => [
-                $facet => collect(Arr::flatten(Arr::wrap(request()->get(str_replace('.', '_', $facet)))))
-                    ->filter(fn ($value) => is_scalar($value))
-                    ->map(fn ($value) => (string) $value)
-                    ->filter(fn (string $value) => $value !== '' && mb_strlen($value) <= self::MAX_FACET_VALUE_LENGTH)
-                    ->take(self::MAX_FACET_VALUES)
-                    ->values()
-                    ->all(),
-            ])
+            ->mapWithKeys(function (string $facet) {
+                $parameter = str_replace('.', '_', $facet);
+                $values = Arr::wrap(request()->get($parameter));
+
+                if (collect($values)->contains(fn ($value) => ! is_scalar($value) && $value !== null)) {
+                    throw ValidationException::withMessages([
+                        $parameter => "The {$parameter} filter must be a value or a list of values.",
+                    ]);
+                }
+
+                return [
+                    $facet => collect($values)
+                        ->filter(fn ($value) => is_scalar($value))
+                        ->map(fn ($value) => (string) $value)
+                        ->filter(fn (string $value) => $value !== '' && mb_strlen($value) <= self::MAX_FACET_VALUE_LENGTH)
+                        ->take(self::MAX_FACET_VALUES)
+                        ->values()
+                        ->all(),
+                ];
+            })
             ->filter()
             ->all();
     }
