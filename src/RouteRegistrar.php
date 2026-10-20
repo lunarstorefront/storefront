@@ -148,7 +148,8 @@ class RouteRegistrar
 
     protected static function accountRoutes(): void
     {
-        Route::post('/account/addresses', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.addresses');
+        // The controller serves create and update; create has no {id} to bind.
+        Route::post('/account/addresses', StoreController::class)->defaults('id', '')->middleware(['auth', 'web'])->name('storefront.account.addresses');
         Route::put('/account/addresses/{id}', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.address');
     }
 
