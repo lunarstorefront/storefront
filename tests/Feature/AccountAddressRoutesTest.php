@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Auth\User as PlainUser;
 use Illuminate\Support\Facades\Route;
 use Lunar\Core\Models\Address;
 use Lunar\Core\Models\Country;
@@ -106,4 +107,42 @@ it('only updates an address that belongs to the account', function () {
         ->assertNotFound();
 
     expect($theirs->refresh()->first_name)->toBe('Theirs');
+});
+
+it('updates one of the account\'s own addresses', function () {
+    $address = Address::factory()->for($this->customer)->create(['country_id' => $this->country->id, 'first_name' => 'Old']);
+
+    $this->actingAs($this->user)
+        ->put(route('storefront.account.address', $address->id), addressPayload(['first_name' => 'New']))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($address->refresh()->first_name)->toBe('New');
+});
+
+it('keeps the stored last name when an update leaves the field out', function () {
+    $address = Address::factory()->for($this->customer)->create(['country_id' => $this->country->id, 'last_name' => 'Fitter']);
+
+    $payload = addressPayload(['first_name' => 'Sam']);
+    unset($payload['last_name']);
+
+    $this->actingAs($this->user)
+        ->put(route('storefront.account.address', $address->id), $payload)
+        ->assertSessionHasNoErrors();
+
+    expect($address->refresh()->last_name)->toBe('Fitter');
+});
+
+it('refuses a signed-in user model that is not a Lunar user', function () {
+    $plain = new class extends PlainUser
+    {
+        protected $table = 'users';
+
+        protected $guarded = [];
+    };
+    $user = $plain->newQuery()->create(['name' => 'Plain', 'email' => 'plain@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->post(route('storefront.account.addresses'), addressPayload())
+        ->assertForbidden();
 });

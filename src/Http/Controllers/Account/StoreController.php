@@ -19,6 +19,12 @@ class StoreController extends Controller
 
     public function __invoke(?string $id, Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // The route is behind `auth`; a user model that is not a Lunar user
+        // has no address book.
+        abort_unless($user instanceof Model && $user instanceof LunarUser, 403);
+
         $request->validate([
             'first_name' => ['required', 'string',  'max:255'],
             'last_name' => ['nullable', 'string',  'max:255'],
@@ -31,8 +37,8 @@ class StoreController extends Controller
             'state' => ['required', 'string',  'max:64'],
             'postcode' => ['required', 'string',  'max:10'],
             'country_id' => ['required', 'integer', Rule::exists(Country::class, 'id')],
-            // Same limits the checkout applies, so a saved address round-trips.
             'contact_email' => ['nullable', 'email:rfc', 'max:255'],
+            // The checkout's limits for these two, so a saved address fits it.
             'contact_phone' => ['nullable', 'string', 'max:32'],
             'delivery_instructions' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -53,17 +59,14 @@ class StoreController extends Controller
         ]);
 
         // last_name is optional on the form (a trade contact may give one name)
-        // but NOT NULL in Lunar's addresses table.
-        $addressData['last_name'] ??= '';
+        // but NOT NULL in Lunar's addresses table. Only a sent-but-blank value
+        // becomes ''; an update that leaves the field out keeps the stored one.
+        if (array_key_exists('last_name', $addressData)) {
+            $addressData['last_name'] ??= '';
+        }
 
         $addressData['billing_default'] = $request->input('type') == 'billing';
         $addressData['shipping_default'] = $request->input('type') != 'billing';
-
-        $user = $request->user();
-
-        // The route is behind `auth`; a user model that is not a Lunar user
-        // has no address book.
-        abort_unless($user instanceof Model && $user instanceof LunarUser, 403);
 
         // An account with no customer yet (an imported user, say) gets one,
         // rather than a null dereference.
