@@ -133,7 +133,10 @@ class RouteRegistrar
             ]);
 
             return back();
-        })->middleware(['web'])->name('lunar.storefront.cart.discount');
+        })
+            // Each attempt says whether a code is valid, so cap the guesses.
+            ->middleware(['web', 'throttle:10,1'])
+            ->name('lunar.storefront.cart.discount');
 
         Route::delete('carts/discount', function (Request $request) {
             $cart = CartSession::current();

@@ -218,3 +218,13 @@ class RefusesEveryUpdate extends BaseValidator
         return $this->fail('cart', 'Refused.');
     }
 }
+
+it('throttles discount code attempts', function () {
+    foreach (range(1, 10) as $attempt) {
+        $this->post(route('lunar.storefront.cart.discount'), ['coupon' => 'GUESS-'.$attempt])
+            ->assertStatus(302);
+    }
+
+    $this->post(route('lunar.storefront.cart.discount'), ['coupon' => 'GUESS-11'])
+        ->assertStatus(429);
+});
