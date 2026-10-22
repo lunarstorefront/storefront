@@ -4,7 +4,10 @@ use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
 use Lunar\Core\Models\Region;
+use Lunar\Search\Data\SearchResults;
+use Lunar\Search\Facades\Search;
 use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
 beforeEach(function () {
@@ -74,3 +77,20 @@ test('sort direction validation accepts only asc and desc', function () {
     expect($source)->toContain("if (! in_array(\$sortDir, ['asc', 'desc']))")
         ->and($source)->toContain("\$sortDir = 'asc'");
 });
+
+test('it only searches published products', function (array $filters) {
+    Search::shouldReceive('model')->with(Product::class)->andReturnSelf();
+    Search::shouldReceive('perPage', 'query')->andReturnSelf();
+    Search::shouldReceive('filter')->once()->with(Mockery::capture($sent))->andReturnSelf();
+    Search::shouldReceive('get')->andReturn(Mockery::mock(SearchResults::class));
+
+    (new SearchProducts)->handle(filters: $filters);
+
+    expect($sent['status'])->toBe('=`published`')
+        ->and($sent)->toMatchArray(array_diff_key($filters, ['status' => true]));
+})->with([
+    'no filters' => [[]],
+    'other filters kept' => [['availability' => '=`In stock`']],
+    // A caller can't widen a public search to drafts.
+    'caller status replaced' => [['status' => ':=draft']],
+]);
