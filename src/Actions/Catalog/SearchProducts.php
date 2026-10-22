@@ -19,6 +19,12 @@ class SearchProducts
             $filters['collection_ids'] = $collectionIds;
         }
 
+        // A storefront search is public: draft products (unreviewed imports,
+        // retired lines) can still sit in the index, because the panel and
+        // reindexes write every product, so they are filtered out at query
+        // time whatever the caller passed.
+        $filters['status'] = '=`published`';
+
         $products = Search::model(Product::class)
             ->perPage($perPage)
             ->filter($filters)
