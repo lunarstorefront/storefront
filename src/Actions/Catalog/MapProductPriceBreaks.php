@@ -3,6 +3,7 @@
 namespace Lunar\Storefront\Actions\Catalog;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Lunar\Core\DataObjects\PricingResponse;
 use Lunar\Core\Models\Price as PriceModel;
@@ -15,8 +16,9 @@ class MapProductPriceBreaks
      * One tier per quantity, priced the way Lunar's PricingManager charges it:
      * the cheapest row the quantity reaches. Rows for several customer groups
      * at one quantity collapse into the cheapest, and a tier that would not
-     * lower the price is left out and logged, so the table only advertises
-     * savings the cart will actually give.
+     * lower the price is left out and logged (once a day, and only for breaks
+     * the buyer can reach), so the table only advertises savings the cart
+     * will actually give.
      *
      * @return Collection<int, PriceBreak>
      */
@@ -32,15 +34,21 @@ class MapProductPriceBreaks
         $tiers = [$min => $current];
 
         foreach ($pricing->priceBreaks->groupBy('min_quantity')->sortKeys() as $minQuantity => $rows) {
-            $this->logDuplicateGroupRows($rows);
+            // Rows below the minimum are never shown on their own, so only a
+            // break the buyer could actually reach is worth reporting.
+            $reachable = (int) $minQuantity >= $min;
+
+            if ($reachable) {
+                $this->warnAboutDuplicateGroupRows($rows);
+            }
 
             /** @var PriceModel $cheapest */
             $cheapest = $rows->sortBy('price')->first();
             $lowerLimit = max((int) $minQuantity, $min);
 
             if ($cheapest->price >= $current->price) {
-                if (! $cheapest->is($pricing->base)) {
-                    Log::warning('Price break skipped: it does not lower the price.', $this->context($cheapest));
+                if ($reachable && ! $cheapest->is($pricing->base)) {
+                    $this->warn('Price break skipped: it does not lower the price.', $cheapest);
                 }
 
                 continue;
@@ -61,14 +69,27 @@ class MapProductPriceBreaks
     /**
      * @param  Collection<int, PriceModel>  $rows  the breaks at one quantity
      */
-    protected function logDuplicateGroupRows(Collection $rows): void
+    protected function warnAboutDuplicateGroupRows(Collection $rows): void
     {
         $rows->groupBy(fn (PriceModel $row) => $row->customer_group_id ?? 'all')
             ->filter(fn (Collection $group) => $group->count() > 1)
-            ->each(fn (Collection $group) => Log::warning(
+            ->each(fn (Collection $group) => $this->warn(
                 'Price break overlaps: one customer group has several prices at the same quantity.',
-                $this->context($group->first()),
+                $group->first(),
             ));
+    }
+
+    /**
+     * Log a data problem at most once a day. The mapper runs on every product
+     * view, so without this one bad row would log a warning per page load.
+     */
+    protected function warn(string $message, PriceModel $row): void
+    {
+        $context = $this->context($row);
+
+        if (Cache::add('price-break-warning:'.md5($message.json_encode($context)), true, now()->addDay())) {
+            Log::warning($message, $context);
+        }
     }
 
     /**
