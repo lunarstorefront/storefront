@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Lunar\Core\DataObjects\PriceValue;
 use Lunar\Core\DataObjects\PricingResponse;
 use Lunar\Core\Models\Channel;
@@ -436,4 +438,144 @@ test('it treats a list price of zero as no compare price', function () {
     expect($price->hasComparePrice)->toBeFalse()
         ->and($price->comparePriceExcTax)->toBeNull()
         ->and($price->comparePriceIncTax)->toBeNull();
+});
+
+/**
+ * @param  array<int, array{0: int, 1: int, 2?: int|null}>  $rows  [price, min_quantity, customer_group_id]
+ * @return array{0: Price, 1: Collection<int, Price>}
+ */
+function priceBreakFixtureRows(int $basePrice, array $rows): array
+{
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for(TaxClass::factory()->create(['default' => true]))
+        ->create();
+
+    $price = fn (int $amount, int $minQuantity, ?int $customerGroupId = null) => Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => Currency::getDefault()->id,
+        'customer_group_id' => $customerGroupId,
+        'price' => $amount,
+        'min_quantity' => $minQuantity,
+    ]);
+
+    return [$price($basePrice, 1), collect($rows)->map(fn (array $row) => $price(...$row))];
+}
+
+function mapPriceBreakFixture(Price $base, Collection $breaks, int $min = 1): Collection
+{
+    return (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $base,
+        base: $base,
+        priceBreaks: $breaks,
+        customerGroupPrices: collect(),
+    ), $min);
+}
+
+test('it shows one tier per quantity at the cheapest of the customer groups prices', function () {
+    $trade = CustomerGroup::factory()->create();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [900, 10],
+        [850, 10, $trade->id],
+        [800, 50],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, 49, 850], [50, null, 800]]);
+});
+
+test('it leaves out and logs a tier that does not lower the price', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [900, 10],
+        [950, 25],
+        [800, 50],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, 49, 900], [50, null, 800]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => ($context['min_quantity'] ?? null) === 25)
+        ->once();
+});
+
+test('it logs two rows for one customer group at the same quantity', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [900, 10],
+        [880, 10],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, null, 880]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => ($context['min_quantity'] ?? null) === 10)
+        ->once();
+});
+
+test('it keeps the cheapest row for the starting tier when breaks fall at or below the minimum', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [900, 3],
+        [950, 4],
+        [800, 10],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks, min: 5);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[5, 9, 900], [10, null, 800]]);
+
+    // Breaks below the minimum are never shown on their own, so a pricier
+    // one there is not worth a warning.
+    Log::shouldNotHaveReceived('warning');
+});
+
+test('it does not let a break at the minimum replace a cheaper base price', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [1100, 5],
+        [900, 10],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks, min: 5);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[5, 9, 1000], [10, null, 900]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => ($context['min_quantity'] ?? null) === 5)
+        ->once();
+});
+
+test('it reports a bad break once a day rather than on every render', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [1100, 10],
+    ]);
+
+    mapPriceBreakFixture($base, $breaks);
+    mapPriceBreakFixture($base, $breaks);
+
+    Log::shouldHaveReceived('warning')->once();
+
+    $this->travel(25)->hours();
+    mapPriceBreakFixture($base, $breaks);
+
+    Log::shouldHaveReceived('warning')->twice();
 });
