@@ -38,8 +38,10 @@ class MapProductPriceBreaks
             $cheapest = $rows->sortBy('price')->first();
             $lowerLimit = max((int) $minQuantity, $min);
 
-            if ($lowerLimit > $min && $cheapest->price >= $current->price) {
-                Log::warning('Price break skipped: it does not lower the price.', $this->context($cheapest));
+            if ($cheapest->price >= $current->price) {
+                if (! $cheapest->is($pricing->base)) {
+                    Log::warning('Price break skipped: it does not lower the price.', $this->context($cheapest));
+                }
 
                 continue;
             }

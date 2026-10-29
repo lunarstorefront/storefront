@@ -524,3 +524,50 @@ test('it logs two rows for one customer group at the same quantity', function ()
         ->withArgs(fn (string $message, array $context) => $context['min_quantity'] === 10)
         ->once();
 });
+
+test('it keeps the cheapest row for the starting tier when breaks fall at or below the minimum', function () {
+    Log::spy();
+
+    [$base, $breaks] = basePriceAndBreaks(1000, [
+        [900, 3],
+        [950, 4],
+        [800, 10],
+    ]);
+
+    $result = (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $base,
+        base: $base,
+        priceBreaks: $breaks,
+        customerGroupPrices: collect(),
+    ), min: 5);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[5, 9, 900], [10, null, 800]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context) => $context['min_quantity'] === 4)
+        ->once();
+});
+
+test('it does not let a break at the minimum replace a cheaper base price', function () {
+    Log::spy();
+
+    [$base, $breaks] = basePriceAndBreaks(1000, [
+        [1100, 5],
+        [900, 10],
+    ]);
+
+    $result = (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $base,
+        base: $base,
+        priceBreaks: $breaks,
+        customerGroupPrices: collect(),
+    ), min: 5);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[5, 9, 1000], [10, null, 900]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context) => $context['min_quantity'] === 5)
+        ->once();
+});
