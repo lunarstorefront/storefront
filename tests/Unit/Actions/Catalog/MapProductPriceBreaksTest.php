@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Lunar\Core\DataObjects\PriceValue;
 use Lunar\Core\DataObjects\PricingResponse;
 use Lunar\Core\Models\Channel;
@@ -436,4 +438,89 @@ test('it treats a list price of zero as no compare price', function () {
     expect($price->hasComparePrice)->toBeFalse()
         ->and($price->comparePriceExcTax)->toBeNull()
         ->and($price->comparePriceIncTax)->toBeNull();
+});
+
+/**
+ * @param  array<int, array{0: int, 1: int, 2?: int|null}>  $rows  [price, min_quantity, customer_group_id]
+ * @return array{0: Price, 1: Collection<int, Price>}
+ */
+function basePriceAndBreaks(int $basePrice, array $rows): array
+{
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for(TaxClass::factory()->create(['default' => true]))
+        ->create();
+
+    $price = fn (int $amount, int $minQuantity, ?int $customerGroupId = null) => Price::factory()->create([
+        'priceable_type' => ProductVariant::class,
+        'priceable_id' => $variant->id,
+        'currency_id' => Currency::getDefault()->id,
+        'customer_group_id' => $customerGroupId,
+        'price' => $amount,
+        'min_quantity' => $minQuantity,
+    ]);
+
+    return [$price($basePrice, 1), collect($rows)->map(fn (array $row) => $price(...$row))];
+}
+
+function mapBreaks(Price $base, Collection $breaks): Collection
+{
+    return (new MapProductPriceBreaks)->map(new PricingResponse(
+        matched: $base,
+        base: $base,
+        priceBreaks: $breaks,
+        customerGroupPrices: collect(),
+    ));
+}
+
+test('it shows one tier per quantity at the cheapest of the customer groups prices', function () {
+    $trade = CustomerGroup::factory()->create();
+
+    [$base, $breaks] = basePriceAndBreaks(1000, [
+        [900, 10],
+        [850, 10, $trade->id],
+        [800, 50],
+    ]);
+
+    $result = mapBreaks($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, 49, 850], [50, null, 800]]);
+});
+
+test('it leaves out and logs a tier that does not lower the price', function () {
+    Log::spy();
+
+    [$base, $breaks] = basePriceAndBreaks(1000, [
+        [900, 10],
+        [950, 25],
+        [800, 50],
+    ]);
+
+    $result = mapBreaks($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, 49, 900], [50, null, 800]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context) => $context['min_quantity'] === 25)
+        ->once();
+});
+
+test('it logs two rows for one customer group at the same quantity', function () {
+    Log::spy();
+
+    [$base, $breaks] = basePriceAndBreaks(1000, [
+        [900, 10],
+        [880, 10],
+    ]);
+
+    $result = mapBreaks($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 9, 1000], [10, null, 880]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context) => $context['min_quantity'] === 10)
+        ->once();
 });
