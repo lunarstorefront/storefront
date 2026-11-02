@@ -14,11 +14,13 @@ class MapProductPriceBreaks
 {
     /**
      * One tier per quantity, priced the way Lunar's PricingManager charges it:
-     * the cheapest row the quantity reaches. Rows for several customer groups
-     * at one quantity collapse into the cheapest, and a tier that would not
-     * lower the price is left out and logged (once a day, and only for breaks
-     * the buyer can reach), so the table only advertises savings the cart
-     * will actually give.
+     * the cheapest break the quantity reaches, or the base until the first
+     * break. A reached break is charged even when it costs more than the base,
+     * so a dearer first break is shown (and logged, as it is likely bad data).
+     * Rows for several customer groups at one quantity collapse into the
+     * cheapest, and a later break that would not lower the price is left out
+     * and logged. Warnings go out once a day, and only for breaks the buyer
+     * can reach, so the table matches what the cart will actually charge.
      *
      * @return Collection<int, PriceBreak>
      */
@@ -29,6 +31,7 @@ class MapProductPriceBreaks
         }
 
         $current = $pricing->base;
+        $cheapestBreak = null;
 
         /** @var array<int, PriceModel> $tiers keyed by lower limit */
         $tiers = [$min => $current];
@@ -46,12 +49,28 @@ class MapProductPriceBreaks
             $cheapest = $rows->sortBy('price')->first();
             $lowerLimit = max((int) $minQuantity, $min);
 
-            if ($cheapest->price >= $current->price) {
-                if ($reachable && ! $cheapest->is($pricing->base)) {
+            // Once a break is reached the cart charges the cheapest break,
+            // never the base, so only the first break is compared with it.
+            if ($cheapestBreak !== null && $cheapest->price >= $cheapestBreak->price) {
+                if ($reachable) {
                     $this->warn('Price break skipped: it does not lower the price.', $cheapest);
                 }
 
                 continue;
+            }
+
+            $cheapestBreak = $cheapest;
+
+            if ($cheapest->price === $current->price) {
+                if ($reachable && ! $cheapest->is($pricing->base)) {
+                    $this->warn('Price break skipped: it does not change the price.', $cheapest);
+                }
+
+                continue;
+            }
+
+            if ($reachable && $cheapest->price > $current->price) {
+                $this->warn('Price break raises the price: the cart charges it from this quantity.', $cheapest);
             }
 
             $tiers[$lowerLimit] = $current = $cheapest;
