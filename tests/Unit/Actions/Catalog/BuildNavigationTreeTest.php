@@ -11,10 +11,10 @@ beforeEach(function () {
     Language::factory()->create(['default' => true]);
 });
 
-function navCollection(CollectionGroup $group, string $name, ?Collection $parent = null, bool $withUrl = true): Collection
+function navCollection(CollectionGroup $group, string $name, ?Collection $parent = null, bool $withUrl = true, string $status = 'published'): Collection
 {
     $collection = Collection::factory()->create([
-        'status' => 'published',
+        'status' => $status,
         'collection_group_id' => $group->id,
         'name' => collect([app()->getLocale() => $name]),
     ]);
@@ -107,4 +107,31 @@ it('uses a fixed number of queries per level', function () {
 
     // group lookup + (collections + urls) per level
     expect(DB::getQueryLog())->toHaveCount(7);
+});
+
+it('omits a draft root collection', function () {
+    $main = CollectionGroup::factory()->create(['handle' => 'main']);
+    navCollection($main, 'Live');
+    navCollection($main, 'Secret', status: 'draft');
+
+    expect(collect((new BuildNavigationTree)->handle('main'))->pluck('name')->all())->toBe(['Live']);
+});
+
+it('omits a published child under a draft parent', function () {
+    $main = CollectionGroup::factory()->create(['handle' => 'main']);
+    $draft = navCollection($main, 'Secret', status: 'draft');
+    navCollection($main, 'Orphan', $draft);
+
+    expect((new BuildNavigationTree)->handle('main', 3))->toBe([]);
+});
+
+it('omits a draft child under a published parent', function () {
+    $main = CollectionGroup::factory()->create(['handle' => 'main']);
+    $live = navCollection($main, 'Live');
+    navCollection($main, 'Secret', $live, status: 'draft');
+    navCollection($main, 'Shown', $live);
+
+    $tree = (new BuildNavigationTree)->handle('main');
+
+    expect(collect($tree[0]->children)->pluck('name')->all())->toBe(['Shown']);
 });

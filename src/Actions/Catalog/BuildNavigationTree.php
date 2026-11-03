@@ -43,6 +43,7 @@ final class BuildNavigationTree
 
         for ($i = 0; $i < $remaining && $parentIds !== []; $i++) {
             $nodes = Collection::query()
+                ->whereVisible()
                 ->where('collection_group_id', $groupId)
                 ->when(
                     $i === 0,
