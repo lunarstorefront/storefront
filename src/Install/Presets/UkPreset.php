@@ -4,6 +4,7 @@ namespace Lunar\Storefront\Install\Presets;
 
 use Illuminate\Support\Facades\DB;
 use Lunar\Storefront\Install\Preset;
+use Lunar\Storefront\Install\Presets\Uk\SeedShipping;
 use Lunar\Storefront\Install\Presets\Uk\SeedStoreSettings;
 
 final class UkPreset implements Preset
@@ -12,6 +13,7 @@ final class UkPreset implements Preset
     {
         DB::transaction(function () {
             (new SeedStoreSettings)();
+            (new SeedShipping)();
         });
     }
 }
