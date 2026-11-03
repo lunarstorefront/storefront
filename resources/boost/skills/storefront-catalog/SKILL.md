@@ -81,6 +81,27 @@ $tree = (new GetCollectionTree)->get(group: 'main', maxDepth: 3, eager: ['defaul
 // Collection<Data\Collection>, nested via ->children
 ```
 
+## Navigation tree
+
+Use for a header or mega menu. `BuildNavigationTree` returns published collections only (hidden or unpublished ones are skipped, with their children), ordered as in the admin tree.
+
+```php
+use Lunar\Storefront\Actions\Catalog\BuildNavigationTree;
+
+public function handle(?string $group = null, ?int $depth = null): array; // list<Lunar\Storefront\Data\NavigationItem>
+
+$menu = (new BuildNavigationTree)->handle(); // config defaults
+$menu = (new BuildNavigationTree)->handle(group: 'footer', depth: 1);
+// NavigationItem: id, name, slug (?string, the default URL), children (NavigationItem[])
+```
+
+An unknown group or a depth below 1 returns `[]`. It costs one query for the group plus two per level.
+
+Config (`storefront.navigation`):
+
+- `group`: collection group handle the menu is built from. Default `'main'`.
+- `depth`: levels of collections to include. Default `2`.
+
 ## Brands
 
 ```php
@@ -103,6 +124,37 @@ $results = Storefront::search()->getResults(
 
 Facets come from `config('lunar.search.facets.'.Product::class)` and are read from the current request automatically (dots in facet keys become underscores in request keys).
 
+### Price filter and page size
+
+`PriceFilter` and `PerPage` turn query-string values into search arguments.
+
+```php
+use Lunar\Storefront\Search\PerPage;
+use Lunar\Storefront\Search\PriceFilter;
+
+PriceFilter::fromRequest($request); // ?string: '[1000..5000]', '>=1000', '<=5000', or null when no bound is given
+PerPage::fromRequest($request);     // int: ?per_page= if it is an offered option, else the default
+PerPage::default();                 // int
+PerPage::options();                 // list<int> for the listing toolbar
+
+$results = Storefront::search()->getResults(
+    query: $q,
+    perPage: PerPage::fromRequest($request),
+    filters: array_filter(['price' => PriceFilter::fromRequest($request)]), // field => expression
+);
+```
+
+Bounds are typed in pounds and returned as minor-unit ex-VAT values, so the filter string is for the search engine's price field. With the VAT key set to `inc` the bounds are divided by the standard rate first; a product on a reduced or zero rate can sit slightly either side of an inc-VAT bound. Swapped bounds are reordered; negative values clamp to 0; non-numeric values are ignored. Filters are `field => expression`: use the name of the price field your index exposes in place of `price`.
+
+Config (`storefront.search`):
+
+- `per_page.default`: `40`
+- `per_page.options`: `[40, 80, 120]`
+- `price_filter.min_key`: `'price_min'`
+- `price_filter.max_key`: `'price_max'`
+- `price_filter.vat_key`: `'price_vat'` (request key; the value `inc` means bounds include VAT)
+- `price_filter.vat_rate`: `20` (percent)
+
 ## Pricing
 
 ```php
@@ -116,10 +168,34 @@ $breaks = Storefront::pricing()->mapPriceBreaks($pricing);
 // Collection<Data\PriceBreak> — price, lowerLimit, upperLimit
 ```
 
+## Stock state
+
+Use on a product page to show in stock, low stock, backorder or out of stock. `GetProductStock` reads one variant: the one you pass, otherwise the product's lowest-id variant. A product with no variants is `out_of_stock`.
+
+```php
+use Lunar\Storefront\Actions\Catalog\GetProductStock;
+
+public function handle(Product $product, ?ProductVariant $variant = null): Lunar\Storefront\Data\ProductStock;
+
+$stock = (new GetProductStock)->handle($product, $variant);
+// ProductStock: state ('in_stock' | 'low_stock' | 'backorder' | 'out_of_stock'),
+//   count (?int, only when show_quantity is on), showQuantity (bool),
+//   leadTimeDays (?int, backorder lead time), maxQuantity (?int, null means no practical limit)
+```
+
+State: `out_of_stock` when the variant cannot be fulfilled at quantity 1; `in_stock` when available stock is above `low_threshold`; `low_stock` above zero; otherwise `backorder`. `maxQuantity` is null for a variant with an always-sell policy or an inventory total above `practical_limit`.
+
+Config (`storefront.stock`):
+
+- `low_threshold`: `5` (stock at or below this, and above zero, is low stock)
+- `show_quantity`: `false` (expose the unit count)
+- `lead_time_attribute`: `null` (product attribute handle holding backorder lead time in days)
+- `practical_limit`: `999` (above this the cart limit is an allowance, not real stock)
+
 ## What returns models vs DTOs
 
 - Eloquent models: `getModelBySlug`, `getBySlug` (collection/brand), `getBySku`, `getProvidedVariant`, `getOptions`.
-- `Lunar\Storefront\Data\*` DTOs: `getPermutations`, `getAssociations`, `getBreadcrumbs`, `getQuantifiedPrice`, `mapPriceBreaks`, `GetCollectionTree`.
+- `Lunar\Storefront\Data\*` DTOs: `getPermutations`, `getAssociations`, `getBreadcrumbs`, `getQuantifiedPrice`, `mapPriceBreaks`, `GetCollectionTree`, `BuildNavigationTree` (`NavigationItem`), `GetProductStock` (`ProductStock`).
 
 Convert models to DTOs for Inertia props with the DTO factories, e.g. `Lunar\Storefront\Data\Product::from($product)`. DTO relations are `Lazy` — they only serialize when the Eloquent relation is eager-loaded.
 
@@ -129,3 +205,5 @@ Convert models to DTOs for Inertia props with the DTO factories, e.g. `Lunar\Sto
 - `getModelBySlug` only returns products in the `Published` state.
 - `PricingManager::mapPriceBreaks()` exists on the concrete manager but not on the `PricingManager` contract — call it via the facade, not a contract type-hint.
 - `GetCollectionTree` is not exposed on any manager; instantiate the action directly.
+
+The UK postcode area lists in `Lunar\Storefront\Shipping\UkPostcodes` (`mainland()`, `highlandsAndIslands()`, `excluded()`) mainly back the `uk` install preset's shipping zones; reuse them if a store needs the same zone definitions.

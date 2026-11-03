@@ -26,10 +26,12 @@ Groups: `cart`, `account`, `checkout`, `currency`, `suggestions`, `auth`. Unknow
 |---|---|
 | cart | `lunar.storefront.cart.lines` POST `cart/lines`; `lunar.storefront.cart.lines.quantity` PUT `cart/lines/{id}`; `lunar.storefront.cart.lines.delete` DELETE `cart/lines`; `lunar.storefront.cart.discount` POST `carts/discount`; `lunar.storefront.cart.discount.delete` DELETE `carts/discount` |
 | account | `storefront.account.addresses` POST `/account/addresses`; `storefront.account.address` PUT `/account/addresses/{id}` (auth) |
-| checkout | `checkout.success` GET `checkout/success`; `checkout.order-issue` GET `checkout/order-issue` |
+| checkout (legacy, see below) | `checkout.success` GET `checkout/success`; `checkout.order-issue` GET `checkout/order-issue` |
 | currency | `storefront.currency` POST `/api/currency` |
 | suggestions | `storefront.query-suggestions` GET `api/query-suggestions` |
 | auth | `auth.codes` GET `/api/auth/codes` (auth) |
+
+The `checkout` group is legacy. Its routes read `session('checkout.order')`, which current `lunarphp/checkout` no longer sets, so they cannot find the order. Leave the group out and own your confirmation route; use `GetCompletedOrder` (below).
 
 `routes/catalog.php` is a separate opt-in file with one route — `storefront.api.products-hash` POST `products/variants/hash`, which turns an `options` array into a signed variant hash (`{"hash": "..."}`):
 
@@ -99,6 +101,71 @@ Nothing self-registers. Point `spatie/laravel-typescript-transformer` at the pac
 
 Then run `php artisan typescript:transform` to emit the types.
 
+## Order confirmation
+
+`lunarphp/checkout` hands the placed order over in `session('lunar.checkout.completed')`. Two actions read it. The order id never comes from the request, because the session is the only proof this browser placed the order.
+
+```php
+use Lunar\Storefront\Actions\Checkout\GetCompletedOrder;
+use Lunar\Storefront\Actions\Checkout\GetOrderContactEmail;
+
+public function handle(Session $session, array $with = []): ?Order;      // GetCompletedOrder
+public function handle(Order $order, Session $session): ?string;         // GetOrderContactEmail
+
+Route::get('order/confirmation', function (Request $request) {
+    $order = (new GetCompletedOrder)->handle($request->session(), with: ['lines']);
+
+    abort_if($order === null, 404); // nothing in the session, or the order is not placed
+
+    return Inertia::render('Checkout/Confirmation', [
+        'order' => \Lunar\Storefront\Data\Order::from($order),
+        'email' => (new GetOrderContactEmail)->handle($order, $request->session()),
+    ]);
+});
+```
+
+`GetCompletedOrder` returns null unless the handover holds a numeric `order_reference` and that order has `placed_at` set. `GetOrderContactEmail` tries the billing then shipping address `contact_email`, then the email on the checkout session (a guest's email can live only there), then the order user's email; null when none exist.
+
+If your confirmation route is not named `checkout.success`, add it to `storefront.buy_now.checkout_routes` (default `['lunar.checkout.*', 'checkout.success', 'checkout.order-issue']`), or an in-progress Buy Now restores the basket before the page forgets the cart.
+
+## Installing a store
+
+`php artisan storefront:install` sets up a new store. It stops with an error if a required package is missing, otherwise it runs in order:
+
+1. Publish config (only if missing) and assets (always `--force`) from `storefront.install.publish`.
+2. `migrate --force`.
+3. Import countries (`lunar:import:address-data`) if there are none.
+4. Seed the preset.
+5. Create the admin user.
+6. Build the search index.
+7. `storage:link` if `public/storage` is missing.
+
+Options: `--preset=uk` (default `uk`; unknown names fail and list the available ones), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
+
+```bash
+php artisan storefront:install --preset=uk --admin-email=me@example.com --admin-firstname=Ada --admin-lastname=Lovelace --admin-password=secret
+php artisan storefront:install --skip-search --no-interaction
+```
+
+The `uk` preset seeds GBP, English, a Webstore channel, Retail and Trade customer groups, a Warehouse location, UK VAT tax zones and classes (Standard 20, Reduced 5, Zero 0) and UK shipping zones, all idempotently.
+
+Add a preset by implementing `Lunar\Storefront\Install\Preset` (one method, `seed(): void`, safe to run twice) and registering it:
+
+```php
+// config/storefront.php (a published copy replaces whole top-level keys, so keep 'uk')
+'presets' => [
+    'uk' => \Lunar\Storefront\Install\Presets\UkPreset::class,
+    'eu' => App\Install\EuPreset::class,
+],
+```
+
+Config (`storefront.install`):
+
+- `requires`: package name => a class that exists when installed. Defaults: `lunarphp/table-rate-shipping`, `lunarphp/panel`, `lunarphp/checkout`, `lunarphp/lunar-cms`, `neoncommerce/storefront-cache`.
+- `publish.config`: `['panel-config']`
+- `publish.assets`: `['panel-all-assets', 'lunar-checkout-assets']`
+- `search_command`: `'lunar:search:index'`
+
 ## Config
 
-`config/storefront.php` has a single option, `key` (from the `STOREFRONT_KEY` env). It is currently unused by package code — variant option hashing uses the app encryption key (`APP_KEY`).
+`config/storefront.php` top-level keys: `key` (from `STOREFRONT_KEY`; unused by package code, variant option hashing uses `APP_KEY`), `buy_now.checkout_routes`, `install`, `install_admin`, `navigation`, `search`, `stock` and `presets`. The last six are documented in this skill and `storefront-catalog`. A store's published copy replaces whole top-level keys, so copy a key in full when overriding it.
