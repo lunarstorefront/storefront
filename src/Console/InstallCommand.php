@@ -35,6 +35,15 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        $presets = config('storefront.presets', []);
+        $name = (string) $this->option('preset');
+
+        if (! isset($presets[$name])) {
+            $this->components->error(sprintf('Unknown preset "%s". Available: %s', $name, implode(', ', array_keys($presets))));
+
+            return self::FAILURE;
+        }
+
         $this->components->info('Publishing config and assets');
         foreach (config('storefront.install.publish.config', []) as $tag) {
             $this->publish($tag);
@@ -52,23 +61,23 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        $presets = config('storefront.presets', []);
-        $name = (string) $this->option('preset');
+        $this->components->info("Seeding the {$name} preset");
+        app($presets[$name])->seed();
 
-        if (! isset($presets[$name])) {
-            $this->components->error(sprintf('Unknown preset "%s". Available: %s', $name, implode(', ', array_keys($presets))));
+        if ($this->createAdmin() !== self::SUCCESS) {
+            $this->components->error('Admin creation failed');
 
             return self::FAILURE;
         }
 
-        $this->components->info("Seeding the {$name} preset");
-        app($presets[$name])->seed();
-
-        $this->createAdmin();
-
         if (! $this->option('skip-search')) {
             $this->components->info('Building the search index');
-            $this->call(config('storefront.install.search_command', 'lunar:search:index'));
+
+            if ($this->call(config('storefront.install.search_command', 'lunar:search:index')) !== self::SUCCESS) {
+                $this->components->error('Search indexing failed');
+
+                return self::FAILURE;
+            }
         }
 
         if (! file_exists(public_path('storage'))) {
@@ -81,7 +90,7 @@ class InstallCommand extends Command
         return self::SUCCESS;
     }
 
-    private function createAdmin(): void
+    private function createAdmin(): int
     {
         $values = [];
         foreach (['email', 'firstname', 'lastname', 'password'] as $key) {
@@ -95,28 +104,28 @@ class InstallCommand extends Command
         if ($values['email'] !== null && $model::query()->where('email', $values['email'])->exists()) {
             $this->components->info("Admin {$values['email']} already exists");
 
-            return;
+            return self::SUCCESS;
         }
 
         if (in_array(null, $values, true)) {
             if (! $this->input->isInteractive()) {
                 $this->components->warn('Skipping admin: pass --admin-email, --admin-firstname, --admin-lastname and --admin-password');
 
-                return;
+                return self::SUCCESS;
             }
 
             $values['email'] ??= text('Admin email', required: true);
             if ($model::query()->where('email', $values['email'])->exists()) {
                 $this->components->info("Admin {$values['email']} already exists");
 
-                return;
+                return self::SUCCESS;
             }
             $values['firstname'] ??= text('Admin first name', required: true);
             $values['lastname'] ??= text('Admin last name', required: true);
             $values['password'] ??= password('Admin password', required: true);
         }
 
-        $this->call('lunar:create-admin', [
+        return $this->call('lunar:create-admin', [
             '--email' => $values['email'],
             '--firstname' => $values['firstname'],
             '--lastname' => $values['lastname'],

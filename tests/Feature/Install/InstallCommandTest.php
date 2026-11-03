@@ -54,6 +54,8 @@ it('fails before changing anything when a required package is missing', function
 it('rejects an unknown preset', function () {
     $this->artisan('storefront:install', ['--preset' => 'mars', '--skip-search' => true, '--no-interaction' => true])
         ->expectsOutputToContain('Unknown preset "mars". Available: uk')->assertFailed();
+    expect(Country::count())->toBe(0);
+    Http::assertNothingSent();
 });
 
 it('creates the admin from options', function () {
@@ -73,7 +75,11 @@ it('skips the admin without details when non-interactive', function () {
 
 it('runs the configured search command unless skipped', function () {
     Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
-    Artisan::registerCommand(new ClosureCommand('test:search-index', fn () => cache()->put('indexed', true)));
+    Artisan::registerCommand(new ClosureCommand('test:search-index', function () {
+        cache()->put('indexed', true);
+
+        return 0;
+    }));
     config(['storefront.install.search_command' => 'test:search-index']);
 
     $this->artisan('storefront:install', ['--no-interaction' => true])->assertSuccessful();
@@ -90,4 +96,20 @@ it('is safe to run twice', function () {
 
     $this->artisan('storefront:install', $args)->expectsOutputToContain('Admin admin@example.com already exists')->assertSuccessful();
     expect($counts())->toBe($before);
+});
+
+it('fails when the admin cannot be created', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    $this->artisan('storefront:install', ['--skip-search' => true, '--no-interaction' => true,
+        '--admin-email' => 'not-an-email', '--admin-firstname' => 'Ada', '--admin-lastname' => 'Admin', '--admin-password' => 'secret-password'])
+        ->expectsOutputToContain('Admin creation failed')->assertFailed();
+});
+
+it('fails when the search command fails', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    Artisan::registerCommand(new ClosureCommand('test:search-fail', fn () => 1));
+    config(['storefront.install.search_command' => 'test:search-fail']);
+
+    $this->artisan('storefront:install', ['--no-interaction' => true])
+        ->expectsOutputToContain('Search indexing failed')->assertFailed();
 });

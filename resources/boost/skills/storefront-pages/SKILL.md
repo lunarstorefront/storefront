@@ -142,7 +142,7 @@ If your confirmation route is not named `checkout.success`, add it to `storefron
 6. Build the search index.
 7. `storage:link` if `public/storage` is missing.
 
-Options: `--preset=uk` (default `uk`; unknown names fail and list the available ones, but only after migrations and the country import have run), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
+Options: `--preset=uk` (default `uk`; unknown names are rejected, listing the available ones, before any changes are made), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
 
 ```bash
 php artisan storefront:install --preset=uk --admin-email=me@example.com --admin-firstname=Ada --admin-lastname=Lovelace --admin-password=secret
