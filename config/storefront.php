@@ -51,6 +51,11 @@ return [
         'depth' => 2,
     ],
 
+    'search' => [
+        'per_page' => ['default' => 40, 'options' => [40, 80, 120]],
+        'price_filter' => ['min_key' => 'price_min', 'max_key' => 'price_max', 'vat_key' => 'price_vat', 'vat_rate' => 20],
+    ],
+
     'presets' => [
         'uk' => UkPreset::class,
     ],
