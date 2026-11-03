@@ -44,6 +44,13 @@ return [
         'password' => env('STOREFRONT_ADMIN_PASSWORD'),
     ],
 
+    'navigation' => [
+        // Collection group handle the header menu is built from
+        'group' => 'main',
+        // Levels of collections to include
+        'depth' => 2,
+    ],
+
     'presets' => [
         'uk' => UkPreset::class,
     ],
