@@ -1,9 +1,16 @@
 <?php
 
+use Illuminate\Foundation\Console\ClosureCommand;
 use Illuminate\Http\Client\Factory;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Lunar\Core\Models\Country;
 use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Staff;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Shipping\Models\ShippingMethod;
+use Lunar\Shipping\Models\ShippingRate;
+use Lunar\Shipping\Models\ShippingZone;
 
 beforeEach(function () {
     config(['storefront.install.requires' => []]);
@@ -47,4 +54,40 @@ it('fails before changing anything when a required package is missing', function
 it('rejects an unknown preset', function () {
     $this->artisan('storefront:install', ['--preset' => 'mars', '--skip-search' => true, '--no-interaction' => true])
         ->expectsOutputToContain('Unknown preset "mars". Available: uk')->assertFailed();
+});
+
+it('creates the admin from options', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    $this->artisan('storefront:install', ['--skip-search' => true, '--no-interaction' => true,
+        '--admin-email' => 'admin@example.com', '--admin-firstname' => 'Ada', '--admin-lastname' => 'Admin', '--admin-password' => 'secret-password'])
+        ->assertSuccessful();
+    expect(Staff::where('email', 'admin@example.com')->exists())->toBeTrue();
+});
+
+it('skips the admin without details when non-interactive', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    $this->artisan('storefront:install', ['--skip-search' => true, '--no-interaction' => true])
+        ->expectsOutputToContain('Skipping admin')->assertSuccessful();
+    expect(Staff::count())->toBe(0);
+});
+
+it('runs the configured search command unless skipped', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    Artisan::registerCommand(new ClosureCommand('test:search-index', fn () => cache()->put('indexed', true)));
+    config(['storefront.install.search_command' => 'test:search-index']);
+
+    $this->artisan('storefront:install', ['--no-interaction' => true])->assertSuccessful();
+    expect(cache('indexed'))->toBeTrue();
+});
+
+it('is safe to run twice', function () {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    $args = ['--skip-search' => true, '--no-interaction' => true,
+        '--admin-email' => 'admin@example.com', '--admin-firstname' => 'Ada', '--admin-lastname' => 'Admin', '--admin-password' => 'secret-password'];
+    $this->artisan('storefront:install', $args)->assertSuccessful();
+    $counts = fn () => [Currency::count(), TaxRate::count(), ShippingZone::count(), ShippingMethod::count(), ShippingRate::count(), Staff::count()];
+    $before = $counts();
+
+    $this->artisan('storefront:install', $args)->expectsOutputToContain('Admin admin@example.com already exists')->assertSuccessful();
+    expect($counts())->toBe($before);
 });

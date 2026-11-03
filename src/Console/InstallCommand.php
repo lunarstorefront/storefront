@@ -3,8 +3,13 @@
 namespace Lunar\Storefront\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Staff;
 use Throwable;
+
+use function Laravel\Prompts\password;
+use function Laravel\Prompts\text;
 
 class InstallCommand extends Command
 {
@@ -59,7 +64,64 @@ class InstallCommand extends Command
         $this->components->info("Seeding the {$name} preset");
         app($presets[$name])->seed();
 
+        $this->createAdmin();
+
+        if (! $this->option('skip-search')) {
+            $this->components->info('Building the search index');
+            $this->call(config('storefront.install.search_command', 'lunar:search:index'));
+        }
+
+        if (! file_exists(public_path('storage'))) {
+            $this->components->info('Linking storage');
+            $this->call('storage:link');
+        }
+
+        $this->components->info('Storefront installed.');
+
         return self::SUCCESS;
+    }
+
+    private function createAdmin(): void
+    {
+        $values = [];
+        foreach (['email', 'firstname', 'lastname', 'password'] as $key) {
+            $value = $this->option("admin-{$key}") ?: config("storefront.install_admin.{$key}");
+            $values[$key] = is_string($value) && $value !== '' ? $value : null;
+        }
+
+        /** @var class-string<Model> $model */
+        $model = config('lunar.staff.model', Staff::class);
+
+        if ($values['email'] !== null && $model::query()->where('email', $values['email'])->exists()) {
+            $this->components->info("Admin {$values['email']} already exists");
+
+            return;
+        }
+
+        if (in_array(null, $values, true)) {
+            if (! $this->input->isInteractive()) {
+                $this->components->warn('Skipping admin: pass --admin-email, --admin-firstname, --admin-lastname and --admin-password');
+
+                return;
+            }
+
+            $values['email'] ??= text('Admin email', required: true);
+            if ($model::query()->where('email', $values['email'])->exists()) {
+                $this->components->info("Admin {$values['email']} already exists");
+
+                return;
+            }
+            $values['firstname'] ??= text('Admin first name', required: true);
+            $values['lastname'] ??= text('Admin last name', required: true);
+            $values['password'] ??= password('Admin password', required: true);
+        }
+
+        $this->call('lunar:create-admin', [
+            '--email' => $values['email'],
+            '--firstname' => $values['firstname'],
+            '--lastname' => $values['lastname'],
+            '--password' => $values['password'],
+        ]);
     }
 
     private function publish(string $tag, bool $force = false): void

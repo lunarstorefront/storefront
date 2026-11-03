@@ -36,6 +36,14 @@ return [
         'search_command' => 'lunar:search:index',
     ],
 
+    // Fallbacks for the storefront:install --admin-* options
+    'install_admin' => [
+        'email' => env('STOREFRONT_ADMIN_EMAIL'),
+        'firstname' => env('STOREFRONT_ADMIN_FIRSTNAME'),
+        'lastname' => env('STOREFRONT_ADMIN_LASTNAME'),
+        'password' => env('STOREFRONT_ADMIN_PASSWORD'),
+    ],
+
     'presets' => [
         'uk' => UkPreset::class,
     ],
