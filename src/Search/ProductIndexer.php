@@ -39,18 +39,39 @@ class ProductIndexer extends BaseProductIndexer
         ]);
     }
 
+    /**
+     * Relations this indexer reads on top of core's bulk eager loads.
+     *
+     * @var list<string>
+     */
+    protected array $searchableRelations = [
+        'prices.currency',
+        'prices.customerGroup',
+        'prices.priceable.taxClass',
+        'collections.ancestors',
+    ];
+
     public function makeAllSearchableUsing(Builder $query): Builder
     {
-        return parent::makeAllSearchableUsing($query)->with([
-            'prices.currency',
-            'prices.customerGroup',
-            'prices.priceable.taxClass',
-            'collections.ancestors',
-        ]);
+        return parent::makeAllSearchableUsing($query)->with($this->searchableRelations);
     }
 
     public function toSearchableArray(Model $model): array
     {
+        // A single save goes through Scout's observer, which skips
+        // makeAllSearchableUsing, so load here what it would have, or strict
+        // mode throws on the first relation read across several prices.
+        // Scout's database engine also passes an unsaved prototype: skip it.
+        if ($model->exists) {
+            $model->loadMissing([
+                'thumbnail',
+                'variants',
+                'productType',
+                'brand',
+                ...$this->searchableRelations,
+            ]);
+        }
+
         return array_merge(
             parent::toSearchableArray($model),
             $this->mapPricing($model),

@@ -208,3 +208,22 @@ it('indexes several products from one query without lazy loading', function () {
         ->and($rows->pluck('min_price')->all())->toBe([700, 700])
         ->and($rows->first()['collectionTree']['lvl1'])->toBe(['Parent > Child']);
 });
+
+it('indexes a single fetched product without the bulk eager loads', function () {
+    $first = makeCollection('First');
+    $second = makeCollection('Second', parent: makeCollection('Root'));
+    $this->product->collections()->attach([$first->id, $second->id]);
+    priceVariant(1000);
+    priceVariant(800);
+
+    $product = Product::query()->whereKey($this->product->id)->firstOrFail();
+    $data = (new ProductIndexer)->toSearchableArray($product);
+
+    expect($data['min_price'])->toBe(800)
+        ->and($data['collection_ids'])->toHaveCount(3)
+        ->and($data['skus'])->toHaveCount(2);
+});
+
+it('builds a searchable array for an unsaved prototype', function () {
+    expect((new ProductIndexer)->toSearchableArray(new Product))->toHaveKey('min_price', null);
+});
