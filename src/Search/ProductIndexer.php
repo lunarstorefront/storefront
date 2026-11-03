@@ -2,9 +2,11 @@
 
 namespace Lunar\Storefront\Search;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Price;
 use Lunar\Core\Search\ProductIndexer as BaseProductIndexer;
@@ -13,7 +15,9 @@ use Lunar\Core\States\Collection\Published;
 /**
  * Adds what a storefront listing needs on top of Lunar's product indexer:
  * prices (`min_price`, `min_prices`, `prices`) and the collection hierarchy
- * (`collectionTree`). Only public prices are indexed, because search documents
+ * (`collectionTree`), the ids of the collections a product is in
+ * (`collection_ids`, which the collection pages filter on) and a plain `name`.
+ * Only public prices are indexed, because search documents
  * are readable by every visitor.
  *
  * Register it under `indexers` in `config/lunar/search.php`.
@@ -29,6 +33,7 @@ class ProductIndexer extends BaseProductIndexer
     {
         return array_merge(parent::getFilterableFields(), [
             'min_price',
+            'collection_ids',
             'collectionTree.lvl0',
             'collectionTree.lvl1',
             'collectionTree.lvl2',
@@ -50,8 +55,33 @@ class ProductIndexer extends BaseProductIndexer
         return array_merge(
             parent::toSearchableArray($model),
             $this->mapPricing($model),
-            ['collectionTree' => $this->mapCollectionTree($model)],
+            [
+                'collection_ids' => $model->collections->pluck('id')->map(fn ($id): string => (string) $id)->values()->all(),
+                'collectionTree' => $this->mapCollectionTree($model),
+            ],
+            $this->mapPlainName($model),
         );
+    }
+
+    /**
+     * Core indexes the name per locale (`name_en`). Listings and the default
+     * `query_by` need one plain `name` in the default language.
+     *
+     * @return array{name?: string}
+     */
+    protected function mapPlainName(Model $model): array
+    {
+        // The same source core uses for `name_<locale>`: a locale keyed map.
+        $name = $model->getAttribute('name');
+        $name = $name instanceof Arrayable ? $name->toArray() : $name;
+
+        if (is_array($name)) {
+            $name = Arr::get($name, app()->getLocale(), Arr::first($name));
+        }
+
+        $name = (string) $name;
+
+        return $name !== '' ? ['name' => $name] : [];
     }
 
     /**

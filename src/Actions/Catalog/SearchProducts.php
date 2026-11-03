@@ -25,6 +25,11 @@ class SearchProducts
         // time whatever the caller passed.
         $filters['status'] = '=`published`';
 
+        // The manager is a singleton that caches its engine, and the engine keeps
+        // its filters, sort and facets, so a second search in one process would
+        // inherit the first's. Start every search on a fresh engine.
+        Search::forgetDrivers();
+
         $products = Search::model(Product::class)
             ->perPage($perPage)
             ->filter($filters)

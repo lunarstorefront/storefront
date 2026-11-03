@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -7,6 +8,7 @@ use Lunar\Core\Models\Language;
 use Lunar\Core\Models\Product;
 use Lunar\Core\Models\Region;
 use Lunar\Search\Data\SearchResults;
+use Lunar\Search\Engines\AbstractEngine;
 use Lunar\Search\Facades\Search;
 use Lunar\Storefront\Actions\Catalog\SearchProducts;
 
@@ -79,6 +81,7 @@ test('sort direction validation accepts only asc and desc', function () {
 });
 
 test('it only searches published products', function (array $filters) {
+    Search::shouldReceive('forgetDrivers')->once()->andReturnSelf();
     Search::shouldReceive('model')->with(Product::class)->andReturnSelf();
     Search::shouldReceive('perPage', 'query')->andReturnSelf();
     Search::shouldReceive('filter')->once()->with(Mockery::capture($sent))->andReturnSelf();
@@ -94,3 +97,47 @@ test('it only searches published products', function (array $filters) {
     // A caller can't widen a public search to drafts.
     'caller status replaced' => [['status' => ':=draft']],
 ]);
+
+test('a second search does not inherit the filters, sort or facets of the first', function () {
+    $engines = [];
+
+    config(['scout.driver' => 'recording']);
+
+    Search::extend('recording', function () use (&$engines) {
+        return $engines[] = new class extends AbstractEngine
+        {
+            public array $seen = [];
+
+            public function get(): mixed
+            {
+                $this->seen = ['filters' => $this->filters, 'sort' => $this->sort, 'facets' => $this->facets];
+
+                return SearchResults::from([
+                    'query' => $this->query,
+                    'totalPages' => 1,
+                    'page' => 1,
+                    'count' => 0,
+                    'perPage' => $this->perPage,
+                    'hits' => collect(),
+                    'facets' => collect(),
+                    'links' => (new LengthAwarePaginator([], 0, 10))->links(),
+                ]);
+            }
+
+            protected function getFieldConfig(): array
+            {
+                return [];
+            }
+        };
+    });
+
+    $action = new SearchProducts;
+    $action->handle(facets: ['brand' => ['Bosch']], collectionIds: [5], filters: ['min_price' => '>=100'], sort: 'min_price:desc');
+    $action->handle(filters: ['min_price' => '<=900']);
+
+    expect($engines)->toHaveCount(2)
+        ->and($engines[0]->seen['filters'])->toBe(['min_price' => '>=100', 'collection_ids' => [5], 'status' => '=`published`'])
+        ->and($engines[1]->seen['filters'])->toBe(['min_price' => '<=900', 'status' => '=`published`'])
+        ->and($engines[1]->seen['sort'])->toBe('')
+        ->and($engines[1]->seen['facets'])->toBe([]);
+});

@@ -113,12 +113,33 @@ it('leaves out draft collections', function () {
     expect(indexed($this->product)['collectionTree'])->toBe(['lvl0' => [], 'lvl1' => [], 'lvl2' => []]);
 });
 
+it('indexes the ids of the product collections', function () {
+    $first = makeCollection('First');
+    $second = makeCollection('Second', 'draft');
+    $this->product->collections()->attach([$first->id, $second->id]);
+
+    expect(indexed($this->product)['collection_ids'])->toBe([(string) $first->id, (string) $second->id]);
+});
+
+it('indexes an empty collection id list for a product in no collection', function () {
+    expect(indexed($this->product)['collection_ids'])->toBe([]);
+});
+
+it('indexes a plain name in the default language', function () {
+    $this->product->update(['name' => collect(['en' => 'Cordless Drill'])]);
+
+    $data = indexed($this->product->fresh());
+
+    expect($data['name'])->toBe('Cordless Drill')
+        ->and($data['name_en'])->toBe('Cordless Drill');
+});
+
 it('declares the new sortable and filterable fields', function () {
     $indexer = new ProductIndexer;
 
     expect($indexer->getSortableFields())->toContain('min_price')
         ->and($indexer->getFilterableFields())->toContain(
-            'min_price', 'collectionTree.lvl0', 'collectionTree.lvl1', 'collectionTree.lvl2',
+            'min_price', 'collection_ids', 'collectionTree.lvl0', 'collectionTree.lvl1', 'collectionTree.lvl2',
         );
 });
 
