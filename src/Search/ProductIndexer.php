@@ -14,7 +14,7 @@ use Lunar\Core\States\Collection\Published;
 /**
  * Adds what a storefront listing needs on top of Lunar's product indexer:
  * prices (`min_price`, `min_prices`, `prices`) and the collection hierarchy
- * (`collectionTree`), the ids of the collections a product is in, with
+ * (`collectionTree`), the default URL `slug` (null without one), the ids of the collections a product is in, with
  * their ancestors (`collection_ids`, which the collection pages filter on) and a plain `name`.
  * Only public prices are indexed, because search documents
  * are readable by every visitor.
@@ -49,6 +49,7 @@ class ProductIndexer extends BaseProductIndexer
         'prices.customerGroup',
         'prices.priceable.taxClass',
         'collections.ancestors',
+        'defaultUrl',
     ];
 
     public function makeAllSearchableUsing(Builder $query): Builder
@@ -78,6 +79,7 @@ class ProductIndexer extends BaseProductIndexer
             [
                 'collection_ids' => $this->mapCollectionIds($model),
                 'collectionTree' => $this->mapCollectionTree($model),
+                'slug' => $model->defaultUrl?->slug,
             ],
             $this->mapPlainName($model),
         );

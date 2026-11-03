@@ -15,6 +15,7 @@ use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\Url;
 use Lunar\Storefront\Search\ProductIndexer;
 
 beforeEach(function () {
@@ -226,4 +227,47 @@ it('indexes a single fetched product without the bulk eager loads', function () 
 
 it('builds a searchable array for an unsaved prototype', function () {
     expect((new ProductIndexer)->toSearchableArray(new Product))->toHaveKey('min_price', null);
+});
+
+it('indexes the default url slug', function () {
+    Url::factory()->create([
+        'element_type' => $this->product->getMorphClass(),
+        'element_id' => $this->product->id,
+        'language_id' => Language::first()->id,
+        'slug' => 'other-slug',
+        'default' => false,
+    ]);
+    Url::factory()->create([
+        'element_type' => $this->product->getMorphClass(),
+        'element_id' => $this->product->id,
+        'language_id' => Language::first()->id,
+        'slug' => 'blue-shirt',
+        'default' => true,
+    ]);
+
+    expect(indexed($this->product)['slug'])->toBe('blue-shirt');
+});
+
+it('indexes a null slug for a product without a url', function () {
+    expect(indexed($this->product))->toHaveKey('slug', null);
+});
+
+it('indexes slugs for several products without lazy loading', function () {
+    $second = Product::factory()->for(ProductType::first())->create();
+
+    foreach ([$this->product, $second] as $i => $product) {
+        Url::factory()->create([
+            'element_type' => $product->getMorphClass(),
+            'element_id' => $product->id,
+            'language_id' => Language::first()->id,
+            'slug' => "product-{$i}",
+            'default' => true,
+        ]);
+    }
+
+    $indexer = new ProductIndexer;
+    $slugs = $indexer->makeAllSearchableUsing(Product::query())->get()
+        ->map(fn (Product $product) => $indexer->toSearchableArray($product)['slug']);
+
+    expect($slugs->sort()->values()->all())->toBe(['product-0', 'product-1']);
 });
