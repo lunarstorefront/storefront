@@ -31,3 +31,10 @@ it('loads the requested relations', function () {
 
     expect($found?->relationLoaded('billingAddress'))->toBeTrue();
 });
+
+it('rejects numeric looking references that are not plain ids', function (string $suffix) {
+    $order = Order::factory()->create(['placed_at' => now()]);
+    session()->put('lunar.checkout.completed', ['order_reference' => $order->id.$suffix]);
+
+    expect((new GetCompletedOrder)->handle(session()->driver()))->toBeNull();
+})->with(['decimal' => ['.9'], 'exponent' => ['e0']]);

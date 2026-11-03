@@ -19,7 +19,7 @@ final class GetCompletedOrder
     {
         $handover = $session->get('lunar.checkout.completed');
 
-        if (! is_array($handover) || ! is_numeric($handover['order_reference'] ?? null)) {
+        if (! is_array($handover) || ! ctype_digit((string) ($handover['order_reference'] ?? ''))) {
             return null;
         }
 

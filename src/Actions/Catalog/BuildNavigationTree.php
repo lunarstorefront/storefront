@@ -9,7 +9,8 @@ use Lunar\Storefront\Data\NavigationItem;
 final class BuildNavigationTree
 {
     /**
-     * Build the navigation tree for a collection group.
+     * Build the navigation tree for a collection group. Unpublished
+     * collections are left out (whereVisible checks status only).
      *
      * Walks the tree one level at a time by parent_id rather than filtering
      * on withDepth(), which returns -1 under Lunar's group scoping. Costs one
@@ -28,18 +29,18 @@ final class BuildNavigationTree
             return [];
         }
 
-        return $this->level($groupId, null, $depth);
+        return $this->level($groupId, $depth);
     }
 
     /**
      * @return list<NavigationItem>
      */
-    private function level(int $groupId, ?int $parentId, int $remaining): array
+    private function level(int $groupId, int $remaining): array
     {
         // Nodes of every parent at this level are fetched together, so
         // levels are walked breadth-first and stitched afterwards.
         $levels = [];
-        $parentIds = [$parentId];
+        $parentIds = [null];
 
         for ($i = 0; $i < $remaining && $parentIds !== []; $i++) {
             $nodes = Collection::query()
