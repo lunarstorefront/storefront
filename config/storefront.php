@@ -56,6 +56,17 @@ return [
         'price_filter' => ['min_key' => 'price_min', 'max_key' => 'price_max', 'vat_key' => 'price_vat', 'vat_rate' => 20],
     ],
 
+    'stock' => [
+        // Stock at or below this (and above zero) reads as low stock
+        'low_threshold' => 5,
+        // Expose the unit count on the product page
+        'show_quantity' => false,
+        // Product attribute handle holding the backorder lead time in days
+        'lead_time_attribute' => null,
+        // Above this the cart limit is an allowance, not real stock
+        'practical_limit' => 999,
+    ],
+
     'presets' => [
         'uk' => UkPreset::class,
     ],
