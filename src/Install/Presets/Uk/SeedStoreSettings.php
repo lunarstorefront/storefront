@@ -20,6 +20,7 @@ use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Core\Models\TaxRate;
 use Lunar\Core\Models\TaxZone;
+use Lunar\Core\Models\TaxZoneCountry;
 use RuntimeException;
 use Spatie\LaravelBlink\BlinkFacade as Blink;
 
@@ -42,6 +43,14 @@ final class SeedStoreSettings
         Blink::forget('lunar_default_'.Str::snake(TaxClass::class));
 
         $uk = $this->seedZone('UK', true, [$gb->id], 'VAT', ['Standard' => 20, 'Reduced' => 5, 'Zero' => 0], $classes);
+
+        // Lunar resolves a country's tax zone with an unordered first(), so GB
+        // left on another active zone (lunar:install's Default Tax Zone) could
+        // win over UK and charge no VAT. Only done on creation so a re-run
+        // never undoes staff changes.
+        if ($uk->wasRecentlyCreated) {
+            TaxZoneCountry::where('country_id', $gb->id)->where('tax_zone_id', '!=', $uk->id)->delete();
+        }
         $this->seedZone(
             'Rest of World',
             false,
@@ -140,9 +149,9 @@ final class SeedStoreSettings
     {
         $this->createDefault(Region::class, ['handle' => 'united-kingdom'], [
             'name' => 'United Kingdom',
-            'channel_id' => Channel::where('default', true)->value('id'),
-            'currency_id' => Currency::where('default', true)->value('id'),
-            'language_id' => Language::where('default', true)->value('id'),
+            'channel_id' => Channel::where('default', true)->value('id') ?? Channel::where('handle', 'webstore')->value('id'),
+            'currency_id' => Currency::where('default', true)->value('id') ?? Currency::where('code', 'GBP')->value('id'),
+            'language_id' => Language::where('default', true)->value('id') ?? Language::where('code', 'en')->value('id'),
             'tax_zone_id' => $uk->id,
         ]);
     }
