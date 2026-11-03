@@ -146,6 +146,19 @@ $results = Storefront::search()->getResults(
 
 Bounds are typed in pounds and returned as minor-unit ex-VAT values, so the filter string is for the search engine's price field. With the VAT key set to `inc` the bounds are divided by the standard rate first; a product on a reduced or zero rate can sit slightly either side of an inc-VAT bound. Swapped bounds are reordered; negative values clamp to 0; non-numeric values are ignored. Filters are `field => expression`: use the name of the price field your index exposes in place of `price`.
 
+### Product indexer (prices and collection hierarchy)
+
+Lunar's core indexer does not index prices or collections. Register the package indexer in `config/lunar/search.php` (the `indexers` key is replaced as a whole, so restate the core indexers for your other models):
+
+```php
+'indexers' => [
+    Product::class => \Lunar\Storefront\Search\ProductIndexer::class,
+    // ...the core indexers for the other models
+],
+```
+
+It adds `min_price` (int, minor units, default currency, quantity 1, sortable and filterable), `min_prices` (currency code => cheapest price), `prices` (the `SearchPriceMap`: `{ default: { GBP: { inclTax: { value, formatted }, exclTax: { value, formatted } } } }`) and `collectionTree` (`lvl0`, `lvl1`, `lvl2` breadcrumbs joined with `' > '`, published collections only; the `collectionTree.lvlN` fields are filterable). Only public prices are indexed (ungrouped and the default customer group). Declare `min_price`, `min_prices`, `prices` and `collectionTree.lvl0..2` in your Typesense schema (with nested fields enabled). The class is not final, so a store can extend it.
+
 Config (`storefront.search`):
 
 - `per_page.default`: `40`
