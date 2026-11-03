@@ -1,5 +1,7 @@
 <?php
 
+use Lunar\Storefront\Install\Presets\UkPreset;
+
 return [
     'key' => env('STOREFRONT_KEY'),
 
@@ -14,5 +16,9 @@ return [
          * `checkout.success`.
          */
         'checkout_routes' => ['lunar.checkout.*', 'checkout.success', 'checkout.order-issue'],
+    ],
+
+    'presets' => [
+        'uk' => UkPreset::class,
     ],
 ];
