@@ -22,6 +22,7 @@ use Lunar\Storefront\Actions\Cart\BuyNow;
 use Lunar\Storefront\Actions\Cart\BuyNowCartInCheckoutPayment;
 use Lunar\Storefront\Actions\Cart\BuyNowCartNotInUse;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
+use Lunar\Storefront\Console\InstallCommand;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\BuyNowCartGuard;
 use Lunar\Storefront\Contracts\CollectionManager;
@@ -89,6 +90,7 @@ class StorefrontServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ConfigureMeilisearchQuerySuggestions::class,
+                InstallCommand::class,
             ]);
         }
     }

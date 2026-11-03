@@ -18,6 +18,24 @@ return [
         'checkout_routes' => ['lunar.checkout.*', 'checkout.success', 'checkout.order-issue'],
     ],
 
+    'install' => [
+        // package => a class that exists when it is installed
+        'requires' => [
+            'lunarphp/table-rate-shipping' => 'Lunar\\Shipping\\ShippingServiceProvider',
+            'lunarphp/panel' => 'Lunar\\Panel\\PanelServiceProvider',
+            'lunarphp/checkout' => 'Lunar\\Checkout\\CheckoutServiceProvider',
+            'lunarphp/lunar-cms' => 'Lunar\\Cms\\CmsServiceProvider',
+            'neoncommerce/storefront-cache' => 'NeonCommerce\\StorefrontCache\\StorefrontCacheServiceProvider',
+        ],
+        'publish' => [
+            // published only if missing
+            'config' => ['panel-config'],
+            // always --force
+            'assets' => ['panel-all-assets', 'lunar-checkout-assets'],
+        ],
+        'search_command' => 'lunar:search:index',
+    ],
+
     'presets' => [
         'uk' => UkPreset::class,
     ],
