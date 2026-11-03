@@ -8,11 +8,11 @@ use Lunar\Storefront\Actions\Catalog\GetCollectionBySlug;
 
 class CollectionManager implements \Lunar\Storefront\Contracts\CollectionManager
 {
-    public function getBySlug(string $slug, ?string $child = null): ?\Lunar\Core\Models\Collection
+    public function getBySlug(string $slug, ?string $child = null, bool $publishedOnly = false): ?\Lunar\Core\Models\Collection
     {
         return (new GetCollectionBySlug)->get($slug, $child, [
             'defaultUrl', 'children.defaultUrl',
-        ]);
+        ], $publishedOnly);
     }
 
     public function getBreadcrumbs(\Lunar\Core\Models\Collection $collection): Collection

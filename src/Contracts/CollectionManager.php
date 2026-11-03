@@ -7,7 +7,7 @@ use Lunar\Storefront\Data\Breadcrumb;
 
 interface CollectionManager
 {
-    public function getBySlug(string $slug, ?string $child = null): ?Collection;
+    public function getBySlug(string $slug, ?string $child = null, bool $publishedOnly = false): ?Collection;
 
     /**
      * @return \Illuminate\Support\Collection<int, Breadcrumb>

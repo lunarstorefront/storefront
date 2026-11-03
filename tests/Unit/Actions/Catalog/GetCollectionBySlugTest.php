@@ -161,3 +161,51 @@ test('it eager loads specified relations', function () {
     expect($found->relationLoaded('defaultUrl'))->toBeTrue()
         ->and($found->relationLoaded('children'))->toBeTrue();
 });
+
+function slugged(string $slug, string $status, ?Collection $parent = null): Collection
+{
+    $collection = Collection::factory()->create(array_filter([
+        'status' => $status,
+        'collection_group_id' => $parent?->collection_group_id,
+    ]));
+    $collection->urls()->create(['slug' => $slug, 'default' => true, 'language_id' => Language::getDefault()->id]);
+
+    if ($parent) {
+        $collection->appendToNode($parent)->save();
+    }
+
+    return $collection;
+}
+
+test('published only returns null for a draft root', function () {
+    slugged('draft-root', 'draft');
+    $action = new GetCollectionBySlug;
+
+    expect($action->get('draft-root', publishedOnly: true))->toBeNull()
+        ->and($action->get('draft-root'))->not->toBeNull();
+});
+
+test('published only returns null for a draft child', function () {
+    $parent = slugged('parent', 'published');
+    slugged('child', 'draft', $parent);
+    $action = new GetCollectionBySlug;
+
+    expect($action->get('parent', 'child', publishedOnly: true))->toBeNull()
+        ->and($action->get('parent', 'child'))->not->toBeNull();
+});
+
+test('published only returns null for a published child under a draft parent', function () {
+    $parent = slugged('parent', 'draft');
+    slugged('child', 'published', $parent);
+    $action = new GetCollectionBySlug;
+
+    expect($action->get('parent', 'child', publishedOnly: true))->toBeNull()
+        ->and($action->get('parent', 'child'))->not->toBeNull();
+});
+
+test('published only still returns a published child under a published parent', function () {
+    $parent = slugged('parent', 'published');
+    slugged('child', 'published', $parent);
+
+    expect((new GetCollectionBySlug)->get('parent', 'child', publishedOnly: true))->not->toBeNull();
+});
