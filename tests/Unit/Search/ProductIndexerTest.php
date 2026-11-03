@@ -117,31 +117,52 @@ it('leaves out draft collections', function () {
     expect(indexed($this->product)['collectionTree'])->toBe(['lvl0' => [], 'lvl1' => [], 'lvl2' => []]);
 });
 
-it('indexes the ids of the product collections', function () {
+it('indexes the ids of the published product collections', function () {
     $first = makeCollection('First');
-    $second = makeCollection('Second', 'draft');
-    $this->product->collections()->attach([$first->id, $second->id]);
+    $draft = makeCollection('Second', 'draft');
+    $this->product->collections()->attach([$first->id, $draft->id]);
 
-    expect(indexed($this->product)['collection_ids'])->toBe([(string) $first->id, (string) $second->id]);
+    expect(indexed($this->product)['collection_ids'])->toBe([(string) $first->id]);
+});
+
+it('indexes the published ancestors of a collection', function () {
+    $grandparent = makeCollection('Grandparent');
+    $parent = makeCollection('Parent', parent: $grandparent);
+    $child = makeCollection('Child', parent: $parent);
+    $this->product->collections()->attach($child->id);
+
+    expect(indexed($this->product)['collection_ids'])
+        ->toEqualCanonicalizing([(string) $grandparent->id, (string) $parent->id, (string) $child->id]);
+});
+
+it('leaves out a chain with a draft ancestor', function () {
+    $draft = makeCollection('Draft parent', 'draft');
+    $child = makeCollection('Child', parent: $draft);
+    $this->product->collections()->attach($child->id);
+
+    expect(indexed($this->product)['collection_ids'])->toBe([]);
 });
 
 it('indexes an empty collection id list for a product in no collection', function () {
     expect(indexed($this->product)['collection_ids'])->toBe([]);
 });
 
-it('indexes a plain name in the default language', function () {
+it('indexes a plain name from the name column', function () {
+    $this->product->update(['name' => collect(['en' => 'Cordless Drill', 'fr' => 'Perceuse'])]);
+
+    expect(indexed($this->product->fresh())['name'])->toBe('Cordless Drill');
+});
+
+it('falls back to the name attribute when the name column is empty', function () {
     Attribute::factory()->create(['handle' => 'name', 'type' => 'translated_text']);
     app(AttributeCache::class)->flush();
 
     $this->product->update([
-        'name' => collect(['en' => 'Column name']),
-        'attribute_data' => collect(['name' => new TranslatedText(collect(['en' => new Text('Cordless Drill')]))]),
+        'name' => null,
+        'attribute_data' => collect(['name' => new TranslatedText(collect(['en' => new Text('Attribute Drill')]))]),
     ]);
 
-    $p = $this->product->fresh();
-    $data = indexed($p);
-
-    expect($data['name'])->toBe('Cordless Drill');
+    expect(indexed($this->product->fresh())['name'])->toBe('Attribute Drill');
 });
 
 it('declares the new sortable and filterable fields', function () {

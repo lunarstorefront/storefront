@@ -2,11 +2,9 @@
 
 namespace Lunar\Storefront\Search;
 
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Price;
 use Lunar\Core\Models\Product;
@@ -16,8 +14,8 @@ use Lunar\Core\States\Collection\Published;
 /**
  * Adds what a storefront listing needs on top of Lunar's product indexer:
  * prices (`min_price`, `min_prices`, `prices`) and the collection hierarchy
- * (`collectionTree`), the ids of the collections a product is in
- * (`collection_ids`, which the collection pages filter on) and a plain `name`.
+ * (`collectionTree`), the ids of the collections a product is in, with
+ * their ancestors (`collection_ids`, which the collection pages filter on) and a plain `name`.
  * Only public prices are indexed, because search documents
  * are readable by every visitor.
  *
@@ -57,7 +55,7 @@ class ProductIndexer extends BaseProductIndexer
             parent::toSearchableArray($model),
             $this->mapPricing($model),
             [
-                'collection_ids' => $model->collections->pluck('id')->map(fn ($id): string => (string) $id)->values()->all(),
+                'collection_ids' => $this->mapCollectionIds($model),
                 'collectionTree' => $this->mapCollectionTree($model),
             ],
             $this->mapPlainName($model),
@@ -66,7 +64,9 @@ class ProductIndexer extends BaseProductIndexer
 
     /**
      * Core indexes the name per locale (`name_en`). Listings and the default
-     * `query_by` need one plain `name` in the default language.
+     * `query_by` need one plain `name` in the default language: the `name`
+     * column, as the package DTOs read it, then the `name` attribute when the
+     * column is empty.
      *
      * @return array{name?: string}
      */
@@ -76,18 +76,36 @@ class ProductIndexer extends BaseProductIndexer
             return [];
         }
 
-        // The `name` attribute (attribute data), as the panel and storefront
-        // show it, falling back to the locale keyed `name` column.
-        $name = $model->translateAttribute('name') ?? $model->getAttribute('name');
-        $name = $name instanceof Arrayable ? $name->toArray() : $name;
-
-        if (is_array($name)) {
-            $name = Arr::get($name, app()->getLocale(), Arr::first($name));
-        }
-
-        $name = (string) $name;
+        $name = (string) ($model->translate('name') ?: $model->translateAttribute('name'));
 
         return $name !== '' ? ['name' => $name] : [];
+    }
+
+    /**
+     * The ids of the published collections a product is in and of their
+     * published ancestors, so a parent collection page lists its children's
+     * products. A chain with an unpublished node contributes nothing, the same
+     * rule as the collection tree.
+     *
+     * @return list<string>
+     */
+    protected function mapCollectionIds(Model $model): array
+    {
+        $ids = [];
+
+        foreach ($model->collections as $collection) {
+            $chain = $collection->ancestors->concat([$collection]);
+
+            if ($chain->contains(fn (Collection $node): bool => (string) $node->status !== Published::$name)) {
+                continue;
+            }
+
+            foreach ($chain as $node) {
+                $ids[(string) $node->id] = true;
+            }
+        }
+
+        return array_map(strval(...), array_keys($ids));
     }
 
     /**

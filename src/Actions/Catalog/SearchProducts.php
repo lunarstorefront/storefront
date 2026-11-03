@@ -9,6 +9,10 @@ use Lunar\Search\Facades\Search;
 class SearchProducts
 {
     /**
+     * `$collectionIds` is meant for a single collection. The engine renders the
+     * ids as a comma list, so several would need the engine's own bracket
+     * syntax passed through `$filters` instead.
+     *
      * @param  array<array-key, mixed>|null  $facets
      * @param  array<int, int|string>  $collectionIds
      * @param  array<string, mixed>  $filters
