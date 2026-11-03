@@ -1,0 +1,223 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Lunar\\Storefront\\Actions\\Catalog\\GetCollectionBySlug\:\:get\(\) should return Lunar\\Core\\Models\\Collection\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Actions/Catalog/GetCollectionBySlug.php
+
+		-
+			message: '#^Method Lunar\\Storefront\\Actions\\Catalog\\GetProductAssociations\:\:get\(\) should return Illuminate\\Support\\Collection\<int, Lunar\\Core\\Models\\ProductAssociation\> but returns Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Actions/Catalog/GetProductAssociations.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:translate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Actions/Catalog/GetProductOptionPermutations.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sum\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model\)\: int\)\|string\|null, Closure\(Lunar\\Core\\Models\\ProductVariant\)\: int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Actions/Catalog/GetProductOptionPermutations.php
+
+		-
+			message: '#^Method Lunar\\Storefront\\Actions\\Catalog\\GetProductOptions\:\:get\(\) should return Illuminate\\Support\\Collection\<int, Lunar\\Core\\Models\\ProductOption\> but returns Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Actions/Catalog/GetProductOptions.php
+
+		-
+			message: '#^Method Lunar\\Storefront\\Actions\\Catalog\\GetProductVariantByProvidedOptions\:\:get\(\) should return Lunar\\Core\\Models\\ProductVariant\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Actions/Catalog/GetProductVariantByProvidedOptions.php
+
+		-
+			message: '#^Call to an undefined method Lunar\\Search\\SearchManager\:\:perPage\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Actions/Catalog/SearchProducts.php
+
+		-
+			message: '#^Access to an undefined property Lunar\\Core\\Models\\Cart\:\:\$lines_sum_quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Data/Cart.php
+
+		-
+			message: '#^Access to an undefined property Lunar\\Core\\Models\\Cart\:\:\$shipping_breakdown\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Data/Cart.php
+
+		-
+			message: '#^Call to an undefined method Lunar\\Core\\Models\\Cart\:\:generateFingerprint\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Data/Cart.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Data/Cart.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\Cart\:\:\$lines with type array\<Lunar\\Storefront\\Data\\CartLine\>\|Spatie\\LaravelData\\Lazy is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/Cart.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\CartAddress constructor expects string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/CartAddress.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getIdentifier\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Data/CartLine.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getTotalInventory\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Data/CartLine.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\CartLine constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/CartLine.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\Currency constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/Currency.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\Discount constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/Discount.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\MediaCollection\:\:\$files with type array\<Lunar\\Storefront\\Data\\Media\>\|Spatie\\LaravelData\\Lazy is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/MediaCollection.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\Order\:\:\$physicalLines with type array\<Lunar\\Storefront\\Data\\OrderLine\>\|Spatie\\LaravelData\\Lazy\|null is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\|null\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/Order.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\Order\:\:\$shippingLines with type array\<Lunar\\Storefront\\Data\\OrderLine\>\|Spatie\\LaravelData\\Lazy\|null is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\|null\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/Order.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\Order\:\:\$transactions with type array\<Lunar\\Storefront\\Data\\Transaction\>\|Spatie\\LaravelData\\Lazy is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/Order.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: src/Data/PricingResponse.php
+
+		-
+			message: '#^Parameter \#1 \$purchasable of method Lunar\\Storefront\\Contracts\\PricingManager\:\:getPricing\(\) expects Lunar\\Core\\Contracts\\Purchasable, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/Product.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\ProductOption\:\:\$values with type array\<Lunar\\Storefront\\Data\\ProductOptionValue\>\|Spatie\\LaravelData\\Lazy is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/ProductOption.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\ProductOption constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/ProductOption.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\ProductOptionValue constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/ProductOptionValue.php
+
+		-
+			message: '#^Access to an undefined property Lunar\\Core\\Models\\ProductVariant\:\:\$stock\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Data/ProductVariant.php
+
+		-
+			message: '#^PHPDoc type for property Lunar\\Storefront\\Data\\ProductVariant\:\:\$values with type array\<Lunar\\Storefront\\Data\\ProductOptionValue\>\|Spatie\\LaravelData\\Lazy is not subtype of native type Illuminate\\Support\\Collection\|Spatie\\LaravelData\\Lazy\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Data/ProductVariant.php
+
+		-
+			message: '#^Parameter \$id of class Lunar\\Storefront\\Data\\ProductVariant constructor expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/ProductVariant.php
+
+		-
+			message: '#^Parameter \$lastFour of class Lunar\\Storefront\\Data\\Transaction constructor expects int\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Data/Transaction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$two_factor_secret\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Http/Controllers/Auth/GetTwoFactorCodesController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:hasEnabledTwoFactorAuthentication\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Http/Controllers/Auth/GetTwoFactorCodesController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:recoveryCodes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Controllers/Auth/GetTwoFactorCodesController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:twoFactorQrCodeSvg\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Controllers/Auth/GetTwoFactorCodesController.php
+
+		-
+			message: '#^Method Lunar\\Storefront\\Managers\\VariantManager\:\:getProvidedVariant\(\) should return Lunar\\Core\\Models\\ProductVariant\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Managers/VariantManager.php
+
+		-
+			message: '#^Call to an undefined static method Lunar\\Core\\Facades\\CartSession\:\:add\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/RouteRegistrar.php
