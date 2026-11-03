@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
 use Lunar\Core\Search\ProductIndexer as BaseProductIndexer;
 use Lunar\Core\States\Collection\Published;
 
@@ -71,8 +72,13 @@ class ProductIndexer extends BaseProductIndexer
      */
     protected function mapPlainName(Model $model): array
     {
-        // The same source core uses for `name_<locale>`: a locale keyed map.
-        $name = $model->getAttribute('name');
+        if (! $model instanceof Product) {
+            return [];
+        }
+
+        // The `name` attribute (attribute data), as the panel and storefront
+        // show it, falling back to the locale keyed `name` column.
+        $name = $model->translateAttribute('name') ?? $model->getAttribute('name');
         $name = $name instanceof Arrayable ? $name->toArray() : $name;
 
         if (is_array($name)) {

@@ -1,5 +1,9 @@
 <?php
 
+use Lunar\Core\Contracts\AttributeCache;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\FieldTypes\TranslatedText;
+use Lunar\Core\Models\Attribute;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Collection;
 use Lunar\Core\Models\CollectionGroup;
@@ -126,12 +130,18 @@ it('indexes an empty collection id list for a product in no collection', functio
 });
 
 it('indexes a plain name in the default language', function () {
-    $this->product->update(['name' => collect(['en' => 'Cordless Drill'])]);
+    Attribute::factory()->create(['handle' => 'name', 'type' => 'translated_text']);
+    app(AttributeCache::class)->flush();
 
-    $data = indexed($this->product->fresh());
+    $this->product->update([
+        'name' => collect(['en' => 'Column name']),
+        'attribute_data' => collect(['name' => new TranslatedText(collect(['en' => new Text('Cordless Drill')]))]),
+    ]);
 
-    expect($data['name'])->toBe('Cordless Drill')
-        ->and($data['name_en'])->toBe('Cordless Drill');
+    $p = $this->product->fresh();
+    $data = indexed($p);
+
+    expect($data['name'])->toBe('Cordless Drill');
 });
 
 it('declares the new sortable and filterable fields', function () {
