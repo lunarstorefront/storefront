@@ -80,3 +80,18 @@ it('refuses to run without countries', function () {
     Country::query()->delete();
     (new SeedStoreSettings)();
 })->throws(RuntimeException::class, 'Import countries before seeding the uk preset');
+
+it('leaves staff-removed child rows alone on a re-run', function () {
+    (new SeedStoreSettings)();
+
+    $row = TaxZone::where('name', 'Rest of World')->first();
+    $row->countries()->delete();
+    $uk = TaxZone::where('name', 'UK')->first();
+    $uk->taxAmounts()->first()->delete();
+    $amountsBefore = $uk->taxAmounts()->count();
+
+    (new SeedStoreSettings)();
+
+    expect($row->countries()->count())->toBe(0)
+        ->and($uk->taxAmounts()->count())->toBe($amountsBefore);
+});

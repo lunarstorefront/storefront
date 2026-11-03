@@ -39,6 +39,7 @@ final class SeedStoreSettings
         foreach (['Standard' => true, 'Reduced' => false, 'Zero' => false] as $name => $default) {
             $classes[$name] = TaxClass::firstOrCreate(['name' => $name], ['default' => $default]);
         }
+        Blink::forget('lunar_default_'.Str::snake(TaxClass::class));
 
         $uk = $this->seedZone('UK', true, [$gb->id], 'VAT', ['Standard' => 20, 'Reduced' => 5, 'Zero' => 0], $classes);
         $this->seedZone(
@@ -110,9 +111,10 @@ final class SeedStoreSettings
             'default' => $default,
         ]);
 
-        $existing = $zone->countries()->pluck('country_id')->all();
-        foreach (array_diff($countryIds, $existing) as $countryId) {
-            $zone->countries()->create(['country_id' => $countryId]);
+        if ($zone->wasRecentlyCreated) {
+            foreach ($countryIds as $countryId) {
+                $zone->countries()->create(['country_id' => $countryId]);
+            }
         }
 
         $rate = TaxRate::firstOrCreate(
@@ -120,11 +122,13 @@ final class SeedStoreSettings
             ['priority' => 1],
         );
 
-        foreach ($percentages as $className => $percentage) {
-            $rate->taxRateAmounts()->firstOrCreate(
-                ['tax_class_id' => $classes[$className]->id],
-                ['percentage' => $percentage],
-            );
+        if ($rate->wasRecentlyCreated) {
+            foreach ($percentages as $className => $percentage) {
+                $rate->taxRateAmounts()->create([
+                    'tax_class_id' => $classes[$className]->id,
+                    'percentage' => $percentage,
+                ]);
+            }
         }
 
         Blink::forget('lunar_default_'.Str::snake(TaxZone::class));
@@ -165,8 +169,13 @@ final class SeedStoreSettings
                 'position' => $required ? 1 : 2,
             ]);
 
-            $attribute->models()->firstOrCreate(['model_type' => (new Product)->getMorphClass()]);
-            $type->attributeMapping()->syncWithoutDetaching([$attribute->id]);
+            if ($attribute->wasRecentlyCreated) {
+                $attribute->models()->create(['model_type' => (new Product)->getMorphClass()]);
+            }
+
+            if ($type->wasRecentlyCreated) {
+                $type->attributeMapping()->attach($attribute->id);
+            }
         }
     }
 }
