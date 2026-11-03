@@ -121,3 +121,38 @@ it('declares the new sortable and filterable fields', function () {
             'min_price', 'collectionTree.lvl0', 'collectionTree.lvl1', 'collectionTree.lvl2',
         );
 });
+
+it('skips a published collection under an unpublished parent', function () {
+    $parent = makeCollection('Hidden parent', 'draft');
+    $child = makeCollection('Visible child', parent: $parent);
+    $this->product->collections()->attach($child->id);
+
+    expect(indexed($this->product)['collectionTree'])->toBe(['lvl0' => [], 'lvl1' => [], 'lvl2' => []]);
+});
+
+it('indexes several products from one query without lazy loading', function () {
+    $parent = makeCollection('Parent');
+    $child = makeCollection('Child', parent: $parent);
+    $second = Product::factory()->for(ProductType::first())->create();
+
+    foreach ([$this->product, $second] as $product) {
+        $product->collections()->attach($child->id);
+        $variant = ProductVariant::factory()->for($product)->for($this->taxClass)->create();
+        Price::factory()->create([
+            'priceable_type' => $variant->getMorphClass(),
+            'priceable_id' => $variant->id,
+            'currency_id' => $this->currency->id,
+            'customer_group_id' => null,
+            'min_quantity' => 1,
+            'price' => 700,
+        ]);
+    }
+
+    $indexer = new ProductIndexer;
+    $rows = $indexer->makeAllSearchableUsing(Product::query())->get()
+        ->map(fn (Product $product) => $indexer->toSearchableArray($product));
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows->pluck('min_price')->all())->toBe([700, 700])
+        ->and($rows->first()['collectionTree']['lvl1'])->toBe(['Parent > Child']);
+});

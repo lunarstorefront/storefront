@@ -122,13 +122,14 @@ class ProductIndexer extends BaseProductIndexer
         $tree = ['lvl0' => [], 'lvl1' => [], 'lvl2' => []];
 
         foreach ($model->collections as $collection) {
-            if ((string) $collection->status !== Published::$name) {
+            $chain = $collection->ancestors->sortBy('_lft')->push($collection);
+
+            // A hidden ancestor must not leak its name through a visible child.
+            if ($chain->contains(fn (Collection $node): bool => (string) $node->status !== Published::$name)) {
                 continue;
             }
 
-            $names = $collection->ancestors
-                ->sortBy('_lft')
-                ->push($collection)
+            $names = $chain
                 ->map(fn (Collection $node): string => (string) $node->translate('name'))
                 ->values();
 
