@@ -113,7 +113,7 @@ public function handle(Session $session, array $with = []): ?Order;      // GetC
 public function handle(Order $order, Session $session): ?string;         // GetOrderContactEmail
 
 Route::get('order/confirmation', function (Request $request) {
-    $order = (new GetCompletedOrder)->handle($request->session(), with: ['lines']);
+    $order = (new GetCompletedOrder)->handle($request->session(), with: ['physicalLines', 'shippingLines', 'billingAddress', 'shippingAddress']);
 
     abort_if($order === null, 404); // nothing in the session, or the order is not placed
 
@@ -123,6 +123,8 @@ Route::get('order/confirmation', function (Request $request) {
     ]);
 });
 ```
+
+The `Order` DTO's relations (`physicalLines`, `shippingLines`, `billingAddress`, `shippingAddress`, `transactions`) are Lazy and only serialize when loaded, hence the eager loads above.
 
 `GetCompletedOrder` returns null unless the handover holds a numeric `order_reference` and that order has `placed_at` set. `GetOrderContactEmail` tries the billing then shipping address `contact_email`, then the email on the checkout session (a guest's email can live only there), then the order user's email; null when none exist.
 
@@ -140,7 +142,7 @@ If your confirmation route is not named `checkout.success`, add it to `storefron
 6. Build the search index.
 7. `storage:link` if `public/storage` is missing.
 
-Options: `--preset=uk` (default `uk`; unknown names fail and list the available ones), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
+Options: `--preset=uk` (default `uk`; unknown names fail and list the available ones, but only after migrations and the country import have run), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
 
 ```bash
 php artisan storefront:install --preset=uk --admin-email=me@example.com --admin-firstname=Ada --admin-lastname=Lovelace --admin-password=secret
