@@ -220,6 +220,17 @@ test('it does not resolve a line by its numeric id when updating', function () {
     expect($line->fresh()->quantity)->toBe(1);
 });
 
+test('it refuses a falsy line id instead of falling through to the sku check', function () {
+    $line = cartWithLine(quantity: 1, stock: 10);
+
+    $this->put(route('lunar.storefront.cart.lines.quantity', '0'), [
+        'quantity' => 2,
+        'sku' => $line->purchasable->sku,
+    ])->assertSessionHasErrors(['quantity' => 'Cart line not found.']);
+
+    expect($line->fresh()->quantity)->toBe(1);
+});
+
 test('it does not resolve a line by its numeric id when deleting', function () {
     $line = cartWithLine(quantity: 1, stock: 10);
 

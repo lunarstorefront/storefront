@@ -36,7 +36,7 @@ class InStock implements DataAwareRule, ValidationRule
 
         $variant = null;
 
-        if ($this->cartLineId) {
+        if ($this->cartLineId !== null) {
             /**
              * Only the shopper's own cart: a line id from another cart is
              * treated as not found, so the rule never confirms it exists.
