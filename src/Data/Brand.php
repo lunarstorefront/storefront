@@ -28,7 +28,7 @@ class Brand extends Data
         return new self(
             name: $brand->name,
             attributeData: static::mapAttributes($brand),
-            productsCount: $brand->products_count ?: 0,
+            productsCount: $brand->hasAttribute('products_count') ? (int) $brand->products_count : 0,
             logo: Lazy::when(
                 fn () => $brand->relationLoaded('media') || $brand->relationLoaded('thumbnail'),
                 fn () => static::logoMedia($brand),
