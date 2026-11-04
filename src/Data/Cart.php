@@ -18,7 +18,6 @@ class Cart extends Data
         public ?string $subTotalFormatted,
         public int $subTotalDiscounted,
         public int $discountTotal,
-        public ?string $discountTotalFormatted,
         public int $shippingTotal,
         public int $taxTotal,
         public ?string $taxTotalFormatted,
@@ -32,6 +31,7 @@ class Cart extends Data
         public Lazy|CartAddress|null $shippingAddress,
         public Lazy|CartAddress|null $billingAddress,
         public ?ShippingBreakdown $shippingBreakdown,
+        public ?string $discountTotalFormatted = null,
     ) {}
 
     public static function fromModel(CartModel $cart): self
@@ -43,7 +43,6 @@ class Cart extends Data
             subTotalFormatted: $cart->subTotal->format(),
             subTotalDiscounted: $cart->subTotalDiscounted->value,
             discountTotal: $cart->discountTotal->value,
-            discountTotalFormatted: $cart->discountTotal->format(),
             shippingTotal: $cart->shippingSubTotal->value,
             taxTotal: $cart->taxTotal->value,
             taxTotalFormatted: $cart->taxTotal->format(),
@@ -60,6 +59,7 @@ class Cart extends Data
             shippingBreakdown: $cart->shippingBreakdown
                 ? ShippingBreakdown::fromValueObject($cart->shippingBreakdown)
                 : null,
+            discountTotalFormatted: $cart->discountTotal->format(),
         );
     }
 }
