@@ -38,7 +38,7 @@ class CartAddress extends Data
     public static function fromModel(CartAddressModel $cartAddress): self
     {
         return new self(
-            id: $cartAddress->id,
+            id: $cartAddress->public_id,
             title: $cartAddress->title,
             firstName: $cartAddress->first_name,
             lastName: $cartAddress->last_name,

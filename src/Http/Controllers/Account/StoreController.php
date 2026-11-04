@@ -8,15 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Lunar\Core\Contracts\LunarUser;
-use Lunar\Core\Models\Address;
 use Lunar\Core\Models\Country;
-use Lunar\Storefront\Actions\Account\GetCustomerForUser;
+use Lunar\Storefront\Actions\Account\FindCustomerAddress;
 use Lunar\Storefront\Actions\Account\SaveCustomerAddress;
 
 class StoreController extends Controller
 {
     public function __construct(
-        protected GetCustomerForUser $customers,
+        protected FindCustomerAddress $find,
         protected SaveCustomerAddress $addresses,
     ) {}
 
@@ -70,11 +69,10 @@ class StoreController extends Controller
 
         $defaults = [$request->input('type') == 'billing' ? 'billing' : 'shipping'];
 
-        // GetCustomerForUser gives an account with no customer yet (an imported
-        // user, say) one, rather than a null dereference. The action does the
-        // same when it creates.
-        /** @var Address|null $address */
-        $address = $id ? $this->customers->get($user)->addresses()->findOrFail($id) : null;
+        // The id is the address's public id, the same one the Address DTO
+        // exposes. Someone else's address and an unknown id are both a 404.
+        $address = $id ? $this->find->get($user, $id) : null;
+        abort_if($id && $address === null, 404);
 
         $this->addresses->save($user, $addressData, $address, $defaults);
 

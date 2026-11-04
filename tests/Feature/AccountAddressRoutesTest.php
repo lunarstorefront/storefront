@@ -103,21 +103,42 @@ it('only updates an address that belongs to the account', function () {
     $theirs = Address::factory()->for($other)->create(['country_id' => $this->country->id, 'first_name' => 'Theirs']);
 
     $this->actingAs($this->user)
-        ->put(route('storefront.account.address', $theirs->id), addressPayload(['first_name' => 'Mine']))
+        ->put(route('storefront.account.address', $theirs->public_id), addressPayload(['first_name' => 'Mine']))
         ->assertNotFound();
 
     expect($theirs->refresh()->first_name)->toBe('Theirs');
 });
 
 it('updates one of the account\'s own addresses', function () {
-    $address = Address::factory()->for($this->customer)->create(['country_id' => $this->country->id, 'first_name' => 'Old']);
+    $address = Address::factory()->for($this->customer)->create([
+        'country_id' => $this->country->id,
+        'first_name' => 'Old',
+        'shipping_default' => false,
+        'billing_default' => false,
+    ]);
 
     $this->actingAs($this->user)
-        ->put(route('storefront.account.address', $address->id), addressPayload(['first_name' => 'New']))
+        ->put(route('storefront.account.address', $address->public_id), addressPayload(['first_name' => 'New']))
         ->assertSessionHasNoErrors()
         ->assertRedirect();
 
     expect($address->refresh()->first_name)->toBe('New');
+});
+
+it('does not resolve an address by its numeric id', function () {
+    $address = Address::factory()->for($this->customer)->create(['country_id' => $this->country->id, 'first_name' => 'Old']);
+
+    $this->actingAs($this->user)
+        ->put(route('storefront.account.address', $address->id), addressPayload(['first_name' => 'New']))
+        ->assertNotFound();
+
+    expect($address->refresh()->first_name)->toBe('Old');
+});
+
+it('does not resolve an unknown public id', function () {
+    $this->actingAs($this->user)
+        ->put(route('storefront.account.address', '01JZZZZZZZZZZZZZZZZZZZZZZZ'), addressPayload())
+        ->assertNotFound();
 });
 
 it('keeps the stored last name when an update leaves the field out', function () {
@@ -127,7 +148,7 @@ it('keeps the stored last name when an update leaves the field out', function ()
     unset($payload['last_name']);
 
     $this->actingAs($this->user)
-        ->put(route('storefront.account.address', $address->id), $payload)
+        ->put(route('storefront.account.address', $address->public_id), $payload)
         ->assertSessionHasNoErrors();
 
     expect($address->refresh()->last_name)->toBe('Fitter');
@@ -187,7 +208,7 @@ it('keeps the shipping default when a default-for-both address is saved as billi
     ]);
 
     $this->actingAs($this->user)
-        ->put(route('storefront.account.address', $address->id), addressPayload(['type' => 'billing']))
+        ->put(route('storefront.account.address', $address->public_id), addressPayload(['type' => 'billing']))
         ->assertSessionHasNoErrors();
 
     expect($address->refresh()->shipping_default)->toBeTrue()
