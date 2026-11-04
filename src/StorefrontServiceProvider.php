@@ -22,6 +22,7 @@ use Lunar\Storefront\Actions\Cart\BuyNow;
 use Lunar\Storefront\Actions\Cart\BuyNowCartInCheckoutPayment;
 use Lunar\Storefront\Actions\Cart\BuyNowCartNotInUse;
 use Lunar\Storefront\Console\ConfigureMeilisearchQuerySuggestions;
+use Lunar\Storefront\Console\InstallCommand;
 use Lunar\Storefront\Contracts\BrandManager;
 use Lunar\Storefront\Contracts\BuyNowCartGuard;
 use Lunar\Storefront\Contracts\CollectionManager;
@@ -71,6 +72,12 @@ class StorefrontServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/storefront.php', 'storefront');
 
+        // A published config that lists its own presets keeps the package's.
+        config(['storefront.presets' => [
+            ...(require __DIR__.'/../config/storefront.php')['presets'],
+            ...config('storefront.presets', []),
+        ]]);
+
         Customer::saved(fn (Customer $customer) => $this->app->make(SyncCustomerGroups::class)->sync($customer));
 
         // Buy Now: a signed-in user's Buy Now carts left unfinished in an
@@ -89,6 +96,7 @@ class StorefrontServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ConfigureMeilisearchQuerySuggestions::class,
+                InstallCommand::class,
             ]);
         }
     }

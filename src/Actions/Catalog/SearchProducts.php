@@ -9,6 +9,10 @@ use Lunar\Search\Facades\Search;
 class SearchProducts
 {
     /**
+     * `$collectionIds` is meant for a single collection. The engine renders the
+     * ids as a comma list, so several would need the engine's own bracket
+     * syntax passed through `$filters` instead.
+     *
      * @param  array<array-key, mixed>|null  $facets
      * @param  array<int, int|string>  $collectionIds
      * @param  array<string, mixed>  $filters
@@ -24,6 +28,11 @@ class SearchProducts
         // reindexes write every product, so they are filtered out at query
         // time whatever the caller passed.
         $filters['status'] = '=`published`';
+
+        // The manager is a singleton that caches its engine, and the engine keeps
+        // its filters, sort and facets, so a second search in one process would
+        // inherit the first's. Start every search on a fresh engine.
+        Search::forgetDrivers();
 
         $products = Search::model(Product::class)
             ->perPage($perPage)

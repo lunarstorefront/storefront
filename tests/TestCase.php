@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Lunar\Core\LunarServiceProvider;
 use Lunar\Nestedset\NestedSetServiceProvider;
 use Lunar\Search\SearchServiceProvider;
+use Lunar\Shipping\ShippingServiceProvider;
 use Lunar\Storefront\StorefrontServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
@@ -45,6 +46,7 @@ abstract class TestCase extends Orchestra
             PermissionServiceProvider::class,
             LunarServiceProvider::class,
             SearchServiceProvider::class,
+            ShippingServiceProvider::class,
             StorefrontServiceProvider::class,
         ];
     }

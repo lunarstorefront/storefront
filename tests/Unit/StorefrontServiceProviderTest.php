@@ -8,6 +8,8 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Install\Presets\UkPreset;
+use Lunar\Storefront\StorefrontServiceProvider;
 
 test('it registers prop manager as singleton', function () {
     $a = app(PropManager::class);
@@ -55,4 +57,15 @@ test('it resolves pricing manager from container', function () {
 
 test('it merges storefront config', function () {
     expect(config('storefront'))->not->toBeNull();
+});
+
+test('a published presets list keeps the package presets', function () {
+    config(['storefront.presets' => ['eu' => 'App\\Install\\EuPreset']]);
+
+    app()->getProvider(StorefrontServiceProvider::class)->boot();
+
+    expect(config('storefront.presets'))->toBe([
+        'uk' => UkPreset::class,
+        'eu' => 'App\\Install\\EuPreset',
+    ]);
 });

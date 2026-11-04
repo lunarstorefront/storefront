@@ -20,6 +20,8 @@ return Inertia::render('Products/Show', [
 </code-snippet>
 @endverbatim
 
+- `php artisan storefront:install --preset=uk` sets up a new store (migrations, UK reference data, admin user, search index).
+
 ### Where code goes
 
 - Only package code receives patches; a store's own controllers and pages never update. Keep store code a thin layer: package calls, then store-specific props.
@@ -29,4 +31,4 @@ return Inertia::render('Products/Show', [
 
 ### Skills
 
-Activate the storefront skills for detailed work: `storefront-store-development` (where code belongs, extending and promoting logic), `storefront-upgrades` (taking package updates, reviewing bump PRs), `storefront-catalog` (products, collections, brands, search, pricing), `storefront-pages` (routes, props, TypeScript types), `storefront-auth-account` (accounts, addresses, 2FA), `storefront-ui-vue` (the @lunarstorefront/vue3 frontend package).
+Activate the storefront skills for detailed work: `storefront-store-development` (where code belongs, extending and promoting logic), `storefront-upgrades` (taking package updates, reviewing bump PRs), `storefront-catalog` (products, collections, brands, search, pricing, navigation, stock), `storefront-pages` (routes, props, TypeScript types, order confirmation, install), `storefront-auth-account` (accounts, addresses, 2FA), `storefront-ui-vue` (the @lunarstorefront/vue3 frontend package).
