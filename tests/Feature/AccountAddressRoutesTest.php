@@ -159,3 +159,48 @@ it('saves a new address sent without a last name at all', function () {
 
     expect($this->customer->addresses()->sole()->last_name)->toBe('');
 });
+
+it('leaves exactly one shipping default across the account when a new shipping address is saved', function () {
+    $existing = Address::factory()->for($this->customer)->create([
+        'country_id' => $this->country->id,
+        'shipping_default' => true,
+        'billing_default' => true,
+    ]);
+    $latest = Customer::factory()->create();
+    $this->user->customers()->attach($latest);
+
+    $this->actingAs($this->user)
+        ->post(route('storefront.account.addresses'), addressPayload(['type' => 'shipping']))
+        ->assertSessionHasNoErrors();
+
+    $new = $latest->addresses()->sole();
+
+    expect(Address::query()->where('shipping_default', true)->pluck('id')->all())->toBe([$new->id])
+        ->and($existing->refresh()->billing_default)->toBeTrue();
+});
+
+it('keeps the shipping default when a default-for-both address is saved as billing', function () {
+    $address = Address::factory()->for($this->customer)->create([
+        'country_id' => $this->country->id,
+        'shipping_default' => true,
+        'billing_default' => true,
+    ]);
+
+    $this->actingAs($this->user)
+        ->put(route('storefront.account.address', $address->id), addressPayload(['type' => 'billing']))
+        ->assertSessionHasNoErrors();
+
+    expect($address->refresh()->shipping_default)->toBeTrue()
+        ->and($address->billing_default)->toBeTrue();
+});
+
+it('makes the first saved address the default for both types', function () {
+    $this->actingAs($this->user)
+        ->post(route('storefront.account.addresses'), addressPayload(['type' => 'billing']))
+        ->assertSessionHasNoErrors();
+
+    $address = $this->customer->addresses()->sole();
+
+    expect($address->shipping_default)->toBeTrue()
+        ->and($address->billing_default)->toBeTrue();
+});

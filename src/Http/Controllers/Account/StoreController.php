@@ -8,13 +8,16 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Lunar\Core\Contracts\LunarUser;
+use Lunar\Core\Models\Address;
 use Lunar\Core\Models\Country;
 use Lunar\Storefront\Actions\Account\GetCustomerForUser;
+use Lunar\Storefront\Actions\Account\SaveCustomerAddress;
 
 class StoreController extends Controller
 {
     public function __construct(
         protected GetCustomerForUser $customers,
+        protected SaveCustomerAddress $addresses,
     ) {}
 
     public function __invoke(?string $id, Request $request): RedirectResponse
@@ -65,21 +68,15 @@ class StoreController extends Controller
             $addressData['last_name'] ??= '';
         }
 
-        $addressData['billing_default'] = $request->input('type') == 'billing';
-        $addressData['shipping_default'] = $request->input('type') != 'billing';
+        $defaults = [$request->input('type') == 'billing' ? 'billing' : 'shipping'];
 
-        // An account with no customer yet (an imported user, say) gets one,
-        // rather than a null dereference.
-        $customer = $this->customers->get($user);
+        // GetCustomerForUser gives an account with no customer yet (an imported
+        // user, say) one, rather than a null dereference. The action does the
+        // same when it creates.
+        /** @var Address|null $address */
+        $address = $id ? $this->customers->get($user)->addresses()->findOrFail($id) : null;
 
-        if ($id) {
-            $address = $customer->addresses()->findOrFail($id);
-            $address->fill($addressData)->save();
-
-            return back();
-        }
-
-        $customer->addresses()->create($addressData);
+        $this->addresses->save($user, $addressData, $address, $defaults);
 
         return back();
     }
