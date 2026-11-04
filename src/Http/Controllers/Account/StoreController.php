@@ -9,12 +9,14 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Lunar\Core\Contracts\LunarUser;
 use Lunar\Core\Models\Country;
-use Lunar\Storefront\Actions\Account\GetCustomerForUser;
+use Lunar\Storefront\Actions\Account\FindCustomerAddress;
+use Lunar\Storefront\Actions\Account\SaveCustomerAddress;
 
 class StoreController extends Controller
 {
     public function __construct(
-        protected GetCustomerForUser $customers,
+        protected FindCustomerAddress $find,
+        protected SaveCustomerAddress $addresses,
     ) {}
 
     public function __invoke(?string $id, Request $request): RedirectResponse
@@ -65,21 +67,14 @@ class StoreController extends Controller
             $addressData['last_name'] ??= '';
         }
 
-        $addressData['billing_default'] = $request->input('type') == 'billing';
-        $addressData['shipping_default'] = $request->input('type') != 'billing';
+        $defaults = [$request->input('type') == 'billing' ? 'billing' : 'shipping'];
 
-        // An account with no customer yet (an imported user, say) gets one,
-        // rather than a null dereference.
-        $customer = $this->customers->get($user);
+        // The id is the address's public id, the same one the Address DTO
+        // exposes. Someone else's address and an unknown id are both a 404.
+        $address = $id ? $this->find->get($user, $id) : null;
+        abort_if($id && $address === null, 404);
 
-        if ($id) {
-            $address = $customer->addresses()->findOrFail($id);
-            $address->fill($addressData)->save();
-
-            return back();
-        }
-
-        $customer->addresses()->create($addressData);
+        $this->addresses->save($user, $addressData, $address, $defaults);
 
         return back();
     }

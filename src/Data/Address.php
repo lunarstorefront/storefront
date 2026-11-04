@@ -34,7 +34,7 @@ class Address extends Data
     public static function fromModel(Model $address): static
     {
         return new static(
-            id: $address->id === null ? null : (string) $address->id,
+            id: $address->public_id,
             title: $address->title,
             firstName: $address->first_name,
             lastName: $address->last_name,
