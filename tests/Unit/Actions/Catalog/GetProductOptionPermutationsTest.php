@@ -15,6 +15,7 @@ use Lunar\Core\Models\Region;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Storefront\Actions\Catalog\GetProductOptionPermutations;
 use Lunar\Storefront\Actions\Catalog\GetProductOptions;
+use Lunar\Storefront\Actions\Catalog\GetProductVariantByProvidedOptions;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 
 beforeEach(function () {
@@ -181,8 +182,8 @@ test('it indicates which permutations have variants', function () {
     expect($permutations)->toHaveCount(2);
 
     // Find each permutation
-    $redSmall = $permutations->first(fn ($p) => in_array($red->id, array_values($p->values)));
-    $blueSmall = $permutations->first(fn ($p) => in_array($blue->id, array_values($p->values)));
+    $redSmall = $permutations->first(fn ($p) => in_array($red->public_id, array_values($p->values), true));
+    $blueSmall = $permutations->first(fn ($p) => in_array($blue->public_id, array_values($p->values), true));
 
     expect($redSmall->hasVariant)->toBeTrue()
         ->and($redSmall->stock)->toBe(10)
@@ -220,6 +221,35 @@ test('permutation includes hash for variant lookup', function () {
     expect($permutation->hash)
         ->toBeString()
         ->not->toBeEmpty();
+});
+
+test('a permutation names options and values by their public ids, and its hash finds the variant', function () {
+    $productType = ProductType::factory()->create();
+    $taxClass = TaxClass::factory()->create();
+    $product = Product::factory()->for($productType)->create();
+
+    $colorOption = ProductOption::factory()->create([
+        'name' => collect(['en' => new Text('Color')]),
+    ]);
+
+    $red = ProductOptionValue::factory()
+        ->for($colorOption, 'option')
+        ->create(['name' => collect(['en' => new Text('Red')])]);
+
+    $variant = ProductVariant::factory()
+        ->for($product)
+        ->for($taxClass)
+        ->create();
+    $variant->values()->attach($red);
+
+    $product->productOptions()->attach($colorOption, ['position' => 1]);
+
+    $permutation = (new GetProductOptionPermutations)
+        ->get((new GetProductOptions)->get($product), $product)
+        ->sole();
+
+    expect($permutation->values)->toBe([$colorOption->public_id => $red->public_id])
+        ->and((new GetProductVariantByProvidedOptions)->get($product, $permutation->hash)?->is($variant))->toBeTrue();
 });
 
 test('permutation includes value names for display', function () {
@@ -291,8 +321,8 @@ test('it detects backorder availability', function () {
     $action = new GetProductOptionPermutations;
     $permutations = $action->get($options, $product);
 
-    $redPerm = $permutations->first(fn ($p) => in_array($red->id, array_values($p->values)));
-    $bluePerm = $permutations->first(fn ($p) => in_array($blue->id, array_values($p->values)));
+    $redPerm = $permutations->first(fn ($p) => in_array($red->public_id, array_values($p->values), true));
+    $bluePerm = $permutations->first(fn ($p) => in_array($blue->public_id, array_values($p->values), true));
 
     expect($redPerm->backorder)->toBeFalse()
         ->and($bluePerm->backorder)->toBeTrue();

@@ -16,6 +16,8 @@ class ProductOptionPermutation extends Data
         public int $stock,
         public bool $backorder,
         /**
+         * The option's public id to the chosen value's public id.
+         *
          * @var array<string,string>
          */
         public array $values,

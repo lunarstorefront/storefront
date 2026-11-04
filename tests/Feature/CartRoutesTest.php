@@ -91,7 +91,7 @@ function foreignLine(): CartLine
 test('it updates a line to the new quantity', function () {
     $line = cartWithLine(quantity: 2, stock: 10);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 4])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => 4])
         ->assertSessionHasNoErrors();
 
     expect($line->fresh()->quantity)->toBe(4);
@@ -100,7 +100,7 @@ test('it updates a line to the new quantity', function () {
 test('it checks stock against the new quantity, not the old one added to it', function () {
     $line = cartWithLine(quantity: 5, stock: 8);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 6])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => 6])
         ->assertSessionHasNoErrors();
 
     expect($line->fresh()->quantity)->toBe(6);
@@ -109,7 +109,7 @@ test('it checks stock against the new quantity, not the old one added to it', fu
 test('it still refuses an update beyond stock', function () {
     $line = cartWithLine(quantity: 5, stock: 8);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 9])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => 9])
         ->assertSessionHasErrors('quantity');
 
     expect($line->fresh()->quantity)->toBe(5);
@@ -121,7 +121,7 @@ test('it checks an update against its own line, not a sku in the request', funct
 
     CartSession::use($line->cart);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), [
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), [
         'quantity' => 500,
         'sku' => $decoy->sku,
     ])->assertSessionHasErrors(['quantity' => 'Insufficient stock.']);
@@ -134,7 +134,7 @@ test('it runs the cart line validators on an update', function () {
 
     config()->set('lunar.cart.validators.update_cart_line', [RefusesEveryUpdate::class]);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 2])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => 2])
         ->assertSessionHasErrors(['quantity' => 'Refused.']);
 
     expect($line->fresh()->quantity)->toBe(1);
@@ -154,7 +154,7 @@ test('it counts what the cart already holds when adding more', function () {
 test('it refuses a quantity that is not a whole number of at least one', function (mixed $quantity) {
     $line = cartWithLine(quantity: 2, stock: 10);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => $quantity])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => $quantity])
         ->assertSessionHasErrors('quantity');
 
     expect($line->fresh()->quantity)->toBe(2);
@@ -183,7 +183,7 @@ test('it treats a line in another cart as not found when updating', function () 
     $foreign = foreignLine();
     cartWithLine(quantity: 1, stock: 10);
 
-    $this->put(route('lunar.storefront.cart.lines.quantity', $foreign->id), ['quantity' => 2])
+    $this->put(route('lunar.storefront.cart.lines.quantity', $foreign->public_id), ['quantity' => 2])
         ->assertSessionHasErrors(['quantity' => 'Cart line not found.']);
 
     expect($foreign->fresh()->quantity)->toBe(1);
@@ -193,10 +193,10 @@ test('it validates a delete against the current cart only', function () {
     $foreign = foreignLine();
     cartWithLine(quantity: 1, stock: 10);
 
-    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => $foreign->id])
+    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => $foreign->public_id])
         ->assertSessionHasErrors('id');
 
-    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => 999999])
+    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => '01JZZZZZZZZZZZZZZZZZZZZZZZ'])
         ->assertSessionHasErrors('id');
 
     expect($foreign->fresh())->not->toBeNull();
@@ -205,10 +205,39 @@ test('it validates a delete against the current cart only', function () {
 test('it deletes a line from the current cart', function () {
     $line = cartWithLine(quantity: 1, stock: 10);
 
-    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => $line->id])
+    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => $line->public_id])
         ->assertSessionHasNoErrors();
 
     expect($line->fresh())->toBeNull();
+});
+
+test('it does not resolve a line by its numeric id when updating', function () {
+    $line = cartWithLine(quantity: 1, stock: 10);
+
+    $this->put(route('lunar.storefront.cart.lines.quantity', $line->id), ['quantity' => 2])
+        ->assertSessionHasErrors(['quantity' => 'Cart line not found.']);
+
+    expect($line->fresh()->quantity)->toBe(1);
+});
+
+test('it refuses a falsy line id instead of falling through to the sku check', function () {
+    $line = cartWithLine(quantity: 1, stock: 10);
+
+    $this->put(route('lunar.storefront.cart.lines.quantity', '0'), [
+        'quantity' => 2,
+        'sku' => $line->purchasable->sku,
+    ])->assertSessionHasErrors(['quantity' => 'Cart line not found.']);
+
+    expect($line->fresh()->quantity)->toBe(1);
+});
+
+test('it does not resolve a line by its numeric id when deleting', function () {
+    $line = cartWithLine(quantity: 1, stock: 10);
+
+    $this->delete(route('lunar.storefront.cart.lines.delete'), ['id' => (string) $line->id])
+        ->assertSessionHasErrors('id');
+
+    expect($line->fresh())->not->toBeNull();
 });
 
 class RefusesEveryUpdate extends BaseValidator

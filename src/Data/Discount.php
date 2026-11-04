@@ -18,7 +18,7 @@ class Discount extends Data
     public static function fromModel(DiscountModel $discount): self
     {
         return new self(
-            id: $discount->id,
+            id: $discount->public_id,
             name: $discount->name,
             coupon: $discount->coupon,
         );

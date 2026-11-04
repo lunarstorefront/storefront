@@ -79,3 +79,12 @@ test('it carries the unit price inclusive of the tax rate of the line', function
     'reduced rate' => [5, 1050, '£10.50'],
     'zero rate' => [0, 1000, '£10.00'],
 ]);
+
+test('it identifies the line and its product by their public ids', function () {
+    $line = calculatedLine(TaxClass::factory()->create(['default' => true]));
+
+    $data = CartLineData::fromModel($line->load('purchasable.product'))->include('productId')->toArray();
+
+    expect($data['id'])->toBe($line->public_id)
+        ->and($data['productId'])->toBe($line->purchasable->product->public_id);
+});

@@ -19,7 +19,7 @@ class ProductOptionValue extends Data
     public static function fromModel(ProductOptionValueModel $productOptionValue): self
     {
         return new self(
-            id: $productOptionValue->id,
+            id: $productOptionValue->public_id,
             name: (string) $productOptionValue->translate('name'),
             productOption: Lazy::whenLoaded('option', $productOptionValue, fn () => ProductOption::from($productOptionValue->option))
         );

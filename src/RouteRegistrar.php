@@ -53,7 +53,8 @@ class RouteRegistrar
 
     protected static function cartRoutes(): void
     {
-        Route::put('cart/lines/{id}', function (Request $request, int $id) {
+        // {id} is the line's public id, the one the CartLine DTO exposes.
+        Route::put('cart/lines/{id}', function (Request $request, string $id) {
             $cart = CartSession::current();
 
             $request->validate([
@@ -65,12 +66,15 @@ class RouteRegistrar
                 ],
             ]);
 
+            // InStock has already rejected a line outside this cart.
+            $line = $cart?->lines->firstWhere('public_id', $id);
+
             /**
              * Through the cart, not a direct write, so Lunar's update_cart_line
              * validators run and the cart is recalculated.
              */
             try {
-                $cart?->updateLine($id, (int) $request->input('quantity'));
+                $cart?->updateLine($line->id, (int) $request->input('quantity'));
             } catch (CartException $e) {
                 throw ValidationException::withMessages([
                     'quantity' => $e->errors()->first(),
@@ -86,11 +90,12 @@ class RouteRegistrar
             $request->validate([
                 'id' => [
                     'required',
-                    Rule::exists(CartLine::class, 'id')->where('cart_id', $cart?->id),
+                    'string',
+                    Rule::exists(CartLine::class, 'public_id')->where('cart_id', $cart?->id),
                 ],
             ]);
 
-            $cart?->lines()->where('id', $request->input('id'))->delete();
+            $cart?->lines()->where('public_id', $request->input('id'))->delete();
 
             return back();
         })->name('lunar.storefront.cart.lines.delete')->middleware(['web']);

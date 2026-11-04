@@ -29,7 +29,7 @@ class GetProductVariantByProvidedOptions
                     collect($options)->filter()->each(
                         fn ($selectedValue) => $query->whereHas(
                             'values',
-                            fn (Builder $relation) => $relation->where('value_id', $selectedValue)
+                            fn (Builder $relation) => $relation->where($relation->qualifyColumn('public_id'), $selectedValue)
                         )
                     );
                 }
