@@ -45,7 +45,7 @@ class OrderLine extends Data
         $format = fn (int $value): ?string => (new PriceValue($value, $currency))->format();
 
         return new self(
-            id: (string) $orderLine->id,
+            id: $orderLine->public_id,
             type: $orderLine->type,
             thumbnail: static::thumbnailOf($orderLine),
             description: $orderLine->description,

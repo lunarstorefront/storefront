@@ -11,7 +11,8 @@ class InStock implements DataAwareRule, ValidationRule
 {
     public function __construct(
         protected ?Cart $cart = null,
-        protected ?int $cartLineId = null,
+        /** The line's public id, as the CartLine DTO exposes it. */
+        protected ?string $cartLineId = null,
         /**
          * All the data under validation.
          *
@@ -40,7 +41,7 @@ class InStock implements DataAwareRule, ValidationRule
              * Only the shopper's own cart: a line id from another cart is
              * treated as not found, so the rule never confirms it exists.
              */
-            $cartLine = $this->cart?->lines->firstWhere('id', $this->cartLineId);
+            $cartLine = $this->cart?->lines->firstWhere('public_id', $this->cartLineId);
 
             if (! $cartLine) {
                 $fail('Cart line not found.');
@@ -71,7 +72,7 @@ class InStock implements DataAwareRule, ValidationRule
          * counted again.
          */
         $alreadyInCart = (int) $this->cart?->lines
-            ->filter(fn ($line) => $line->purchasable_id == $variant->id && $line->id != $this->cartLineId)
+            ->filter(fn ($line) => $line->purchasable_id == $variant->id && $line->public_id !== $this->cartLineId)
             ->sum('quantity');
 
         $value = $value + $alreadyInCart;

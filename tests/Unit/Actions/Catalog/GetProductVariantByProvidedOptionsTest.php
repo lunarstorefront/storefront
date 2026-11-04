@@ -74,7 +74,7 @@ test('it finds variant by encrypted options hash', function () {
     // Create hash using VariantManager (same as GetProductOptionPermutations)
     $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
-        $colorOption->id => $red->id,
+        $colorOption->public_id => $red->public_id,
     ]);
 
     $action = new GetProductVariantByProvidedOptions;
@@ -137,8 +137,8 @@ test('it finds correct variant with multiple options', function () {
 
     $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
-        $colorOption->id => $blue->id,
-        $sizeOption->id => $large->id,
+        $colorOption->public_id => $blue->public_id,
+        $sizeOption->public_id => $large->public_id,
     ]);
 
     $action = new GetProductVariantByProvidedOptions;
@@ -177,7 +177,7 @@ test('it eager loads prices and tax class relations', function () {
 
     $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
-        $colorOption->id => $red->id,
+        $colorOption->public_id => $red->public_id,
     ]);
 
     $action = new GetProductVariantByProvidedOptions;
@@ -216,7 +216,7 @@ test('it returns null when variant does not belong to product', function () {
 
     $variantManager = new VariantManager;
     $hash = $variantManager->encryptOptions([
-        $colorOption->id => $red->id,
+        $colorOption->public_id => $red->public_id,
     ]);
 
     $action = new GetProductVariantByProvidedOptions;
@@ -224,4 +224,30 @@ test('it returns null when variant does not belong to product', function () {
     $result = $action->get($product1, $hash);
 
     expect($result)->toBeNull();
+});
+
+test('it does not resolve a hash of numeric option and value ids', function () {
+    $productType = ProductType::factory()->create();
+    $taxClass = TaxClass::factory()->create();
+    $product = Product::factory()->for($productType)->create();
+
+    $colorOption = ProductOption::factory()->create([
+        'name' => collect(['en' => new Text('Color')]),
+    ]);
+
+    $red = ProductOptionValue::factory()
+        ->for($colorOption, 'option')
+        ->create(['name' => collect(['en' => new Text('Red')])]);
+
+    $variant = ProductVariant::factory()
+        ->for($product)
+        ->for($taxClass)
+        ->create();
+    $variant->values()->attach($red);
+
+    $hash = (new VariantManager)->encryptOptions([
+        $colorOption->id => $red->id,
+    ]);
+
+    expect((new GetProductVariantByProvidedOptions)->get($product, $hash))->toBeNull();
 });

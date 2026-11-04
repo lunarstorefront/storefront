@@ -52,15 +52,15 @@ $crossSells = Storefront::products()->getAssociations($product, ProductAssociati
 
 ## Variants
 
-Variant selection round-trips an HMAC-signed hash of the chosen options (`[product_option_id => value_id]`) through the frontend. The signature uses the app encryption key (`APP_KEY`).
+Variant selection round-trips an HMAC-signed hash of the chosen options through the frontend, keyed by the option's `public_id` with the value's `public_id` (the same ids the `ProductOption`, `ProductOptionValue` and `ProductOptionPermutation` DTOs expose). The signature uses the app encryption key (`APP_KEY`). A hash of numeric ids resolves no variant.
 
 ```php
-$hash = Storefront::variants()->encryptOptions([$optionId => $valueId]);
+$hash = Storefront::variants()->encryptOptions([$option->public_id => $value->public_id]);
 
 $variant  = Storefront::variants()->getProvidedVariant($product, $hash);
 // ?ProductVariant — returns the product's first variant when $hash is null
 
-$selected = Storefront::variants()->getSelectedOptions($hash); // Collection [optionId => valueId]
+$selected = Storefront::variants()->getSelectedOptions($hash); // Collection [option public id => value public id]
 $variant  = Storefront::variants()->getBySku('WIDGET-RED-L');  // ?ProductVariant
 ```
 

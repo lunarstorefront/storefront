@@ -59,7 +59,7 @@ class Order extends Data
         $format = fn (int $value): ?string => (new PriceValue($value, $currency))->format();
 
         return new self(
-            id: (string) $order->id,
+            id: $order->public_id,
             status: $fulfilmentStatus,
             paymentStatus: (string) $order->payment_status?->getValue(),
             fulfilmentStatus: $fulfilmentStatus,

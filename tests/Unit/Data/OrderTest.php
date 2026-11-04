@@ -30,7 +30,7 @@ test('it maps a placed order', function () {
     $data = OrderData::from($this->order->fresh())->toArray();
 
     expect($data)
-        ->id->toBe((string) $this->order->id)
+        ->id->toBe($this->order->public_id)
         ->reference->toBe('00000001')
         ->customerReference->toBe('PO-4471')
         ->notes->toBe('Leave at the side gate')
@@ -96,6 +96,7 @@ test('it carries the shipping lines when loaded', function () {
 
     expect($data['shippingLines'])->toHaveCount(1)
         ->and($data['shippingLines'][0]['description'])->toBe('Click & collect')
+        ->and($data['shippingLines'][0]['id'])->toBe(OrderLine::query()->where('type', 'shipping')->sole()->public_id)
         ->and($data['physicalLines'])->toHaveCount(1);
 });
 
@@ -174,8 +175,8 @@ test('it gives each line its part number and VAT, for the order detail', functio
 
     $lines = collect(OrderData::from($this->order->fresh()->load('physicalLines.purchasable'))->toArray()['physicalLines'])->keyBy('id');
 
-    expect($lines[(string) $withMpn->id])->mpn->toBe('11100100')->taxTotalFormatted->toBe('£2.50')
-        ->and($lines[(string) $withoutMpn->id]['mpn'])->toBeNull();
+    expect($lines[$withMpn->public_id])->mpn->toBe('11100100')->taxTotalFormatted->toBe('£2.50')
+        ->and($lines[$withoutMpn->public_id]['mpn'])->toBeNull();
 });
 
 test('a line gives the part number stamped when the order was placed, not the variant\'s current one', function (?string $stamped) {

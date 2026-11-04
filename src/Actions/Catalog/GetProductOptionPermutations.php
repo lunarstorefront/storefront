@@ -48,7 +48,7 @@ class GetProductOptionPermutations
 
             return new ProductOptionPermutation(
                 hash: Storefront::variants()->encryptOptions($values->mapWithKeys(
-                    fn (ProductOptionValue $value) => [$value->product_option_id => $value->id]
+                    fn (ProductOptionValue $value) => [$value->option->public_id => $value->public_id]
                 )->toArray()),
                 hasVariant: $variantQuery->exists(),
                 stock: (int) $variantQuery->clone()->get()->sum(
@@ -67,7 +67,7 @@ class GetProductOptionPermutations
                         )
                 )->exists(),
                 values: $values->mapWithKeys(
-                    fn (ProductOptionValue $value) => [(string) $value->product_option_id => $value->id]
+                    fn (ProductOptionValue $value) => [$value->option->public_id => $value->public_id]
                 )->toArray(),
                 valueNames: $values->mapWithKeys(
                     fn (ProductOptionValue $value) => [(string) $value->option->translate('name') => (string) $value->translate('name')]

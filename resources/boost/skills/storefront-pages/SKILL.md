@@ -22,9 +22,11 @@ RouteRegistrar::register(['cart', 'currency']); // a subset
 
 Groups: `cart`, `account`, `checkout`, `currency`, `suggestions`, `auth`. Unknown keys are silently ignored.
 
+Every `id` a DTO exposes for a Lunar record is that record's `public_id` (a ULID string), never the numeric key, and every route that takes an id back expects the same public id.
+
 | Group | Routes (name — verb URI) |
 |---|---|
-| cart | `lunar.storefront.cart.lines` POST `cart/lines`; `lunar.storefront.cart.lines.quantity` PUT `cart/lines/{id}`; `lunar.storefront.cart.lines.delete` DELETE `cart/lines`; `lunar.storefront.cart.discount` POST `carts/discount`; `lunar.storefront.cart.discount.delete` DELETE `carts/discount` |
+| cart | `lunar.storefront.cart.lines` POST `cart/lines`; `lunar.storefront.cart.lines.quantity` PUT `cart/lines/{id}` (the line's public id); `lunar.storefront.cart.lines.delete` DELETE `cart/lines` (body `id`, the line's public id); `lunar.storefront.cart.discount` POST `carts/discount`; `lunar.storefront.cart.discount.delete` DELETE `carts/discount` |
 | account | `storefront.account.addresses` POST `/account/addresses`; `storefront.account.address` PUT `/account/addresses/{id}` (auth) |
 | checkout | `checkout.success` GET `checkout/success`; `checkout.order-issue` GET `checkout/order-issue` |
 | currency | `storefront.currency` POST `/api/currency` |

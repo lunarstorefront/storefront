@@ -55,7 +55,7 @@ test('it fails when sku does not exist', function () {
 });
 
 test('it fails when cart line id does not exist', function () {
-    $rule = new InStock(cartLineId: 999);
+    $rule = new InStock(cartLineId: '01JZZZZZZZZZZZZZZZZZZZZZZZ');
     $rule->setData([]);
 
     $failures = [];
@@ -169,7 +169,7 @@ test('it ignores a request sku when validating a cart line', function () {
         'quantity' => 1,
     ]);
 
-    $rule = new InStock($cart, cartLineId: $line->id);
+    $rule = new InStock($cart, cartLineId: $line->public_id);
     $rule->setData(['sku' => 'DECOY']);
 
     $failures = [];
@@ -178,4 +178,27 @@ test('it ignores a request sku when validating a cart line', function () {
     });
 
     expect($failures)->toContain('Insufficient stock.');
+});
+
+test('it does not find a cart line by its numeric id', function () {
+    $product = Product::factory()->for($this->productType)->create();
+    $variant = ProductVariant::factory()->for($product)->for($this->taxClass)->inStock(10)->create();
+
+    $cart = Cart::factory()->create();
+    $line = CartLine::factory()->create([
+        'cart_id' => $cart->id,
+        'purchasable_type' => $variant->getMorphClass(),
+        'purchasable_id' => $variant->id,
+        'quantity' => 1,
+    ]);
+
+    $rule = new InStock($cart, cartLineId: (string) $line->id);
+    $rule->setData([]);
+
+    $failures = [];
+    $rule->validate('quantity', 1, function ($message) use (&$failures) {
+        $failures[] = $message;
+    });
+
+    expect($failures)->toContain('Cart line not found.');
 });

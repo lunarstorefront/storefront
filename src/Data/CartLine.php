@@ -38,8 +38,8 @@ class CartLine extends Data
     {
 
         return new self(
-            id: $cartLine->id,
-            productId: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product_id),
+            id: $cartLine->public_id,
+            productId: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->product->public_id),
             stockLevel: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getTotalInventory()),
             identifier: Lazy::whenLoaded('purchasable', $cartLine, fn () => $cartLine->purchasable->getIdentifier()),
             name: Lazy::whenLoaded('purchasable', $cartLine, fn () => (string) $cartLine->purchasable->product->translate('name')),

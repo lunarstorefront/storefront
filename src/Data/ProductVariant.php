@@ -22,7 +22,7 @@ class ProductVariant extends Data
     public static function fromModel(ProductVariantModel $variant): self
     {
         return new self(
-            id: $variant->id,
+            id: $variant->public_id,
             sku: $variant->sku,
             stock: $variant->getTotalInventory(),
             values: Lazy::whenLoaded('values', $variant, fn () => ProductOptionValue::collect($variant->values))
