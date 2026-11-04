@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Lunar\Core\Models\Country;
 use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Product;
 use Lunar\Core\Models\Staff;
 use Lunar\Core\Models\TaxRate;
 use Lunar\Shipping\Models\ShippingMethod;
@@ -112,4 +115,27 @@ it('fails when the search command fails', function () {
 
     $this->artisan('storefront:install', ['--no-interaction' => true])
         ->expectsOutputToContain('Search indexing failed')->assertFailed();
+});
+
+it('refuses to run on a store that is already trading', function (string $model, string $label) {
+    Country::factory()->create(['iso2' => 'GB', 'iso3' => 'GBR']);
+    $model::factory()->create();
+    $currencies = Currency::count();
+
+    $this->artisan('storefront:install', ['--skip-search' => true, '--no-interaction' => true])
+        ->expectsOutputToContain("this database already has {$label}")->assertFailed();
+
+    expect(Currency::count())->toBe($currencies);
+})->with([
+    'products' => [Product::class, 'products'],
+    'orders' => [Order::class, 'orders'],
+    'customers' => [Customer::class, 'customers'],
+]);
+
+it('fails cleanly when the preset cannot seed', function () {
+    Country::factory()->create(['iso2' => 'FR', 'iso3' => 'FRA']);
+
+    $this->artisan('storefront:install', ['--skip-search' => true, '--no-interaction' => true])
+        ->expectsOutputToContain('Seeding the uk preset failed: Import countries before seeding the uk preset')
+        ->assertFailed();
 });

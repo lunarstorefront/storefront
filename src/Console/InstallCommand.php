@@ -4,7 +4,11 @@ namespace Lunar\Storefront\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Product;
 use Lunar\Core\Models\Staff;
 use Throwable;
 
@@ -44,6 +48,14 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
+        $established = $this->establishedStoreData();
+
+        if ($established !== []) {
+            $this->components->error('storefront:install sets up a new store, but this database already has '.implode(', ', $established).'. Nothing was changed.');
+
+            return self::FAILURE;
+        }
+
         $this->components->info('Publishing config and assets');
         foreach (config('storefront.install.publish.config', []) as $tag) {
             $this->publish($tag);
@@ -62,7 +74,14 @@ class InstallCommand extends Command
         }
 
         $this->components->info("Seeding the {$name} preset");
-        app($presets[$name])->seed();
+
+        try {
+            app($presets[$name])->seed();
+        } catch (Throwable $e) {
+            $this->components->error("Seeding the {$name} preset failed: {$e->getMessage()}");
+
+            return self::FAILURE;
+        }
 
         if ($this->createAdmin() !== self::SUCCESS) {
             $this->components->error('Admin creation failed');
@@ -131,6 +150,20 @@ class InstallCommand extends Command
             '--lastname' => $values['lastname'],
             '--password' => $values['password'],
         ]);
+    }
+
+    /**
+     * What makes this a store that is already trading. Running the command
+     * again on a store it set up is fine, as the presets seed none of these.
+     *
+     * @return array<int, string>
+     */
+    private function establishedStoreData(): array
+    {
+        return collect(['products' => Product::class, 'orders' => Order::class, 'customers' => Customer::class])
+            ->filter(fn (string $model) => Schema::hasTable((new $model)->getTable()) && $model::query()->exists())
+            ->keys()
+            ->all();
     }
 
     private function publish(string $tag, bool $force = false): void

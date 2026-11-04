@@ -132,7 +132,7 @@ If your confirmation route is not named `checkout.success`, add it to `storefron
 
 ## Installing a store
 
-`php artisan storefront:install` sets up a new store. It stops with an error if a required package is missing, otherwise it runs in order:
+`php artisan storefront:install` sets up a new store. It stops with an error, before changing anything, if a required package is missing or the database already has products, orders or customers (it is not for a store that is already trading). Otherwise it runs in order:
 
 1. Publish config (only if missing) and assets (always `--force`) from `storefront.install.publish`.
 2. `migrate --force`.
@@ -142,7 +142,7 @@ If your confirmation route is not named `checkout.success`, add it to `storefron
 6. Build the search index.
 7. `storage:link` if `public/storage` is missing.
 
-Options: `--preset=uk` (default `uk`; unknown names are rejected, listing the available ones, before any changes are made), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once.
+Options: `--preset=uk` (default `uk`; unknown names are rejected, listing the available ones, before any changes are made), `--skip-search`, `--admin-email`, `--admin-firstname`, `--admin-lastname`, `--admin-password`. Each `--admin-*` option falls back to `config('storefront.install_admin.*')`, which reads `STOREFRONT_ADMIN_EMAIL`, `STOREFRONT_ADMIN_FIRSTNAME`, `STOREFRONT_ADMIN_LASTNAME` and `STOREFRONT_ADMIN_PASSWORD`. An existing admin email is left alone. Missing values are prompted for interactively; with `--no-interaction` the admin step is skipped with a warning. Safe to run more than once on a store it set up. If the preset throws, the command reports the message and fails.
 
 ```bash
 php artisan storefront:install --preset=uk --admin-email=me@example.com --admin-firstname=Ada --admin-lastname=Lovelace --admin-password=secret
@@ -154,9 +154,8 @@ The `uk` preset seeds GBP, English, a Webstore channel, Retail and Trade custome
 Add a preset by implementing `Lunar\Storefront\Install\Preset` (one method, `seed(): void`, safe to run twice) and registering it:
 
 ```php
-// config/storefront.php (a published copy replaces whole top-level keys, so keep 'uk')
+// config/storefront.php (merged with the package presets, so 'uk' stays available)
 'presets' => [
-    'uk' => \Lunar\Storefront\Install\Presets\UkPreset::class,
     'eu' => App\Install\EuPreset::class,
 ],
 ```
@@ -170,4 +169,4 @@ Config (`storefront.install`):
 
 ## Config
 
-`config/storefront.php` top-level keys: `key` (from `STOREFRONT_KEY`; unused by package code, variant option hashing uses `APP_KEY`), `buy_now.checkout_routes`, `install`, `install_admin`, `navigation`, `search`, `stock` and `presets`. The last six are documented in this skill and `storefront-catalog`. A store's published copy replaces whole top-level keys, so copy a key in full when overriding it.
+`config/storefront.php` top-level keys: `key` (from `STOREFRONT_KEY`; unused by package code, variant option hashing uses `APP_KEY`), `buy_now.checkout_routes`, `install`, `install_admin`, `navigation`, `search`, `stock` and `presets`. The last six are documented in this skill and `storefront-catalog`. A store's published copy replaces whole top-level keys, so copy a key in full when overriding it. The exception is `presets`, which is merged with the package's.
