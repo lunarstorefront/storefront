@@ -24,7 +24,7 @@ class ProductVariant extends Data
         return new self(
             id: $variant->id,
             sku: $variant->sku,
-            stock: $variant->stock,
+            stock: $variant->getTotalInventory(),
             values: Lazy::whenLoaded('values', $variant, fn () => ProductOptionValue::collect($variant->values))
         );
     }
