@@ -583,6 +583,8 @@ test('it shows and logs a first break dearer than the base, as the cart charges 
 });
 
 test('it keeps charging a break that only tied the base when a dearer one follows', function () {
+    Log::spy();
+
     [$base, $breaks] = priceBreakFixtureRows(1000, [
         [1000, 5],
         [1050, 10],
@@ -593,6 +595,16 @@ test('it keeps charging a break that only tied the base when a dearer one follow
     // The 5+ break is still the cheapest reached at 10, so 10+ costs 1000.
     expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
         ->toBe([[1, null, 1000]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Price break skipped: it does not change the price.'
+            && ($context['min_quantity'] ?? null) === 5)
+        ->once();
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Price break skipped: it does not lower the price.'
+            && ($context['min_quantity'] ?? null) === 10)
+        ->once();
 });
 
 test('it reports a bad break once a day rather than on every render', function () {
