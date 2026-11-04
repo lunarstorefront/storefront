@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Lunar\Core\Models\Brand;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductType;
 use Lunar\Storefront\Data\Brand as BrandData;
 
 beforeEach(function () {
@@ -39,3 +42,24 @@ test('it exposes a null logo when the brand has no logo or primary image', funct
 
     expect($data['logo'])->toBeNull();
 });
+
+test('it reads a missing products_count as zero under strict attribute access', function () {
+    Model::preventAccessingMissingAttributes();
+
+    $brand = Brand::factory()->create(['name' => 'Acme']);
+
+    expect(BrandData::from(Brand::find($brand->id))->productsCount)->toBe(0);
+});
+
+test('it reports products_count when the query aggregated it', function () {
+    Model::preventAccessingMissingAttributes();
+
+    $brand = Brand::factory()->create(['name' => 'Acme']);
+    Product::factory()->for(ProductType::factory())->create(['brand_id' => $brand->id]);
+
+    $counted = Brand::withCount('products')->find($brand->id);
+
+    expect(BrandData::from($counted)->productsCount)->toBe(1);
+});
+
+afterEach(fn () => Model::preventAccessingMissingAttributes(false));

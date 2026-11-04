@@ -31,6 +31,7 @@ class Cart extends Data
         public Lazy|CartAddress|null $shippingAddress,
         public Lazy|CartAddress|null $billingAddress,
         public ?ShippingBreakdown $shippingBreakdown,
+        public ?string $discountTotalFormatted = null,
     ) {}
 
     public static function fromModel(CartModel $cart): self
@@ -48,16 +49,17 @@ class Cart extends Data
             total: $cart->total->value,
             totalFormatted: $cart->total->format(),
             currency: Currency::from($cart->currency),
-            linesCount: $cart->lines_count,
-            totalQuantity: $cart->lines_sum_quantity !== null
+            linesCount: $cart->hasAttribute('lines_count') ? $cart->lines_count : null,
+            totalQuantity: $cart->hasAttribute('lines_sum_quantity') && $cart->lines_sum_quantity !== null
                 ? (int) $cart->lines_sum_quantity
                 : ($cart->relationLoaded('lines') ? $cart->lines->sum('quantity') : null),
             lines: Lazy::whenLoaded('lines', $cart, fn () => CartLine::collect($cart->lines)),
             shippingAddress: Lazy::whenLoaded('shippingAddress', $cart, fn () => CartAddress::from($cart->shippingAddress)),
             billingAddress: Lazy::whenLoaded('billingAddress', $cart, fn () => CartAddress::from($cart->billingAddress)),
-            shippingBreakdown: $cart->shipping_breakdown
-                ? ShippingBreakdown::fromValueObject($cart->shipping_breakdown)
+            shippingBreakdown: $cart->shippingBreakdown
+                ? ShippingBreakdown::fromValueObject($cart->shippingBreakdown)
                 : null,
+            discountTotalFormatted: $cart->discountTotal->format(),
         );
     }
 }
