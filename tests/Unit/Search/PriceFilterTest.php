@@ -15,3 +15,12 @@ it('builds price ranges from the query string', function (array $query, ?string 
     'negative' => [['price_min' => '-5'], '>=0'],
     'nothing' => [[], null],
 ]);
+
+it('compares against VAT-inclusive stored prices when the store keeps them', function (array $query, string $expected) {
+    config(['lunar.pricing.stored_inclusive_of_tax' => true]);
+
+    expect(PriceFilter::fromRequest(Request::create('/', 'GET', $query)))->toBe($expected);
+})->with([
+    'inc vat bound used as is' => [['price_max' => '50', 'price_vat' => 'inc'], '<=5000'],
+    'ex vat bound has VAT added' => [['price_max' => '50'], '<=6000'],
+]);

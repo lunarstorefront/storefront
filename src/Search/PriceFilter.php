@@ -7,11 +7,13 @@ use Illuminate\Http\Request;
 final class PriceFilter
 {
     /**
-     * A search range filter on the minor-unit ex-VAT price from the query
+     * A search range filter on the stored minor-unit price from the query
      * string bounds (in pounds). Null when neither bound is given.
      *
-     * VAT-aware: the shopper types prices the way the site shows them, so with
-     * the VAT key set to `inc` the bounds are taken off the standard rate first.
+     * VAT-aware: the shopper types prices the way the site shows them (inc VAT
+     * when the VAT key is `inc`), and the bounds are moved onto the basis Lunar
+     * stores prices in (`lunar.pricing.stored_inclusive_of_tax`) at the
+     * standard rate.
      * A product on a reduced or zero rate can sit slightly either side of an
      * inc-VAT bound; the standard rate covers nearly the whole catalogue.
      */
@@ -22,7 +24,13 @@ final class PriceFilter
         $vatKey = config('storefront.search.price_filter.vat_key', 'price_vat');
         $vatRate = (float) config('storefront.search.price_filter.vat_rate', 20);
 
-        $divisor = $request->query($vatKey) === 'inc' ? 1 + ($vatRate / 100) : 1;
+        $shownIncVat = $request->query($vatKey) === 'inc';
+        $storedIncVat = (bool) config('lunar.pricing.stored_inclusive_of_tax', false);
+        $divisor = match (true) {
+            $shownIncVat && ! $storedIncVat => 1 + ($vatRate / 100),
+            ! $shownIncVat && $storedIncVat => 1 / (1 + ($vatRate / 100)),
+            default => 1,
+        };
 
         $bound = fn (string $key): ?int => $request->filled($key) && is_numeric($request->query($key))
             ? max(0, (int) round(((float) $request->query($key)) / $divisor * 100))
