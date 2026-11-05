@@ -544,7 +544,7 @@ test('it keeps the cheapest row for the starting tier when breaks fall at or bel
     Log::shouldNotHaveReceived('warning');
 });
 
-test('it does not let a break at the minimum replace a cheaper base price', function () {
+test('it starts at a dearer break that falls at the minimum, as the cart charges it', function () {
     Log::spy();
 
     [$base, $breaks] = priceBreakFixtureRows(1000, [
@@ -555,10 +555,55 @@ test('it does not let a break at the minimum replace a cheaper base price', func
     $result = mapPriceBreakFixture($base, $breaks, min: 5);
 
     expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
-        ->toBe([[5, 9, 1000], [10, null, 900]]);
+        ->toBe([[5, 9, 1100], [10, null, 900]]);
 
     Log::shouldHaveReceived('warning')
         ->withArgs(fn (string $message, array $context = []) => ($context['min_quantity'] ?? null) === 5)
+        ->once();
+});
+
+test('it shows and logs a first break dearer than the base, as the cart charges it', function () {
+    Log::spy();
+
+    // Lunar charges the cheapest break a quantity reaches and never compares
+    // it with the base, so 3+ really costs 1100.
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [1100, 3],
+        [1050, 10],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks);
+
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, 2, 1000], [3, 9, 1100], [10, null, 1050]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => ($context['min_quantity'] ?? null) === 3)
+        ->once();
+});
+
+test('it keeps charging a break that only tied the base when a dearer one follows', function () {
+    Log::spy();
+
+    [$base, $breaks] = priceBreakFixtureRows(1000, [
+        [1000, 5],
+        [1050, 10],
+    ]);
+
+    $result = mapPriceBreakFixture($base, $breaks);
+
+    // The 5+ break is still the cheapest reached at 10, so 10+ costs 1000.
+    expect($result->map(fn (PriceBreak $break) => [$break->lowerLimit, $break->upperLimit, $break->price->exclTax])->all())
+        ->toBe([[1, null, 1000]]);
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Price break skipped: it does not change the price.'
+            && ($context['min_quantity'] ?? null) === 5)
+        ->once();
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Price break skipped: it does not lower the price.'
+            && ($context['min_quantity'] ?? null) === 10)
         ->once();
 });
 
