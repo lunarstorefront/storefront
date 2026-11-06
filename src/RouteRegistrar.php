@@ -177,7 +177,7 @@ class RouteRegistrar
 
     protected static function suggestionRoutes(): void
     {
-        Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->name('storefront.query-suggestions');
+        Route::get('api/query-suggestions', GetQuerySuggestionsController::class)->middleware(['web', 'throttle:120,1'])->name('storefront.query-suggestions');
     }
 
     protected static function authRoutes(): void
