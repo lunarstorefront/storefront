@@ -124,6 +124,19 @@ it('short terms return an empty list without searching', function (string $term)
     expect($engine->calls)->toBe([]);
 })->with(['one character' => 'h', 'blank' => '', 'padded' => '%20h%20']);
 
+it('falls back to the defaults when a published config has no suggestions block', function () {
+    config(['storefront.search' => []]);
+    $product = suggestedProduct('Halo Infinite');
+    $engine = fakeSuggestionsEngine([$product->id]);
+
+    $this->getJson('/api/query-suggestions?term=h')->assertOk()->assertExactJson([]);
+    expect($engine->calls)->toBe([]);
+
+    $this->getJson('/api/query-suggestions?term=halo')->assertOk()->assertJsonCount(1);
+    expect($engine->calls)->toHaveCount(1)
+        ->and($engine->calls[0]['perPage'])->toBe(6);
+});
+
 it('suggestions skip hits with no published product', function () {
     $published = suggestedProduct('Halo Infinite');
     $draft = suggestedProduct('Halo Draft', 'draft');

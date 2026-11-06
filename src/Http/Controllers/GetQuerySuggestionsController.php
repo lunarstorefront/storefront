@@ -17,11 +17,11 @@ class GetQuerySuggestionsController extends Controller
     {
         $term = trim((string) $request->query('term'));
 
-        if (mb_strlen($term) < config('storefront.search.suggestions.min_length')) {
+        if (mb_strlen($term) < config('storefront.search.suggestions.min_length', 2)) {
             return response()->json([]);
         }
 
-        if (config('storefront.search.suggestions.driver') === 'meilisearch') {
+        if (config('storefront.search.suggestions.driver', 'search') === 'meilisearch') {
             return $this->meilisearchSuggestions($term);
         }
 
@@ -53,7 +53,7 @@ class GetQuerySuggestionsController extends Controller
 
         $results = Search::model(Product::class)
             ->query($term)
-            ->perPage(config('storefront.search.suggestions.limit'))
+            ->perPage(config('storefront.search.suggestions.limit', 6))
             ->filter(['status' => '=`published`'])
             ->get();
 
