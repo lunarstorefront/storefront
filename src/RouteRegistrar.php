@@ -11,6 +11,7 @@ use Lunar\Core\Facades\CartSession;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Storefront\Facades\Storefront;
+use Lunar\Storefront\Http\Controllers\Account\DestroyAddressController;
 use Lunar\Storefront\Http\Controllers\Account\StoreController;
 use Lunar\Storefront\Http\Controllers\Auth\GetTwoFactorCodesController;
 use Lunar\Storefront\Http\Controllers\Checkout\OrderIssueController;
@@ -159,6 +160,7 @@ class RouteRegistrar
         // The controller serves create and update; create has no {id} to bind.
         Route::post('/account/addresses', StoreController::class)->defaults('id', '')->middleware(['auth', 'web'])->name('storefront.account.addresses');
         Route::put('/account/addresses/{id}', StoreController::class)->middleware(['auth', 'web'])->name('storefront.account.address');
+        Route::delete('/account/addresses/{id}', DestroyAddressController::class)->middleware(['auth', 'web'])->name('storefront.account.address.delete');
     }
 
     protected static function checkoutRoutes(): void
