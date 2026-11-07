@@ -39,9 +39,11 @@ class VariantManager implements \Lunar\Storefront\Contracts\VariantManager
         try {
             $combined = base64_decode(strtr($hash, '-_', '+/'));
 
-            $dotPosition = strrpos($combined, '.');
+            // The signature is the last 16 bytes of binary, which can itself
+            // contain a ".", so split at a fixed offset rather than a search.
+            $dotPosition = strlen($combined) - 17;
 
-            if ($dotPosition === false) {
+            if ($dotPosition < 0 || $combined[$dotPosition] !== '.') {
                 return [];
             }
 

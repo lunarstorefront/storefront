@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Crypt;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -33,6 +34,20 @@ test('it can decrypt options back to original array', function () {
     $decrypted = $this->manager->decryptOptions($encrypted);
 
     expect($decrypted)->toBe($options);
+});
+
+test('it decrypts options whose signature contains a dot', function () {
+    // The truncated binary signature holds a "." byte about 6% of the time.
+    $options = collect(range(1, 2000))
+        ->map(fn (int $id) => ['1' => (string) $id])
+        ->first(function (array $options) {
+            $payload = collect($options)->map(fn ($value, $key) => $key.':'.$value)->implode(',');
+
+            return str_contains(substr(hash_hmac('sha256', $payload, Crypt::getKey(), binary: true), 0, 16), '.');
+        });
+
+    expect($options)->not->toBeNull()
+        ->and($this->manager->decryptOptions($this->manager->encryptOptions($options)))->toBe($options);
 });
 
 test('it returns empty array when decrypting null', function () {
