@@ -111,3 +111,18 @@ test('it respects perPage parameter', function () {
     expect($result->perPage())->toBe(2)
         ->and($result->total())->toBe(5);
 });
+
+test('paginated brands list names starting with a letter before symbols and digits', function () {
+    foreach (['#1 Games', 'zeta', '18 Studio', 'Acme', '[Bracket]'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $names = collect($this->manager->getPaginated()->items())->pluck('name')->all();
+
+    expect(array_slice($names, 0, 2))->toBe(['Acme', 'zeta'])
+        ->and(array_slice($names, 2))->toEqualCanonicalizing(['#1 Games', '18 Studio', '[Bracket]']);
+});
