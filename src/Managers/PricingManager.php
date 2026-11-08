@@ -5,19 +5,24 @@ namespace Lunar\Storefront\Managers;
 use Illuminate\Support\Collection;
 use Lunar\Core\Contracts\Purchasable;
 use Lunar\Core\DataObjects\PricingResponse;
-use Lunar\Core\Facades\CartSession;
 use Lunar\Core\Facades\Pricing;
+use Lunar\Core\Facades\StorefrontSession;
 use Lunar\Storefront\Actions\Catalog\GetQuantifiedPrice;
 use Lunar\Storefront\Actions\Catalog\MapProductPriceBreaks;
 use Lunar\Storefront\Data\Price;
 
 class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
 {
+    /**
+     * Prices in the storefront's currency, which the session carries between requests.
+     * CartSession only knows a currency once something sets it in the same request,
+     * so without a cart it would fall back to the default.
+     */
     public function getPricing(Purchasable $purchasable, int $quantity = 1): ?PricingResponse
     {
         try {
             return Pricing::for($purchasable)->currency(
-                CartSession::getCurrency()
+                StorefrontSession::getCurrency()
             )->qty($quantity)->get();
         } catch (\Exception $e) {
             report($e);
