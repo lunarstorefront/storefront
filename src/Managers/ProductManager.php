@@ -17,11 +17,12 @@ class ProductManager implements \Lunar\Storefront\Contracts\ProductManager
         return (new GetProductBySlug)->get($slug, asModel: true);
     }
 
-    public function getPermutations(Product $product, ?Collection $options = null): Collection
+    public function getPermutations(Product $product, ?Collection $options = null, bool $withPrices = false): Collection
     {
         return (new GetProductOptionPermutations)->get(
             $options ?: $this->getOptions($product),
-            $product
+            $product,
+            $withPrices
         );
     }
 

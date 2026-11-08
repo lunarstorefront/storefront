@@ -9,6 +9,7 @@ use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductOption;
 use Lunar\Core\Models\ProductOptionValue;
 use Lunar\Core\Models\ProductVariant;
+use Lunar\Storefront\Data\Price;
 use Lunar\Storefront\Data\ProductOptionPermutation;
 use Lunar\Storefront\Facades\Storefront;
 
@@ -16,9 +17,11 @@ class GetProductOptionPermutations
 {
     /**
      * @param  Collection<int, ProductOption>  $productOptions
+     * @param  bool  $withPrices  Price each permutation's variant at quantity one (one pricing lookup per
+     *                            permutation, so ask for it only when the page shows those prices)
      * @return Collection<int, ProductOptionPermutation>
      */
-    public function get(Collection $productOptions, Product $product): Collection
+    public function get(Collection $productOptions, Product $product, bool $withPrices = false): Collection
     {
         $permutations = $productOptions
             ->pluck('values')
@@ -34,7 +37,7 @@ class GetProductOptionPermutations
                 })->values();
             }, null) ?: collect();
 
-        return $permutations->map(function (mixed $values) use ($product): ProductOptionPermutation {
+        return $permutations->map(function (mixed $values) use ($product, $withPrices): ProductOptionPermutation {
             /** @var Collection<int, ProductOptionValue> $values */
             $values = collect($values);
 
@@ -71,8 +74,16 @@ class GetProductOptionPermutations
                 )->toArray(),
                 valueNames: $values->mapWithKeys(
                     fn (ProductOptionValue $value) => [(string) $value->option->translate('name') => (string) $value->translate('name')]
-                )->toArray()
+                )->toArray(),
+                price: $withPrices ? $this->priceOf($variantQuery->clone()->first()) : null
             );
         });
+    }
+
+    private function priceOf(?ProductVariant $variant): ?Price
+    {
+        $pricing = $variant ? Storefront::pricing()->getPricing($variant) : null;
+
+        return $pricing ? Storefront::pricing()->getQuantifiedPrice($pricing, 1) : null;
     }
 }
