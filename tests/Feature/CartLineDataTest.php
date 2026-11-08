@@ -1,5 +1,6 @@
 <?php
 
+use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Cart;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\Channel;
@@ -8,6 +9,8 @@ use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
 use Lunar\Core\Models\Price;
 use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
 use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\TaxClass;
@@ -87,4 +90,20 @@ test('it identifies the line and its product by their public ids', function () {
 
     expect($data['id'])->toBe($line->public_id)
         ->and($data['productId'])->toBe($line->purchasable->product->public_id);
+});
+
+test('it names the option behind each value of the purchased variant', function () {
+    $line = calculatedLine(TaxClass::factory()->create(['default' => true]));
+    $option = ProductOption::factory()->create(['name' => collect(['en' => new Text('Edition')])]);
+    $value = ProductOptionValue::factory()
+        ->for($option, 'option')
+        ->create(['name' => collect(['en' => new Text('Deluxe')])]);
+    $line->purchasable->values()->attach($value);
+
+    $data = CartLineData::fromModel($line->load('purchasable'))->toArray();
+
+    expect($data['optionValues'])->toHaveCount(1)
+        ->and($data['optionValues'][0]['name'])->toBe('Deluxe')
+        ->and($data['optionValues'][0]['productOption']['name'])->toBe('Edition')
+        ->and($data['optionValues'][0]['productOption'])->not->toHaveKey('values');
 });
