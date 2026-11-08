@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Attribute;
 use Lunar\Core\Models\Channel;
@@ -116,4 +117,24 @@ test('it labels each value with the attribute name, falling back to the handle',
         'material' => 'material',
         'colour' => 'colour',
     ]);
+});
+
+test('it looks the attribute names up once for a list of models of one type', function () {
+    Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    $productType = ProductType::factory()->create();
+    $products = collect(range(1, 3))->map(fn () => Product::factory()->for($productType)->create([
+        'attribute_data' => collect(['name' => new Text('Test Product'), 'release_date' => new Text('2011-05-16')]),
+    ]));
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    DB::enableQueryLog();
+    $names = $products->map(fn (Product $product) => $testClass::mapAttributes($product)->first()->name);
+    $lookups = collect(DB::getQueryLog())->filter(fn (array $query) => str_contains($query['query'], 'attributes'));
+
+    expect($names->all())->toBe(['Release date', 'Release date', 'Release date'])
+        ->and($lookups)->toHaveCount(1);
 });

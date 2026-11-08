@@ -21,11 +21,7 @@ trait HasAttributeData
             fn ($attribute, $handle) => in_array($handle, ['name', 'description'])
         );
 
-        // The display name each handle is shown under, from the attributes this model type has.
-        $names = $attributes->isEmpty() ? collect() : Attribute::query()
-            ->whereIn('handle', $attributes->keys())
-            ->whereHas('models', fn ($query) => $query->where('model_type', $model->getMorphClass()))
-            ->pluck('name', 'handle');
+        $names = $attributes->isEmpty() ? collect() : static::attributeNames($model->getMorphClass());
 
         foreach ($attributes as $handle => $attributeValue) {
             $value = $attributeValue->getValue();
@@ -48,5 +44,18 @@ trait HasAttributeData
         // serialize as a JSON object when non-empty but an array when empty,
         // breaking the AttributeDataValue[] contract on the frontend.
         return $attributeValues->values();
+    }
+
+    /**
+     * The display name each handle is shown under, from the attributes the model type has.
+     * Looked up once per type for the request, not once per model in a list.
+     *
+     * @return Collection<string, mixed>
+     */
+    protected static function attributeNames(string $morphClass): Collection
+    {
+        return once(fn () => Attribute::query()
+            ->whereHas('models', fn ($query) => $query->where('model_type', $morphClass))
+            ->pluck('name', 'handle'));
     }
 }
