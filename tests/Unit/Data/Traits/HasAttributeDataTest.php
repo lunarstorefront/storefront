@@ -1,6 +1,7 @@
 <?php
 
 use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Attribute;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -86,4 +87,33 @@ test('it excludes name and description attributes', function () {
     $result = $testClass::mapAttributes($product);
 
     expect($result)->toBeEmpty();
+});
+
+test('it labels each value with the attribute name, falling back to the handle', function () {
+    Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    Attribute::factory()->modelType('collection')->create(['handle' => 'material', 'name' => 'Not a product attribute']);
+
+    $product = Product::factory()
+        ->for(ProductType::factory()->create())
+        ->create([
+            'attribute_data' => collect([
+                'name' => new Text('Test Product'),
+                'release_date' => new Text('2011-05-16'),
+                'material' => new Text('Cotton'),
+                'colour' => new Text('Blue'),
+            ]),
+        ]);
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    $names = $testClass::mapAttributes($product)->pluck('name', 'handle')->all();
+
+    expect($names)->toBe([
+        'release_date' => 'Release date',
+        'material' => 'material',
+        'colour' => 'colour',
+    ]);
 });

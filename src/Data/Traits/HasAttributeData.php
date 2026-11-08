@@ -5,6 +5,7 @@ namespace Lunar\Storefront\Data\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lunar\Core\FieldTypes\Dropdown;
+use Lunar\Core\Models\Attribute;
 use Lunar\Storefront\Data\AttributeDataValue;
 
 trait HasAttributeData
@@ -20,6 +21,12 @@ trait HasAttributeData
             fn ($attribute, $handle) => in_array($handle, ['name', 'description'])
         );
 
+        // The display name each handle is shown under, from the attributes this model type has.
+        $names = $attributes->isEmpty() ? collect() : Attribute::query()
+            ->whereIn('handle', $attributes->keys())
+            ->whereHas('models', fn ($query) => $query->where('model_type', $model->getMorphClass()))
+            ->pluck('name', 'handle');
+
         foreach ($attributes as $handle => $attributeValue) {
             $value = $attributeValue->getValue();
 
@@ -29,7 +36,7 @@ trait HasAttributeData
 
             $attributeValues->push(
                 new AttributeDataValue(
-                    name: $handle,
+                    name: (string) ($names[$handle] ?? $handle),
                     handle: $handle,
                     type: strtolower(class_basename($attributeValue)),
                     value: $value,
