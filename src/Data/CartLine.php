@@ -30,7 +30,7 @@ class CartLine extends Data
         public int $total,
         public ?string $totalFormattedExclTax,
         public ?string $totalFormattedInclTax,
-        /** @var ProductOption[] */
+        /** @var ProductOptionValue[] Each value carries its `productOption`, so a line can read "Edition: Deluxe". */
         public Lazy|Collection $optionValues
     ) {}
 
@@ -59,7 +59,7 @@ class CartLine extends Data
             optionValues: Lazy::whenLoaded(
                 'purchasable',
                 $cartLine,
-                fn () => ProductOptionValue::collect($cartLine->purchasable->values)
+                fn () => ProductOptionValue::collect($cartLine->purchasable->values->loadMissing('option'))
             )
         );
     }

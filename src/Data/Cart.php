@@ -4,6 +4,7 @@ namespace Lunar\Storefront\Data;
 
 use Illuminate\Support\Collection;
 use Lunar\Core\Models\Cart as CartModel;
+use Lunar\Core\Models\ProductVariant;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -53,7 +54,7 @@ class Cart extends Data
             totalQuantity: $cart->hasAttribute('lines_sum_quantity') && $cart->lines_sum_quantity !== null
                 ? (int) $cart->lines_sum_quantity
                 : ($cart->relationLoaded('lines') ? $cart->lines->sum('quantity') : null),
-            lines: Lazy::whenLoaded('lines', $cart, fn () => CartLine::collect($cart->lines)),
+            lines: Lazy::whenLoaded('lines', $cart, fn () => CartLine::collect(static::withOptionValues($cart->lines))),
             shippingAddress: Lazy::whenLoaded('shippingAddress', $cart, fn () => CartAddress::from($cart->shippingAddress)),
             billingAddress: Lazy::whenLoaded('billingAddress', $cart, fn () => CartAddress::from($cart->billingAddress)),
             shippingBreakdown: $cart->shippingBreakdown
@@ -61,5 +62,26 @@ class Cart extends Data
                 : null,
             discountTotalFormatted: $cart->discountTotal->format(),
         );
+    }
+
+    /**
+     * Loads the option values (and their options) of the variants the lines already
+     * hold in one go, so each line's `optionValues` does not query on its own.
+     *
+     * @template TLines of Collection<int, \Lunar\Core\Models\CartLine>
+     *
+     * @param  TLines  $lines
+     * @return TLines
+     */
+    protected static function withOptionValues(Collection $lines): Collection
+    {
+        $variants = $lines
+            ->filter(fn ($line) => $line->relationLoaded('purchasable') && $line->purchasable instanceof ProductVariant)
+            ->map(fn ($line) => $line->purchasable)
+            ->all();
+
+        (new ProductVariant)->newCollection($variants)->loadMissing('values.option');
+
+        return $lines;
     }
 }

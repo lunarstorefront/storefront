@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+use Lunar\Core\FieldTypes\Text;
 use Lunar\Core\Models\Cart;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\Channel;
@@ -8,12 +10,15 @@ use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
 use Lunar\Core\Models\Price;
 use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
 use Lunar\Core\Models\ProductType;
 use Lunar\Core\Models\ProductVariant;
 use Lunar\Core\Models\TaxClass;
 use Lunar\Core\Models\TaxRate;
 use Lunar\Core\Models\TaxRateAmount;
 use Lunar\Core\Models\TaxZone;
+use Lunar\Storefront\Data\Cart as CartData;
 use Lunar\Storefront\Data\CartLine as CartLineData;
 
 beforeEach(function () {
@@ -87,4 +92,45 @@ test('it identifies the line and its product by their public ids', function () {
 
     expect($data['id'])->toBe($line->public_id)
         ->and($data['productId'])->toBe($line->purchasable->product->public_id);
+});
+
+test('it names the option behind each value of the purchased variant', function () {
+    $line = calculatedLine(TaxClass::factory()->create(['default' => true]));
+    $option = ProductOption::factory()->create(['name' => collect(['en' => new Text('Edition')])]);
+    $value = ProductOptionValue::factory()
+        ->for($option, 'option')
+        ->create(['name' => collect(['en' => new Text('Deluxe')])]);
+    $line->purchasable->values()->attach($value);
+
+    $data = CartLineData::fromModel($line->load('purchasable'))->toArray();
+
+    expect($data['optionValues'])->toHaveCount(1)
+        ->and($data['optionValues'][0]['name'])->toBe('Deluxe')
+        ->and($data['optionValues'][0]['productOption']['name'])->toBe('Edition')
+        ->and($data['optionValues'][0]['productOption'])->not->toHaveKey('values');
+});
+
+test('a cart loads the option values of all its lines at once', function () {
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    $cart = calculatedLine($taxClass)->cart;
+    $option = ProductOption::factory()->create(['name' => collect(['en' => new Text('Edition')])]);
+
+    foreach (range(1, 2) as $i) {
+        $variant = ProductVariant::factory()->for(Product::factory()->for(ProductType::factory()))->for($taxClass)->create();
+        Price::factory()->create(['priceable_type' => $variant->getMorphClass(), 'priceable_id' => $variant->id, 'currency_id' => $this->currency->id, 'price' => 1000]);
+        $variant->values()->attach(ProductOptionValue::factory()->for($option, 'option')->create(['name' => collect(['en' => new Text("Edition {$i}")])]));
+        CartLine::factory()->create(['cart_id' => $cart->id, 'purchasable_type' => $variant->getMorphClass(), 'purchasable_id' => $variant->id]);
+    }
+    $cart = Cart::find($cart->id)->calculate();
+    // What a line reads besides its option values; lazy loading is off, so these must be here.
+    $cart->lines->load('purchasable.product.defaultUrl', 'purchasable.product.thumbnail');
+
+    DB::enableQueryLog();
+    $lines = CartData::from($cart)->include('lines')->toArray()['lines'];
+    $queries = collect(DB::getQueryLog())->pluck('query');
+
+    expect(collect($lines)->pluck('optionValues')->map(fn (array $values) => array_column($values, 'name'))->all())
+        ->toBe([[], ['Edition 1'], ['Edition 2']])
+        ->and($queries->filter(fn (string $query) => str_contains($query, 'product_option_values'))->count())->toBe(1)
+        ->and($queries->filter(fn (string $query) => preg_match('/from "\\w*product_options"/', $query))->count())->toBe(1);
 });
