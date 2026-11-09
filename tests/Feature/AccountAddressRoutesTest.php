@@ -225,3 +225,45 @@ it('makes the first saved address the default for both types', function () {
     expect($address->shipping_default)->toBeTrue()
         ->and($address->billing_default)->toBeTrue();
 });
+
+it('deletes own address', function () {
+    $a = Address::factory()->for($this->customer)->create([
+        'country_id' => $this->country->id,
+        'shipping_default' => true,
+        'billing_default' => true,
+    ]);
+    $b = Address::factory()->for($this->customer)->create([
+        'country_id' => $this->country->id,
+        'shipping_default' => false,
+        'billing_default' => false,
+    ]);
+
+    $this->actingAs($this->user)
+        ->delete(route('storefront.account.address.delete', $a->public_id))
+        ->assertRedirect();
+
+    $this->assertModelMissing($a);
+    expect($b->refresh()->shipping_default)->toBeTrue()
+        ->and($b->billing_default)->toBeTrue();
+});
+
+it('cannot delete another customers address', function () {
+    $theirs = Address::factory()->for(Customer::factory()->create())->create(['country_id' => $this->country->id]);
+
+    $this->actingAs($this->user)
+        ->delete(route('storefront.account.address.delete', $theirs->public_id))
+        ->assertNotFound();
+
+    $this->assertModelExists($theirs);
+});
+
+it('guest cannot delete an address', function () {
+    $address = Address::factory()->for($this->customer)->create(['country_id' => $this->country->id]);
+
+    Route::get('/login', fn () => 'login')->name('login');
+
+    $this->delete(route('storefront.account.address.delete', $address->public_id))
+        ->assertRedirect();
+
+    $this->assertModelExists($address);
+});
