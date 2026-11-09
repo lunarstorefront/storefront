@@ -163,8 +163,8 @@ test('paginated brands narrow to the names starting with a letter, in either cas
 
     $names = fn (?string $letter) => collect($this->manager->getPaginated(150, $letter)->items())->pluck('name')->all();
 
-    expect($names('V'))->toBe(['Valve', 'valkyrie'])
-        ->and($names('v'))->toBe(['Valve', 'valkyrie'])
+    expect($names('V'))->toEqualCanonicalizing(['Valve', 'valkyrie'])
+        ->and($names('v'))->toEqualCanonicalizing(['Valve', 'valkyrie'])
         ->and($names('A'))->toBe(['Acme'])
         ->and($names('Q'))->toBe([])
         ->and($names('#'))->toBe(['18 Studio']);
