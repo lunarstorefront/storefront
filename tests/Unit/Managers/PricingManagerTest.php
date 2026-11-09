@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Lunar\Core\Contracts\StorefrontSession;
 use Lunar\Core\DataObjects\PricingResponse;
+use Lunar\Core\Managers\StorefrontSessionManager;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -136,4 +138,34 @@ test('it can get quantified price from pricing response', function () {
     $quantifiedPrice = $this->manager->getQuantifiedPrice($pricingResponse, 5);
 
     expect($quantifiedPrice)->toBeInstanceOf(DataPrice::class);
+});
+
+test('it prices in the currency the shopper chose on an earlier request', function () {
+    $gbp = Currency::factory()->create(['code' => 'GBP', 'default' => false]);
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    $variant = ProductVariant::factory()
+        ->for(Product::factory()->for(ProductType::factory()))
+        ->for($taxClass)
+        ->create();
+
+    foreach ([[$this->currency, 999], [$gbp, 789]] as [$currency, $amount]) {
+        Price::factory()->create([
+            'priceable_type' => $variant->getMorphClass(),
+            'priceable_id' => $variant->id,
+            'currency_id' => $currency->id,
+            'price' => $amount,
+            'min_quantity' => 1,
+        ]);
+    }
+
+    // A later request: the choice is only in the session, and no cart has been loaded.
+    session()->put('lunar_storefront_currency', 'GBP');
+    app()->forgetInstance(StorefrontSession::class);
+    app()->forgetInstance(StorefrontSessionManager::class);
+    Lunar\Core\Facades\StorefrontSession::clearResolvedInstances();
+
+    $pricing = $this->manager->getPricing($variant);
+
+    expect($pricing->matched->currency->code)->toBe('GBP')
+        ->and($pricing->matched->price)->toBe(789);
 });
