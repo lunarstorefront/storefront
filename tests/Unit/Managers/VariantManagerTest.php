@@ -35,6 +35,23 @@ test('it can decrypt options back to original array', function () {
     expect($decrypted)->toBe($options);
 });
 
+test('it decrypts options whose signature contains a dot', function () {
+    // The hash is base64url of "payload.signature", with a 16-byte binary signature that holds
+    // a "." about 6% of the time. Pick options whose real hash has one, read from the manager's
+    // own output, so the case stays covered whatever the signing details are.
+    $signatureOf = fn (array $options): string => substr(
+        base64_decode(strtr($this->manager->encryptOptions($options), '-_', '+/')),
+        -16,
+    );
+
+    $options = collect(range(1, 2000))
+        ->map(fn (int $id) => ['1' => (string) $id])
+        ->first(fn (array $options) => str_contains($signatureOf($options), '.'));
+
+    expect($options)->not->toBeNull()
+        ->and($this->manager->decryptOptions($this->manager->encryptOptions($options)))->toBe($options);
+});
+
 test('it returns empty array when decrypting null', function () {
     $decrypted = $this->manager->decryptOptions(null);
 
