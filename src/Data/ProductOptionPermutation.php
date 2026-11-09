@@ -21,7 +21,9 @@ class ProductOptionPermutation extends Data
          * @var array<string,string>
          */
         public array $values,
-        public array $valueNames
+        public array $valueNames,
+        /** The variant's quantity-one price; only set when the permutations were asked to carry prices. */
+        public ?Price $price = null
     ) {
         $this->purchasable = ($stock > 0 && $hasVariant) || $backorder;
     }

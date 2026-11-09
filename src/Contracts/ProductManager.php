@@ -20,9 +20,10 @@ interface ProductManager
 
     /**
      * @param  Collection<int, ProductOption>|null  $options
+     * @param  bool  $withPrices  Carry each permutation's variant price, at one pricing lookup each
      * @return Collection<int, ProductOptionPermutation>
      */
-    public function getPermutations(Product $product, ?Collection $options = null): Collection;
+    public function getPermutations(Product $product, ?Collection $options = null, bool $withPrices = false): Collection;
 
     /**
      * @return Collection<int, ProductData>

@@ -6,6 +6,7 @@ use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
 use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Price;
 use Lunar\Core\Models\Product;
 use Lunar\Core\Models\ProductOption;
 use Lunar\Core\Models\ProductOptionValue;
@@ -326,4 +327,34 @@ test('it detects backorder availability', function () {
 
     expect($redPerm->backorder)->toBeFalse()
         ->and($bluePerm->backorder)->toBeTrue();
+});
+
+test('it prices each permutation only when asked to', function () {
+    $product = Product::factory()->for(ProductType::factory()->create())->create();
+    $taxClass = TaxClass::factory()->create(['default' => true]);
+    $option = ProductOption::factory()->create(['name' => collect(['en' => new Text('Edition')])]);
+    $product->productOptions()->attach($option, ['position' => 1]);
+
+    foreach (['Standard' => 799, 'Deluxe' => 1299] as $name => $amount) {
+        $value = ProductOptionValue::factory()
+            ->for($option, 'option')
+            ->create(['name' => collect(['en' => new Text($name)])]);
+        $variant = ProductVariant::factory()->for($product)->for($taxClass)->inStock(10)->create();
+        $variant->values()->attach($value);
+        Price::factory()->create([
+            'priceable_type' => $variant->getMorphClass(),
+            'priceable_id' => $variant->id,
+            'currency_id' => Currency::query()->where('default', true)->value('id'),
+            'price' => $amount,
+            'min_quantity' => 1,
+        ]);
+    }
+
+    $options = (new GetProductOptions)->get($product);
+    $plain = (new GetProductOptionPermutations)->get($options, $product);
+    $priced = (new GetProductOptionPermutations)->get($options, $product, withPrices: true);
+
+    expect($plain->pluck('price')->filter())->toBeEmpty()
+        ->and($priced->map(fn ($permutation) => [$permutation->valueNames['Edition'], $permutation->price->exclTax])->all())
+        ->toBe([['Standard', 799], ['Deluxe', 1299]]);
 });
