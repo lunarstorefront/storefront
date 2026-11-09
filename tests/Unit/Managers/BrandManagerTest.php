@@ -111,3 +111,115 @@ test('it respects perPage parameter', function () {
     expect($result->perPage())->toBe(2)
         ->and($result->total())->toBe(5);
 });
+
+test('paginated brands list names starting with a letter before symbols and digits', function () {
+    foreach (['#1 Games', 'zeta', '18 Studio', 'Acme', '[Bracket]'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $names = collect($this->manager->getPaginated()->items())->pluck('name')->all();
+
+    expect(array_slice($names, 0, 2))->toBe(['Acme', 'zeta'])
+        ->and(array_slice($names, 2))->toEqualCanonicalizing(['#1 Games', '18 Studio', '[Bracket]']);
+});
+
+test('accented names list with their letter and other characters after the alphabet, on any database', function () {
+    foreach (['Øresund', 'Fox', '#1 Games', 'Édith', 'Delta', 'ünal', 'Zeta', '18 Studio'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $names = collect($this->manager->getPaginated()->items())->pluck('name')->all();
+
+    // Names are ordered by name within their letter, which follows the database's collation,
+    // so this pins the letter order across them rather than every position.
+    expect(array_slice($names, 0, 5))->toBe(['Delta', 'Édith', 'Fox', 'ünal', 'Zeta'])
+        ->and(array_slice($names, 5))->toEqualCanonicalizing(['#1 Games', '18 Studio', 'Øresund']);
+});
+
+test('every brand files under A to Z or #', function () {
+    $initials = BrandManager::initials();
+
+    expect(array_keys($initials))->toBe(range('A', 'Z'))
+        ->and($initials['E'])->toContain('E', 'e', 'É', 'é', 'Ê')
+        ->and(array_merge(...array_values($initials)))->not->toContain('Ø', '1', '#');
+});
+
+test('paginated brands narrow to the names starting with a letter, in either case', function () {
+    foreach (['Valve', 'valkyrie', 'Acme', '18 Studio'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $names = fn (?string $letter) => collect($this->manager->getPaginated(150, $letter)->items())->pluck('name')->all();
+
+    expect($names('V'))->toEqualCanonicalizing(['Valve', 'valkyrie'])
+        ->and($names('v'))->toEqualCanonicalizing(['Valve', 'valkyrie'])
+        ->and($names('A'))->toBe(['Acme'])
+        ->and($names('Q'))->toBe([])
+        ->and($names('#'))->toBe(['18 Studio']);
+});
+
+test('an unknown letter lists every brand', function () {
+    foreach (['Acme', '18 Studio'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    expect($this->manager->getPaginated(150, 'AB')->total())->toBe(2)
+        ->and($this->manager->getPaginated(150, '')->total())->toBe(2)
+        ->and($this->manager->getPaginated(150, null)->total())->toBe(2);
+});
+
+test('paginated brand links keep the letter in the query string', function () {
+    foreach (range(1, 3) as $i) {
+        Brand::factory()->create(['name' => "Va {$i}"])->urls()->create([
+            'slug' => "brand-{$i}",
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    // Not from the request: a route parameter or a fixed value still carries into the links.
+    expect($this->manager->getPaginated(2, 'v')->nextPageUrl())->toContain('letter=V')
+        ->and($this->manager->getPaginated(2, '#')->url(1))->toContain('letter=%23')
+        ->and($this->manager->getPaginated(2)->nextPageUrl())->not->toContain('letter=');
+});
+
+test('a name files under its letter with accents folded, and every other name under #', function () {
+    $names = ['Évian', 'ecco', 'Øresund', '鬼谷工作室', '유진게임즈', 'ßeta', 'Ångström', 'Zed', '18 Studio', 'Łódź'];
+    foreach ($names as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $letter = fn (?string $letter) => collect($this->manager->getPaginated(150, $letter)->items())->pluck('name')->all();
+
+    expect($letter('E'))->toEqualCanonicalizing(['Évian', 'ecco'])
+        ->and($letter('A'))->toBe(['Ångström'])
+        ->and($letter('O'))->toBe([])
+        ->and($letter('#'))->toEqualCanonicalizing(['Øresund', '鬼谷工作室', '유진게임즈', 'ßeta', '18 Studio', 'Łódź'])
+        ->and(collect([...range('A', 'Z'), '#'])->sum(fn (string $l) => $this->manager->getPaginated(150, $l)->total()))
+        ->toBe(count($names));
+
+    // Folded names sit with their letter on any collation, and # comes last.
+    expect(array_slice($letter(null), 0, 4))->toEqualCanonicalizing(['Ångström', 'Évian', 'ecco', 'Zed'])
+        ->and(array_slice($letter(null), 0, 1))->toBe(['Ångström'])
+        ->and(array_slice($letter(null), 3, 1))->toBe(['Zed']);
+});
