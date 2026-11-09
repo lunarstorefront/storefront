@@ -20,13 +20,22 @@ class BrandManager implements \Lunar\Storefront\Contracts\BrandManager
             ->firstOrFail();
     }
 
-    public function getPaginated(int $perPage = 150): LengthAwarePaginator
+    public function getPaginated(int $perPage = 150, ?string $letter = null): LengthAwarePaginator
     {
+        $letter = strtoupper((string) $letter);
+        $initials = self::initials();
+        $group = isset($initials[$letter]) || $letter === '#' ? $letter : null;
+
         return Brand::whereHas('defaultUrl')
             ->with(['defaultUrl', 'thumbnail'])
-            ->orderByRaw($this->letterOrder(self::initials()))
+            ->when(isset($initials[$letter]), fn (Builder $query) => $query->whereRaw($this->firstCharacterIn($initials[$letter])))
+            ->when($letter === '#', fn (Builder $query) => $query->whereRaw('not '.$this->firstCharacterIn(array_merge(...array_values($initials)))))
+            ->orderByRaw($this->letterOrder($initials))
             ->orderBy((new Brand)->qualifyColumn('name'))
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString()
+            // The letter may not come from the request, so the page links carry it themselves.
+            ->appends($group === null ? [] : ['letter' => $group]);
     }
 
     /**
