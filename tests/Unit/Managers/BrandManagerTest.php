@@ -126,3 +126,28 @@ test('paginated brands list names starting with a letter before symbols and digi
     expect(array_slice($names, 0, 2))->toBe(['Acme', 'zeta'])
         ->and(array_slice($names, 2))->toEqualCanonicalizing(['#1 Games', '18 Studio', '[Bracket]']);
 });
+
+test('accented names list with their letter and other characters after the alphabet, on any database', function () {
+    foreach (['Øresund', 'Fox', '#1 Games', 'Édith', 'Delta', 'ünal', 'Zeta', '18 Studio'] as $i => $name) {
+        Brand::factory()->create(['name' => $name])->urls()->create([
+            'slug' => 'brand-'.$i,
+            'default' => true,
+            'language_id' => $this->language->id,
+        ]);
+    }
+
+    $names = collect($this->manager->getPaginated()->items())->pluck('name')->all();
+
+    // Names are ordered by name within their letter, which follows the database's collation,
+    // so this pins the letter order across them rather than every position.
+    expect(array_slice($names, 0, 5))->toBe(['Delta', 'Édith', 'Fox', 'ünal', 'Zeta'])
+        ->and(array_slice($names, 5))->toEqualCanonicalizing(['#1 Games', '18 Studio', 'Øresund']);
+});
+
+test('every brand files under A to Z or #', function () {
+    $initials = BrandManager::initials();
+
+    expect(array_keys($initials))->toBe(range('A', 'Z'))
+        ->and($initials['E'])->toContain('E', 'e', 'É', 'é', 'Ê')
+        ->and(array_merge(...array_values($initials)))->not->toContain('Ø', '1', '#');
+});
