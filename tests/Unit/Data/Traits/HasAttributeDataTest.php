@@ -138,3 +138,24 @@ test('it looks the attribute names up once for a list of models of one type', fu
     expect($names->all())->toBe(['Release date', 'Release date', 'Release date'])
         ->and($lookups)->toHaveCount(1);
 });
+
+test('a new request or job sees a renamed attribute', function () {
+    $attribute = Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    $product = Product::factory()->for(ProductType::factory()->create())->create([
+        'attribute_data' => collect(['name' => new Text('Test Product'), 'release_date' => new Text('2011-05-16')]),
+    ]);
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Release date');
+
+    $attribute->update(['name' => 'Released']);
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Release date');
+
+    // What the container does between requests (Octane) and queued jobs.
+    app()->forgetScopedInstances();
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Released');
+});

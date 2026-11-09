@@ -46,6 +46,7 @@ class StorefrontServiceProvider extends ServiceProvider
         $this->app->bind(CollectionManager::class, fn () => new Managers\CollectionManager);
         $this->app->bind(SearchManager::class, fn () => new Managers\SearchManager);
         $this->app->bind(PricingManager::class, fn () => new Managers\PricingManager);
+        $this->app->scoped(Data\AttributeNames::class);
 
         // Customer group rules (Contracts\CustomerGroupResolver). Lunar's
         // customer actions sync the groups they are given after saving, so

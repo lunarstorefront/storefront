@@ -5,8 +5,8 @@ namespace Lunar\Storefront\Data\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lunar\Core\FieldTypes\Dropdown;
-use Lunar\Core\Models\Attribute;
 use Lunar\Storefront\Data\AttributeDataValue;
+use Lunar\Storefront\Data\AttributeNames;
 
 trait HasAttributeData
 {
@@ -21,7 +21,7 @@ trait HasAttributeData
             fn ($attribute, $handle) => in_array($handle, ['name', 'description'])
         );
 
-        $names = $attributes->isEmpty() ? collect() : static::attributeNames($model->getMorphClass());
+        $names = $attributes->isEmpty() ? collect() : app(AttributeNames::class)->for($model->getMorphClass());
 
         foreach ($attributes as $handle => $attributeValue) {
             $value = $attributeValue->getValue();
@@ -32,7 +32,7 @@ trait HasAttributeData
 
             $attributeValues->push(
                 new AttributeDataValue(
-                    name: (string) ($names[$handle] ?? $handle),
+                    name: $names[$handle] ?? $handle,
                     handle: $handle,
                     type: strtolower(class_basename($attributeValue)),
                     value: $value,
@@ -44,18 +44,5 @@ trait HasAttributeData
         // serialize as a JSON object when non-empty but an array when empty,
         // breaking the AttributeDataValue[] contract on the frontend.
         return $attributeValues->values();
-    }
-
-    /**
-     * The display name each handle is shown under, from the attributes the model type has.
-     * Looked up once per type for the request, not once per model in a list.
-     *
-     * @return Collection<string, mixed>
-     */
-    protected static function attributeNames(string $morphClass): Collection
-    {
-        return once(fn () => Attribute::query()
-            ->whereHas('models', fn ($query) => $query->where('model_type', $morphClass))
-            ->pluck('name', 'handle'));
     }
 }
