@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Lunar\Core\FieldTypes\Dropdown;
 use Lunar\Storefront\Data\AttributeDataValue;
+use Lunar\Storefront\Data\AttributeNames;
 
 trait HasAttributeData
 {
@@ -20,6 +21,8 @@ trait HasAttributeData
             fn ($attribute, $handle) => in_array($handle, ['name', 'description'])
         );
 
+        $names = $attributes->isEmpty() ? collect() : app(AttributeNames::class)->for($model->getMorphClass());
+
         foreach ($attributes as $handle => $attributeValue) {
             $value = $attributeValue->getValue();
 
@@ -29,7 +32,7 @@ trait HasAttributeData
 
             $attributeValues->push(
                 new AttributeDataValue(
-                    name: $handle,
+                    name: $names[$handle] ?? $handle,
                     handle: $handle,
                     type: strtolower(class_basename($attributeValue)),
                     value: $value,

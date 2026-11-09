@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Attribute;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -86,4 +88,74 @@ test('it excludes name and description attributes', function () {
     $result = $testClass::mapAttributes($product);
 
     expect($result)->toBeEmpty();
+});
+
+test('it labels each value with the attribute name, falling back to the handle', function () {
+    Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    Attribute::factory()->modelType('collection')->create(['handle' => 'material', 'name' => 'Not a product attribute']);
+
+    $product = Product::factory()
+        ->for(ProductType::factory()->create())
+        ->create([
+            'attribute_data' => collect([
+                'name' => new Text('Test Product'),
+                'release_date' => new Text('2011-05-16'),
+                'material' => new Text('Cotton'),
+                'colour' => new Text('Blue'),
+            ]),
+        ]);
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    $names = $testClass::mapAttributes($product)->pluck('name', 'handle')->all();
+
+    expect($names)->toBe([
+        'release_date' => 'Release date',
+        'material' => 'material',
+        'colour' => 'colour',
+    ]);
+});
+
+test('it looks the attribute names up once for a list of models of one type', function () {
+    Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    $productType = ProductType::factory()->create();
+    $products = collect(range(1, 3))->map(fn () => Product::factory()->for($productType)->create([
+        'attribute_data' => collect(['name' => new Text('Test Product'), 'release_date' => new Text('2011-05-16')]),
+    ]));
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    DB::enableQueryLog();
+    $names = $products->map(fn (Product $product) => $testClass::mapAttributes($product)->first()->name);
+    $lookups = collect(DB::getQueryLog())->filter(fn (array $query) => str_contains($query['query'], 'attributes'));
+
+    expect($names->all())->toBe(['Release date', 'Release date', 'Release date'])
+        ->and($lookups)->toHaveCount(1);
+});
+
+test('a new request or job sees a renamed attribute', function () {
+    $attribute = Attribute::factory()->modelType('product')->create(['handle' => 'release_date', 'name' => 'Release date']);
+    $product = Product::factory()->for(ProductType::factory()->create())->create([
+        'attribute_data' => collect(['name' => new Text('Test Product'), 'release_date' => new Text('2011-05-16')]),
+    ]);
+
+    $testClass = new class
+    {
+        use HasAttributeData;
+    };
+
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Release date');
+
+    $attribute->update(['name' => 'Released']);
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Release date');
+
+    // What the container does between requests (Octane) and queued jobs.
+    app()->forgetScopedInstances();
+    expect($testClass::mapAttributes($product)->first()->name)->toBe('Released');
 });
