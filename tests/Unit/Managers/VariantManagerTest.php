@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Crypt;
 use Lunar\Core\Models\Channel;
 use Lunar\Core\Models\Currency;
 use Lunar\Core\Models\CustomerGroup;
@@ -37,14 +36,17 @@ test('it can decrypt options back to original array', function () {
 });
 
 test('it decrypts options whose signature contains a dot', function () {
-    // The truncated binary signature holds a "." byte about 6% of the time.
+    // The hash is base64url of "payload.signature", with a 16-byte binary signature that holds
+    // a "." about 6% of the time. Pick options whose real hash has one, read from the manager's
+    // own output, so the case stays covered whatever the signing details are.
+    $signatureOf = fn (array $options): string => substr(
+        base64_decode(strtr($this->manager->encryptOptions($options), '-_', '+/')),
+        -16,
+    );
+
     $options = collect(range(1, 2000))
         ->map(fn (int $id) => ['1' => (string) $id])
-        ->first(function (array $options) {
-            $payload = collect($options)->map(fn ($value, $key) => $key.':'.$value)->implode(',');
-
-            return str_contains(substr(hash_hmac('sha256', $payload, Crypt::getKey(), binary: true), 0, 16), '.');
-        });
+        ->first(fn (array $options) => str_contains($signatureOf($options), '.'));
 
     expect($options)->not->toBeNull()
         ->and($this->manager->decryptOptions($this->manager->encryptOptions($options)))->toBe($options);
