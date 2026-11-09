@@ -13,5 +13,6 @@ class SearchQueryHit extends Data
 
     public function __construct(
         public string $term,
+        public ?Product $product = null,
     ) {}
 }
