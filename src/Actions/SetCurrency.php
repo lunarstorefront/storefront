@@ -3,7 +3,6 @@
 namespace Lunar\Storefront\Actions;
 
 use Lunar\Core\Facades\CartSession;
-use Lunar\Core\Facades\Pricing;
 use Lunar\Core\Facades\StorefrontSession;
 use Lunar\Core\Models\Currency;
 
@@ -19,6 +18,5 @@ class SetCurrency
 
         StorefrontSession::setCurrency($currency);
         CartSession::setCurrency($currency);
-        Pricing::currency($currency);
     }
 }
