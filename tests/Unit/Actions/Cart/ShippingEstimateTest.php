@@ -25,13 +25,13 @@ class EstimateTestShippingModifier extends ShippingModifier
     {
         $taxClass = TaxClass::query()->first();
         $currency = $cart->currency;
-        $option = fn (string $name, string $identifier, int $price, bool $collect = false) => new ShippingOptionValue(
+        $option = fn (string $name, string $identifier, int $price, bool $pickup = false) => new ShippingOptionValue(
             name: $name,
             description: "{$name} description",
             identifier: $identifier,
             price: new PriceValue($price, $currency),
             taxClass: $taxClass,
-            collect: $collect,
+            pickup: $pickup,
         );
 
         if (! str_starts_with((string) $cart->shippingAddress?->postcode, 'BT')) {
@@ -39,7 +39,7 @@ class EstimateTestShippingModifier extends ShippingModifier
             ShippingManifest::addOption($option('Standard delivery', 'STANDARD', 695));
         }
 
-        ShippingManifest::addOption($option('Click & collect', 'COLLECT', 0, collect: true));
+        ShippingManifest::addOption($option('Click & collect', 'COLLECT', 0, pickup: true));
 
         return $next($cart);
     }
