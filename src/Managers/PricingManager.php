@@ -14,16 +14,18 @@ use Lunar\Storefront\Data\Price;
 class PricingManager implements \Lunar\Storefront\Contracts\PricingManager
 {
     /**
-     * Prices in the storefront's currency, which the session carries between requests.
-     * CartSession only knows a currency once something sets it in the same request,
-     * so without a cart it would fall back to the default.
+     * Prices with the storefront session's context: its currency, which the
+     * session carries between requests, and the signed-in customer's groups,
+     * so a trade customer sees the price their basket will charge. Lunar's
+     * pricing no longer resolves either by itself.
      */
     public function getPricing(Purchasable $purchasable, int $quantity = 1): ?PricingResponse
     {
         try {
-            return Pricing::for($purchasable)->currency(
-                StorefrontSession::getCurrency()
-            )->qty($quantity)->get();
+            return Pricing::for($purchasable)
+                ->using(StorefrontSession::context())
+                ->qty($quantity)
+                ->get();
         } catch (\Exception $e) {
             report($e);
         }
