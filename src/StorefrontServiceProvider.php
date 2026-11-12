@@ -5,6 +5,8 @@ namespace Lunar\Storefront;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Checkout\Models\CheckoutSession;
@@ -32,6 +34,7 @@ use Lunar\Storefront\Contracts\PropManager;
 use Lunar\Storefront\Contracts\SearchManager;
 use Lunar\Storefront\Contracts\StorefrontManager;
 use Lunar\Storefront\Contracts\VariantManager;
+use Lunar\Storefront\Http\Middleware\UseStorefrontPricingContext;
 use Lunar\Storefront\Listeners\StampOrderLinePartNumbers;
 
 class StorefrontServiceProvider extends ServiceProvider
@@ -94,11 +97,28 @@ class StorefrontServiceProvider extends ServiceProvider
         // Order lines keep the part number they were sold under.
         Event::listen(OrderPlaced::class, StampOrderLinePartNumbers::class);
 
+        $this->usePricingContextOnWebRequests();
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ConfigureMeilisearchQuerySuggestions::class,
                 InstallCommand::class,
             ]);
+        }
+    }
+
+    /**
+     * Lunar prices against store defaults unless given a context. Web
+     * requests default to the storefront session's, so the signed-in
+     * customer's group prices show wherever the basket would charge them.
+     * Appended through the kernel so a later kernel sync keeps it.
+     */
+    protected function usePricingContextOnWebRequests(): void
+    {
+        $kernel = $this->app->make(HttpKernelContract::class);
+
+        if ($kernel instanceof HttpKernel && array_key_exists('web', $kernel->getMiddlewareGroups())) {
+            $kernel->appendMiddlewareToGroup('web', UseStorefrontPricingContext::class);
         }
     }
 }

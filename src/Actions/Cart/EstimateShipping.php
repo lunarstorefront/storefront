@@ -26,7 +26,7 @@ class EstimateShipping
 
         /** @var ShippingOptionValue|null $cheapest */
         $cheapest = ShippingManifest::getOptions($cart->calculate())
-            ->reject(fn (ShippingOptionValue $option): bool => $option->collect)
+            ->reject(fn (ShippingOptionValue $option): bool => $option->pickup)
             ->sortBy(fn (ShippingOptionValue $option): int => $option->getPrice()->value)
             ->first();
 

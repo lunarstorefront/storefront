@@ -4,6 +4,7 @@ namespace Lunar\Storefront\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
+use Lunar\Core\Facades\Pricing;
 use Lunar\Core\LunarServiceProvider;
 use Lunar\Nestedset\NestedSetServiceProvider;
 use Lunar\Search\SearchServiceProvider;
@@ -30,6 +31,10 @@ abstract class TestCase extends Orchestra
         // collides with Lunar core's consolidated schema under Testbench, so we
         // migrate explicitly here where the migrator paths are fully resolved.
         Artisan::call('migrate:fresh', ['--database' => 'testing']);
+
+        // Every price must come from a context the storefront supplies, so a
+        // call site that would price against store defaults throws instead.
+        Pricing::preventDefaultContext();
 
         activity()->disableLogging();
         $this->freezeTime();
