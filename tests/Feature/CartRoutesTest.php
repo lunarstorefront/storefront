@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Lunar\Core\Enums\SellingPolicy;
+use Lunar\Core\Enums\StepList;
 use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Facades\Steps;
 use Lunar\Core\Models\Cart;
 use Lunar\Core\Models\CartLine;
 use Lunar\Core\Models\Channel;
@@ -132,7 +134,7 @@ test('it checks an update against its own line, not a sku in the request', funct
 test('it runs the cart line validators on an update', function () {
     $line = cartWithLine(quantity: 1, stock: 10);
 
-    config()->set('lunar.cart.validators.update_cart_line', [RefusesEveryUpdate::class]);
+    Steps::for(StepList::UpdateCartLineValidation)->append(RefusesEveryUpdate::class);
 
     $this->put(route('lunar.storefront.cart.lines.quantity', $line->public_id), ['quantity' => 2])
         ->assertSessionHasErrors(['quantity' => 'Refused.']);
